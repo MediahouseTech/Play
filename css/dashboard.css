@@ -1,0 +1,1177 @@
+/**
+ * DASHBOARD.CSS - Mediahouse Crew Dashboard
+ * Dark theme, mobile-first, high contrast for outdoor use
+ * 
+ * Color Zones:
+ * - Background: #121212 (near black)
+ * - Panels: #1e1e1e, #2d2d2d
+ * - Text: #ffffff (primary), #a0a0a0 (secondary)
+ * - Accent: #00a8e8 (blue)
+ * - Live: #22c55e (green)
+ * - Warning: #eab308 (yellow)
+ * - Error: #ef4444 (red)
+ */
+
+:root {
+    --bg-dark: #121212;
+    --bg-panel: #1e1e1e;
+    --bg-panel-light: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --accent: #00a8e8;
+    --live: #22c55e;
+    --warning: #eab308;
+    --error: #ef4444;
+    --border: #3a3a3a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    background: var(--bg-panel);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.main {
+    flex: 1;
+    padding: 12px;
+}
+
+.footer {
+    background: var(--bg-panel);
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* ============================================
+   TABS
+   ============================================ */
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ============================================
+   PLAYER SELECTOR
+   ============================================ */
+
+.player-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.selector-btn {
+    padding: 8px 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selector-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.bandwidth-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+/* ============================================
+   DANGER ZONE
+   ============================================ */
+
+.danger-zone {
+    border-color: var(--error) !important;
+    background: rgba(239, 68, 68, 0.05) !important;
+    margin-top: 24px;
+}
+
+.danger-zone h3 {
+    color: var(--error) !important;
+}
+
+.btn-danger {
+    background: var(--error);
+    color: white;
+    width: 100%;
+    padding: 14px;
+    font-weight: 600;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+/* ============================================
+   RESPONSIVE IMPROVEMENTS
+   ============================================ */
+
+@media (max-width: 600px) {
+    .tabs {
+        flex-direction: row;
+    }
+    
+    .tab-btn {
+        font-size: 0.8rem;
+        padding: 8px 4px;
+    }
+    
+    .config-row-inline {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   BREAK MODE PANEL (Main Dashboard)
+   ============================================ */
+
+.break-mode-panel {
+    background: var(--bg-panel);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.break-mode-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.break-mode-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.break-mode-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.break-mode-grid-main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.break-control-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+.break-control-card.on-break {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.break-control-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.break-control-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.break-control-status {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.break-control-status.live {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--live);
+}
+
+.break-control-status.break {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--error);
+}
+
+.btn-break-main {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-break-main.go-break {
+    background: var(--error);
+    color: white;
+}
+
+.btn-break-main.go-break:hover {
+    background: #dc2626;
+}
+
+.btn-break-main.go-live {
+    background: var(--live);
+    color: white;
+}
+
+.btn-break-main.go-live:hover {
+    background: #16a34a;
+}
+
+/* ============================================
+   BREAK MODE CONTROLS
+   ============================================ */
+
+.break-mode-section {
+    border: 2px solid var(--accent);
+    background: rgba(0, 122, 255, 0.05);
+}
+
+.section-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.break-mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.break-mode-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.break-mode-row .stream-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 120px;
+}
+
+.break-mode-row .stream-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+}
+
+.break-mode-row .status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.break-mode-row .status-badge.live {
+    background: rgba(52, 199, 89, 0.2);
+    color: #34c759;
+}
+
+.break-mode-row .status-badge.break {
+    background: rgba(255, 69, 58, 0.2);
+    color: #ff453a;
+}
+
+.break-mode-row .btn-break {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    min-width: 120px;
+}
+
+.break-mode-row .btn-break.go-break {
+    background: #ff453a;
+    color: white;
+}
+
+.break-mode-row .btn-break.go-break:hover {
+    background: #ff6961;
+}
+
+.break-mode-row .btn-break.go-live {
+    background: #34c759;
+    color: white;
+}
+
+.break-mode-row .btn-break.go-live:hover {
+    background: #4cd964;
+}
+
+.break-mode-row .btn-break:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Break mode indicator on video panels */
+.player-panel.on-break .status-bar {
+    background: rgba(255, 69, 58, 0.9);
+}
+
+.player-panel.on-break .video-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 3px solid #ff453a;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* ============================================
+   PLAYER CONTAINER
+   ============================================ */
+
+#playerContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#playerContainer.grid-view {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    #playerContainer.grid-view {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+#playerContainer.single-view .player-wrapper {
+    max-width: 100%;
+}
+
+/* ============================================
+   PLAYER WRAPPER
+   ============================================ */
+
+.player-wrapper {
+    background: var(--bg-panel);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--bg-panel-light);
+    border-bottom: 1px solid var(--border);
+}
+
+.stream-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.stream-status {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: var(--bg-dark);
+}
+
+.stream-status.live {
+    background: var(--live);
+    color: white;
+}
+
+.stream-status.break {
+    background: #ff453a;
+    color: white;
+}
+
+.stream-status.error {
+    background: var(--error);
+    color: white;
+}
+
+/* ============================================
+   PLAYER CONTENT
+   ============================================ */
+
+.player-content {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+}
+
+.video-container {
+    flex: 1;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.vu-container {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.vu-canvas {
+    display: block;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.vu-canvas:hover {
+    opacity: 0.9;
+}
+
+/* Hide VU meters when toggled off */
+.hide-streamHealth .vu-container {
+    display: none;
+}
+
+/* ============================================
+   PLAYER STATS
+   ============================================ */
+
+.player-stats {
+    display: flex;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--bg-panel-light);
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Hide stats when toggled off */
+.hide-duration .stat-duration { display: none; }
+.hide-bitrate .stat-bitrate { display: none; }
+.hide-viewers .stat-viewers { display: none; }
+
+/* ============================================
+   VISIBILITY TOGGLES
+   ============================================ */
+
+.visibility-toggles {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-panel);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.toggle-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.toggle-item input[type="checkbox"] {
+    accent-color: var(--accent);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 44px;
+    min-width: 44px;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--bg-panel-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.btn-settings {
+    background: var(--bg-panel-light);
+    color: var(--text-primary);
+    padding: 8px 12px;
+}
+
+
+/* ============================================
+   MODALS
+   ============================================ */
+
+.modal {
+    display: none !important;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex !important;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+}
+
+.modal-small {
+    max-width: 350px;
+    text-align: center;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+
+.input {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin: 12px 0;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.error-text {
+    color: var(--error);
+    font-size: 0.85rem;
+    display: none;
+    margin-top: 8px;
+}
+
+.error-text.show {
+    display: block;
+}
+
+/* ============================================
+   INFO CARD
+   ============================================ */
+
+.info-card {
+    background: var(--bg-panel);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.info-value {
+    font-weight: 500;
+    text-align: right;
+}
+
+.info-brief {
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-brief .info-value {
+    text-align: left;
+}
+
+.whatsapp-btn {
+    display: block;
+    background: #25D366;
+    color: white;
+    text-align: center;
+    padding: 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 16px;
+}
+
+/* ============================================
+   EXPIRED MESSAGE
+   ============================================ */
+
+.expired-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 24px;
+}
+
+.expired-message h1 {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+
+.expired-message p {
+    color: var(--text-secondary);
+}
+
+.error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 24px;
+}
+
+
+/* ============================================
+   SETTINGS MODAL CONTENT
+   ============================================ */
+
+.stream-config {
+    background: var(--bg-dark);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+}
+
+.stream-config h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+}
+
+.config-row {
+    margin-bottom: 14px;
+}
+
+.config-row:last-child {
+    margin-bottom: 0;
+}
+
+.config-row label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-with-copy {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-with-copy input {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.input-with-copy input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.btn-copy, .btn-show {
+    padding: 10px 14px;
+    background: var(--bg-panel-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-copy:hover, .btn-show:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-copy.copy-success {
+    background: var(--live);
+    border-color: var(--live);
+}
+
+.btn-copy.copy-error {
+    background: var(--error);
+    border-color: var(--error);
+}
+
+/* Make modal scrollable */
+.modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Custom scrollbar for modal */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+
+/* ============================================
+   SAVE BUTTON
+   ============================================ */
+
+.btn-save {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: var(--live);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.btn-save:hover {
+    background: #1da851;
+}
+
+.btn-save:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-save.save-success {
+    background: var(--live);
+}
+
+.btn-save.save-error {
+    background: var(--error);
+}
+
+.btn-sms {
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.btn-sms:hover {
+    background: #0090c5;
+}
+
+/* ============================================
+   SETTINGS SECTIONS
+   ============================================ */
+
+.settings-section {
+    background: var(--bg-dark);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+}
+
+.settings-section h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.input-field {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.input-field.textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.config-row-inline {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.config-row-inline .config-row {
+    margin-bottom: 0;
+}
+
+.toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--bg-panel);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.toggle-row input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 18px;
+    height: 18px;
+}
+
+
+/* ============================================
+   HEALTH INDICATOR (Replaces VU Meters)
+   Simple visual feedback for stream activity
+   ============================================ */
+
+.health-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    width: 60px;
+    min-width: 60px;
+    padding: 8px 4px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.health-indicator {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    height: 80px;
+    width: 100%;
+    justify-content: center;
+}
+
+.health-bar {
+    width: 16px;
+    height: 10%;
+    background: #444;
+    border-radius: 2px;
+    transition: height 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.health-bar.active {
+    background: linear-gradient(to top, 
+        var(--live) 0%, 
+        var(--live) 60%, 
+        var(--warning) 60%, 
+        var(--warning) 85%, 
+        var(--error) 85%, 
+        var(--error) 100%
+    );
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.health-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* Hide health indicator when toggled off */
+.hide-streamHealth .health-container {
+    display: none;
+}
+
+/* ============================================
+   VIDEO OVERLAY (Not Live state)
+   ============================================ */
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.overlay-message {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.video-container {
+    position: relative;
+    flex: 1;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* ============================================
+   BANDWIDTH CONTROLS
+   ============================================ */
+
+.bandwidth-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.bandwidth-btn {
+    padding: 6px 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bandwidth-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}

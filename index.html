@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Crew Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <h1 id="eventTitle">Loading...</h1>
+            <div class="header-actions">
+                <button class="btn btn-settings" id="settingsBtn">⚙️ Settings</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="live">📹 Live</button>
+                <button class="tab-btn" data-tab="info">📝 Event Info</button>
+                <button class="tab-btn" data-tab="recordings">🎬 Recordings</button>
+            </div>
+
+            <!-- Live Tab -->
+            <div id="tab-live" class="tab-content active">
+                <!-- Player Selector -->
+                <div class="player-selector" id="playerSelector"></div>
+                
+                <!-- Visibility Toggles -->
+                <div class="visibility-toggles" id="visibilityToggles"></div>
+                
+                <!-- Players Container -->
+                <div id="playerContainer" class="grid-view"></div>
+                
+                <!-- Break Mode Controls (Producer Only) -->
+                <div id="breakModePanel" class="break-mode-panel" style="display: none;">
+                    <div class="break-mode-header">
+                        <h3>🎬 Break Mode</h3>
+                        <span class="break-mode-hint">Switch stages to holding video during breaks</span>
+                    </div>
+                    <div id="breakModeControlsMain" class="break-mode-grid-main">
+                        <!-- Populated by JavaScript after producer login -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Info Tab -->
+            <div id="tab-info" class="tab-content">
+                <div id="eventInfo" class="info-card"></div>
+            </div>
+
+            <!-- Recordings Tab -->
+            <div id="tab-recordings" class="tab-content">
+                <iframe id="recordingsFrame" src="/recordings.html?embedded=true" style="width:100%; height: calc(100vh - 200px); border:none;"></iframe>
+            </div>
+        </main>
+
+        <!-- Footer with Bandwidth Controls -->
+        <footer class="footer">
+            <span style="color: var(--text-secondary); font-size: 0.85rem;">Quality:</span>
+            <button class="btn btn-secondary bandwidth-btn" data-bandwidth="low" onclick="setBandwidth('low')" title="480p - Save data">LOW</button>
+            <button class="btn btn-secondary bandwidth-btn active" data-bandwidth="medium" onclick="setBandwidth('medium')" title="720p - Balanced">MED</button>
+            <button class="btn btn-secondary bandwidth-btn" data-bandwidth="high" onclick="setBandwidth('high')" title="1080p - Full quality">HIGH</button>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-overlay" onclick="closeSettings()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="btn-close" onclick="closeSettings()">✕</button>
+            </div>
+            <div id="settingsBody" class="modal-body">
+                <!-- Event Info Section -->
+                <div class="settings-section">
+                    <h3>Event Information</h3>
+                    <div class="config-row">
+                        <label>Event Name</label>
+                        <input type="text" id="settings-eventName" class="input-field" placeholder="Event Name">
+                    </div>
+                    <div class="config-row">
+                        <label>Date</label>
+                        <input type="text" id="settings-eventDate" class="input-field" placeholder="e.g. Sunday 26 January 2025">
+                    </div>
+                    <div class="config-row-inline">
+                        <div class="config-row">
+                            <label>Call Time</label>
+                            <input type="text" id="settings-callTime" class="input-field" placeholder="7:00 AM">
+                        </div>
+                        <div class="config-row">
+                            <label>Live Start</label>
+                            <input type="text" id="settings-liveStart" class="input-field" placeholder="10:00 AM">
+                        </div>
+                        <div class="config-row">
+                            <label>Live End</label>
+                            <input type="text" id="settings-liveEnd" class="input-field" placeholder="6:00 PM">
+                        </div>
+                    </div>
+                    <div class="config-row">
+                        <label>Producer Name</label>
+                        <input type="text" id="settings-producerName" class="input-field" placeholder="Producer Name">
+                    </div>
+                    <div class="config-row">
+                        <label>Producer Phone</label>
+                        <input type="text" id="settings-producerPhone" class="input-field" placeholder="0412 XXX XXX">
+                    </div>
+                    <div class="config-row">
+                        <label>WhatsApp Link</label>
+                        <input type="text" id="settings-whatsappLink" class="input-field" placeholder="https://chat.whatsapp.com/...">
+                    </div>
+                    <div class="config-row">
+                        <label>Crew Brief</label>
+                        <textarea id="settings-brief" class="input-field textarea" rows="3" placeholder="Instructions for crew..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Stream Configs Section -->
+                <div class="settings-section">
+                    <h3>Stream Configuration</h3>
+                    <div id="streamConfigs"></div>
+                </div>
+
+                <!-- Display Settings Section -->
+                <div class="settings-section">
+                    <h3>Display Options</h3>
+                    <div class="toggle-grid">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="settings-showHealth" checked>
+                            <span>Show VU Meters</span>
+                        </label>
+                        <label class="toggle-row">
+                            <input type="checkbox" id="settings-showDuration" checked>
+                            <span>Show Duration</span>
+                        </label>
+                        <label class="toggle-row">
+                            <input type="checkbox" id="settings-showBitrate">
+                            <span>Show Bitrate</span>
+                        </label>
+                        <label class="toggle-row">
+                            <input type="checkbox" id="settings-showViewers">
+                            <span>Show Viewers</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Break Mode Controls Section -->
+                <div class="settings-section break-mode-section">
+                    <h3>🎬 Break Mode Controls</h3>
+                    <p class="section-hint">Switch stages between LIVE and BREAK. When on break, all viewers see the holding video.</p>
+                    <div id="breakModeControls" class="break-mode-grid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="settings-section">
+                    <h3>Security</h3>
+                    <div class="config-row">
+                        <label>Producer Password</label>
+                        <div class="input-with-copy">
+                            <input type="password" id="settings-password" class="input-field" placeholder="Password for settings access">
+                            <button class="btn-show" onclick="togglePasswordVisibility()">👁</button>
+                        </div>
+                    </div>
+                    <div class="config-row">
+                        <label>Dashboard Expiry</label>
+                        <input type="datetime-local" id="settings-expiry" class="input-field">
+                    </div>
+                </div>
+
+                <button id="saveSettingsBtn" class="btn btn-save" onclick="saveSettings()">💾 Save Settings</button>
+                <button class="btn btn-sms" onclick="handleSMSShare()">📱 Share via SMS</button>
+                
+                <!-- Reset Dashboard -->
+                <div class="settings-section danger-zone">
+                    <h3>⚠️ Reset Dashboard</h3>
+                    <p class="section-hint">Clear all event info and reset to defaults for a new event.</p>
+                    <button class="btn btn-danger" onclick="resetDashboard()">🗑️ Reset Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-small">
+            <h2>Producer Access</h2>
+            <input type="password" id="passwordInput" class="input" placeholder="Enter password">
+            <p id="passwordError" class="error-text">Incorrect password</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="checkPassword()">Enter</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/vu-meter.js"></script>
+    <script src="js/visibility.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Settings button
+        document.getElementById('settingsBtn').addEventListener('click', openSettings);
+    </script>
+</body>
+</html>

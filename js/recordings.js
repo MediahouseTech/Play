@@ -1,0 +1,1449 @@
+/* ============================================
+   RECORDINGS MANAGER - JavaScript (Full Featured)
+   ============================================ */
+
+// State
+let recordings = [];
+let filteredRecordings = [];
+let selectedRecordings = new Set();
+let currentPreviewAsset = null;
+let currentDeleteAsset = null;
+let currentEditAsset = null;
+let hlsPlayer = null;
+let currentView = 'grid';
+let lastRefreshTime = null;
+let clipChapters = {};
+let clipInPoint = null;
+let clipOutPoint = null;
+let previewModalOpen = false;
+
+const PRODUCER_PASSWORD = 'Live2Stream';
+const AUTH_SESSION_KEY = 'producerAuth';
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if embedded in iframe (from main dashboard)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isEmbedded = urlParams.get('embedded') === 'true' || window.parent !== window;
+    
+    if (isEmbedded || sessionStorage.getItem(AUTH_SESSION_KEY) === 'true') {
+        showApp();
+    }
+    
+    document.getElementById('loginPassword')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkLogin();
+    });
+    
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    
+    // Rename pattern preview
+    document.getElementById('renamePattern')?.addEventListener('input', updateRenamePreview);
+});
+
+function checkLogin() {
+    const password = document.getElementById('loginPassword').value;
+    if (password === PRODUCER_PASSWORD) {
+        sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+        showApp();
+    } else {
+        document.getElementById('loginError').classList.add('show');
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginPassword').focus();
+    }
+}
+
+function showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    loadRecordings();
+}
+
+// ============================================
+// KEYBOARD SHORTCUTS
+// ============================================
+
+function handleKeyboardShortcuts(e) {
+    // Ignore if typing in input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+    }
+    
+    // Preview modal shortcuts
+    if (previewModalOpen) {
+        const video = document.getElementById('previewVideo');
+        switch(e.key) {
+            case ' ':
+                e.preventDefault();
+                video.paused ? video.play() : video.pause();
+                break;
+            case 'ArrowLeft':
+                video.currentTime = Math.max(0, video.currentTime - 5);
+                break;
+            case 'ArrowRight':
+                video.currentTime = Math.min(video.duration, video.currentTime + 5);
+                break;
+            case 'i':
+            case 'I':
+                setInPoint();
+                break;
+            case 'o':
+            case 'O':
+                setOutPoint();
+                break;
+            case 'm':
+            case 'M':
+                addChapterAtCurrentTime();
+                break;
+            case 'Escape':
+                closePreview();
+                break;
+        }
+        return;
+    }
+    
+    // List view shortcuts
+    switch(e.key) {
+        case 'a':
+        case 'A':
+            e.preventDefault();
+            document.getElementById('selectAll').click();
+            break;
+        case 'd':
+        case 'D':
+            if (selectedRecordings.size > 0) {
+                e.preventDefault();
+                bulkDownload();
+            }
+            break;
+        case 'Delete':
+        case 'Backspace':
+            if (selectedRecordings.size > 0) {
+                e.preventDefault();
+                bulkDelete();
+            }
+            break;
+        case 'r':
+        case 'R':
+            e.preventDefault();
+            refreshRecordings();
+            break;
+        case 'g':
+        case 'G':
+            setView('grid');
+            break;
+        case 'l':
+        case 'L':
+            setView('list');
+            break;
+        case '?':
+            openShortcuts();
+            break;
+    }
+}
+
+function openShortcuts() {
+    document.getElementById('shortcutsModal').classList.add('show');
+}
+
+function closeShortcuts() {
+    document.getElementById('shortcutsModal').classList.remove('show');
+}
+
+// ============================================
+// DATA LOADING
+// ============================================
+
+async function loadRecordings() {
+    showLoading(true);
+    
+    try {
+        const response = await fetch('/api/recordings');
+        const data = await response.json();
+        
+        if (data.success && data.recordings && data.recordings.length > 0) {
+            recordings = data.recordings;
+            applyFiltersAndSort();
+            updateStats();
+            updateLastRefresh();
+        } else {
+            await refreshRecordings();
+        }
+    } catch (error) {
+        console.error('Error loading recordings:', error);
+        showEmpty();
+    }
+    
+    showLoading(false);
+}
+
+async function refreshRecordings() {
+    showLoading(true);
+    
+    try {
+        const response = await fetch('/api/recordings?action=refresh');
+        const data = await response.json();
+        
+        if (data.success) {
+            recordings = data.recordings || [];
+            applyFiltersAndSort();
+            updateStats();
+            updateLastRefresh();
+            
+            if (recordings.length === 0) {
+                showEmpty();
+            }
+        } else {
+            throw new Error(data.error || 'Failed to refresh');
+        }
+    } catch (error) {
+        console.error('Error refreshing recordings:', error);
+        alert('Failed to refresh recordings: ' + error.message);
+    }
+    
+    showLoading(false);
+}
+
+function updateLastRefresh() {
+    lastRefreshTime = new Date();
+    document.getElementById('lastRefresh').textContent = 'Updated: just now';
+    
+    // Update every minute
+    setInterval(() => {
+        if (!lastRefreshTime) return;
+        const mins = Math.floor((Date.now() - lastRefreshTime) / 60000);
+        if (mins < 1) {
+            document.getElementById('lastRefresh').textContent = 'Updated: just now';
+        } else if (mins === 1) {
+            document.getElementById('lastRefresh').textContent = 'Updated: 1 min ago';
+        } else {
+            document.getElementById('lastRefresh').textContent = `Updated: ${mins} mins ago`;
+        }
+    }, 60000);
+}
+
+// ============================================
+// FILTERING & SORTING
+// ============================================
+
+function filterRecordings() {
+    applyFiltersAndSort();
+}
+
+function sortRecordings() {
+    applyFiltersAndSort();
+}
+
+function applyFiltersAndSort() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const stageFilter = document.getElementById('stageFilter').value;
+    const durationFilter = document.getElementById('durationFilter').value;
+    const tagFilter = document.getElementById('tagFilter').value;
+    const sortBy = document.getElementById('sortBy').value;
+    
+    // Filter
+    filteredRecordings = recordings.filter(rec => {
+        const matchesSearch = !searchTerm || 
+            rec.title?.toLowerCase().includes(searchTerm) ||
+            rec.stageName?.toLowerCase().includes(searchTerm) ||
+            rec.createdFormatted?.toLowerCase().includes(searchTerm) ||
+            rec.externalId?.toLowerCase().includes(searchTerm) ||
+            rec.notes?.toLowerCase().includes(searchTerm);
+        
+        const matchesStage = !stageFilter || rec.stageName === stageFilter;
+        
+        let matchesDuration = true;
+        if (durationFilter === 'short') {
+            matchesDuration = rec.duration < 120; // Under 2 mins
+        } else if (durationFilter) {
+            matchesDuration = rec.duration >= parseInt(durationFilter) * 60;
+        }
+        
+        let matchesTag = true;
+        if (tagFilter === 'none') {
+            matchesTag = !rec.tag;
+        } else if (tagFilter) {
+            matchesTag = rec.tag === tagFilter;
+        }
+        
+        // Hide archived unless specifically filtering for them
+        if (tagFilter !== 'archive' && rec.tag === 'archive') {
+            return false;
+        }
+        
+        return matchesSearch && matchesStage && matchesDuration && matchesTag;
+    });
+    
+    // Sort
+    filteredRecordings.sort((a, b) => {
+        switch (sortBy) {
+            case 'date-desc':
+                return parseInt(b.createdAt) - parseInt(a.createdAt);
+            case 'date-asc':
+                return parseInt(a.createdAt) - parseInt(b.createdAt);
+            case 'duration-desc':
+                return b.duration - a.duration;
+            case 'duration-asc':
+                return a.duration - b.duration;
+            case 'stage':
+                return (a.stageName || '').localeCompare(b.stageName || '');
+            default:
+                return 0;
+        }
+    });
+    
+    renderRecordings();
+    updateBulkButtons();
+}
+
+// ============================================
+// SELECT SHORT CLIPS
+// ============================================
+
+function selectShortClips() {
+    selectedRecordings.clear();
+    
+    filteredRecordings.forEach(rec => {
+        if (rec.duration < 120) { // Under 2 minutes
+            selectedRecordings.add(rec.assetId);
+        }
+    });
+    
+    renderRecordings();
+    updateBulkButtons();
+    updateSelectAllCheckbox();
+}
+
+// ============================================
+// VIEW TOGGLE
+// ============================================
+
+function setView(view) {
+    currentView = view;
+    
+    document.getElementById('gridViewBtn').classList.toggle('active', view === 'grid');
+    document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+    
+    document.getElementById('recordingsGrid').style.display = view === 'grid' ? 'grid' : 'none';
+    document.getElementById('recordingsList').style.display = view === 'list' ? 'block' : 'none';
+    
+    renderRecordings();
+}
+
+// ============================================
+// RENDERING
+// ============================================
+
+function renderRecordings() {
+    const grid = document.getElementById('recordingsGrid');
+    const listBody = document.getElementById('recordingsTableBody');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (filteredRecordings.length === 0) {
+        grid.innerHTML = '';
+        listBody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    
+    // Render Grid View
+    grid.innerHTML = filteredRecordings.map(rec => {
+        const thumbnailUrl = rec.playbackId 
+            ? `https://image.mux.com/${rec.playbackId}/thumbnail.jpg?time=10&width=640`
+            : '';
+        
+        const stageClass = getStageClass(rec.stageName);
+        const isSelected = selectedRecordings.has(rec.assetId);
+        const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '';
+        
+        return `
+            <div class="recording-card ${isSelected ? 'selected' : ''}" 
+                 data-asset-id="${rec.assetId}">
+                <div class="recording-thumbnail" onclick="openPreview('${rec.assetId}')">
+                    <input type="checkbox" class="select-checkbox" 
+                           ${isSelected ? 'checked' : ''}
+                           onclick="event.stopPropagation(); toggleSelect('${rec.assetId}')">
+                    ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="${rec.title}" loading="lazy">` : ''}
+                    <div class="play-overlay">
+                        <div class="play-icon">▶</div>
+                    </div>
+                    <span class="duration-badge">${rec.durationStr}</span>
+                </div>
+                <div class="recording-info">
+                    <div class="recording-title" title="${rec.title}">${rec.title || 'Untitled'}</div>
+                    <div class="recording-meta">
+                        <span class="stage-badge ${stageClass}">${rec.stageName}</span>
+                        ${tagBadge}
+                    </div>
+                    <div class="recording-meta">
+                        <span>📅 ${rec.createdFormatted || formatDate(rec.createdAt)}</span>
+                    </div>
+                </div>
+                <div class="recording-actions">
+                    <button class="btn btn-secondary btn-small" onclick="openEdit('${rec.assetId}')">✏️</button>
+                    <button class="btn btn-primary btn-small" onclick="downloadRecording('${rec.assetId}')">⬇️</button>
+                    <button class="btn btn-danger btn-small" onclick="openDelete('${rec.assetId}')">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Render List View
+    listBody.innerHTML = filteredRecordings.map(rec => {
+        const thumbnailUrl = rec.playbackId 
+            ? `https://image.mux.com/${rec.playbackId}/thumbnail.jpg?time=10&width=200`
+            : '';
+        
+        const stageClass = getStageClass(rec.stageName);
+        const isSelected = selectedRecordings.has(rec.assetId);
+        const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '';
+        
+        return `
+            <tr class="${isSelected ? 'selected' : ''}" data-asset-id="${rec.assetId}">
+                <td class="col-checkbox">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                           onchange="toggleSelect('${rec.assetId}')">
+                </td>
+                <td class="col-thumb">
+                    ${thumbnailUrl ? `<img src="${thumbnailUrl}" class="list-thumbnail" onclick="openPreview('${rec.assetId}')" alt="Preview">` : '-'}
+                </td>
+                <td class="col-title">
+                    <div class="list-title" onclick="openPreview('${rec.assetId}')">${rec.title || 'Untitled'}</div>
+                    ${tagBadge}
+                </td>
+                <td class="col-stage">
+                    <span class="stage-badge ${stageClass}">${rec.stageName}</span>
+                </td>
+                <td class="col-date">${rec.createdFormatted || formatDate(rec.createdAt)}</td>
+                <td class="col-duration">${rec.durationStr}</td>
+                <td class="col-actions">
+                    <div class="list-actions">
+                        <button class="btn btn-secondary btn-small" onclick="openEdit('${rec.assetId}')" title="Edit">✏️</button>
+                        <button class="btn btn-primary btn-small" onclick="downloadRecording('${rec.assetId}')" title="Download">⬇️</button>
+                        <button class="btn btn-danger btn-small" onclick="openDelete('${rec.assetId}')" title="Delete">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function getStageClass(stageName) {
+    if (!stageName) return '';
+    const name = stageName.toLowerCase().replace(/\s+/g, '-');
+    if (name.includes('main')) return 'main-stage';
+    if (name.includes('yarn')) return 'yabun-yarns';
+    if (name.includes('corrob')) return 'corroboree';
+    if (name.includes('speak')) return 'speak-out';
+    if (name.includes('old') || name.includes('test')) return 'old-test';
+    return '';
+}
+
+function getTagLabel(tag) {
+    const labels = {
+        'keep': '🟢 Keep',
+        'review': '🟡 Review',
+        'archive': '📦'
+    };
+    return labels[tag] || tag;
+}
+
+function formatDate(timestamp) {
+    if (!timestamp) return '--';
+    const date = new Date(parseInt(timestamp) * 1000);
+    return date.toLocaleString('en-AU', {
+        timeZone: 'Australia/Sydney',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function updateStats() {
+    const totalCount = recordings.filter(r => r.tag !== 'archive').length;
+    const totalDuration = recordings.filter(r => r.tag !== 'archive').reduce((sum, r) => sum + (r.duration || 0), 0);
+    const mainStageCount = recordings.filter(r => r.stageName?.includes('Main') && r.tag !== 'archive').length;
+    const otherCount = totalCount - mainStageCount;
+    
+    document.getElementById('statTotal').textContent = totalCount;
+    document.getElementById('statDuration').textContent = formatDurationLong(totalDuration);
+    document.getElementById('statMainStage').textContent = mainStageCount;
+    document.getElementById('statOther').textContent = otherCount;
+}
+
+function formatDurationLong(seconds) {
+    if (!seconds) return '0m';
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.round((seconds % 3600) / 60);
+    if (hours > 0) {
+        return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+}
+
+function showLoading(show) {
+    document.getElementById('loadingState').style.display = show ? 'block' : 'none';
+    document.getElementById('recordingsGrid').style.display = show ? 'none' : (currentView === 'grid' ? 'grid' : 'none');
+    document.getElementById('recordingsList').style.display = show ? 'none' : (currentView === 'list' ? 'block' : 'none');
+}
+
+function showEmpty() {
+    document.getElementById('recordingsGrid').innerHTML = '';
+    document.getElementById('recordingsTableBody').innerHTML = '';
+    document.getElementById('emptyState').style.display = 'block';
+}
+
+// ============================================
+// SELECTION
+// ============================================
+
+function toggleSelect(assetId) {
+    if (selectedRecordings.has(assetId)) {
+        selectedRecordings.delete(assetId);
+    } else {
+        selectedRecordings.add(assetId);
+    }
+    
+    // Update grid card visual
+    const card = document.querySelector(`.recording-card[data-asset-id="${assetId}"]`);
+    if (card) {
+        card.classList.toggle('selected', selectedRecordings.has(assetId));
+        const checkbox = card.querySelector('.select-checkbox');
+        if (checkbox) checkbox.checked = selectedRecordings.has(assetId);
+    }
+    
+    // Update list row visual
+    const row = document.querySelector(`tr[data-asset-id="${assetId}"]`);
+    if (row) {
+        row.classList.toggle('selected', selectedRecordings.has(assetId));
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = selectedRecordings.has(assetId);
+    }
+    
+    updateBulkButtons();
+    updateSelectAllCheckbox();
+}
+
+function toggleSelectAll() {
+    // If all are currently selected, deselect all. Otherwise select all.
+    const allCurrentlySelected = filteredRecordings.length > 0 && 
+        filteredRecordings.every(rec => selectedRecordings.has(rec.assetId));
+    
+    if (allCurrentlySelected) {
+        // Deselect all
+        selectedRecordings.clear();
+    } else {
+        // Select all
+        filteredRecordings.forEach(rec => selectedRecordings.add(rec.assetId));
+    }
+    
+    renderRecordings();
+    updateBulkButtons();
+    updateSelectAllCheckbox();
+}
+
+function updateSelectAllCheckbox() {
+    const selectAllGrid = document.getElementById('selectAll');
+    const selectAllList = document.getElementById('selectAllList');
+    const allSelected = filteredRecordings.length > 0 && 
+        filteredRecordings.every(rec => selectedRecordings.has(rec.assetId));
+    
+    if (selectAllGrid) selectAllGrid.checked = allSelected;
+    if (selectAllList) selectAllList.checked = allSelected;
+}
+
+function updateBulkButtons() {
+    const hasSelection = selectedRecordings.size > 0;
+    const count = selectedRecordings.size;
+    
+    document.getElementById('bulkDeleteBtn').disabled = !hasSelection;
+    document.getElementById('bulkDownloadBtn').disabled = !hasSelection;
+    document.getElementById('batchRenameBtn').disabled = !hasSelection;
+    document.getElementById('batchTagBtn').disabled = !hasSelection;
+    
+    const countDisplay = document.getElementById('selectionCount');
+    if (countDisplay) {
+        countDisplay.textContent = hasSelection ? `${count} selected` : '';
+    }
+    
+    document.getElementById('bulkDeleteBtn').textContent = 
+        hasSelection ? `🗑 Delete (${count})` : '🗑 Delete';
+    document.getElementById('bulkDownloadBtn').textContent = 
+        hasSelection ? `⬇ Download (${count})` : '⬇ Download';
+}
+
+// ============================================
+// PREVIEW MODAL
+// ============================================
+
+function openPreview(assetId) {
+    const rec = recordings.find(r => r.assetId === assetId);
+    if (!rec || !rec.playbackId) {
+        alert('Cannot preview - no playback ID available');
+        return;
+    }
+    
+    currentPreviewAsset = rec;
+    previewModalOpen = true;
+    clipInPoint = null;
+    clipOutPoint = null;
+    
+    // Update modal info
+    document.getElementById('previewTitle').textContent = rec.title || 'Preview';
+    document.getElementById('previewStage').textContent = rec.stageName || '--';
+    document.getElementById('previewDate').textContent = rec.createdFormatted || '--';
+    document.getElementById('previewDuration').textContent = rec.durationStr || '--';
+    document.getElementById('previewAssetId').textContent = rec.assetId;
+    document.getElementById('previewEditTitle').value = rec.title || '';
+    document.getElementById('previewNotes').value = rec.notes || '';
+    document.getElementById('previewTag').value = rec.tag || '';
+    
+    // Technical info
+    document.getElementById('techPlaybackId').textContent = rec.playbackId || '--';
+    document.getElementById('techStreamId').textContent = rec.liveStreamId || '--';
+    
+    // Setup video player
+    const video = document.getElementById('previewVideo');
+    const streamUrl = `https://stream.mux.com/${rec.playbackId}.m3u8`;
+    
+    if (Hls.isSupported()) {
+        if (hlsPlayer) {
+            hlsPlayer.destroy();
+        }
+        hlsPlayer = new Hls();
+        hlsPlayer.loadSource(streamUrl);
+        hlsPlayer.attachMedia(video);
+        
+        hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
+            // Get technical info from HLS
+            const levels = hlsPlayer.levels;
+            if (levels && levels.length > 0) {
+                const best = levels[levels.length - 1];
+                document.getElementById('techResolution').textContent = `${best.width}x${best.height}`;
+                document.getElementById('techAspect').textContent = (best.width / best.height).toFixed(2) + ':1';
+                document.getElementById('techBitrate').textContent = Math.round(best.bitrate / 1000) + ' kbps';
+                document.getElementById('techVideoCodec').textContent = best.videoCodec || 'H.264';
+                document.getElementById('techAudioCodec').textContent = best.audioCodec || 'AAC';
+                document.getElementById('techFrameRate').textContent = (best.frameRate || 25) + ' fps';
+            }
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+    }
+    
+    // Setup scrubber
+    setupThumbnailScrubber(rec);
+    
+    // Load chapters
+    loadChapters(rec.assetId);
+    
+    // Reset tabs
+    switchClipTab('info');
+    
+    // Clear in/out points display
+    updateInOutDisplay();
+    
+    document.getElementById('previewModal').classList.add('show');
+}
+
+function closePreview() {
+    document.getElementById('previewModal').classList.remove('show');
+    previewModalOpen = false;
+    
+    const video = document.getElementById('previewVideo');
+    video.pause();
+    
+    if (hlsPlayer) {
+        hlsPlayer.destroy();
+        hlsPlayer = null;
+    }
+    
+    currentPreviewAsset = null;
+}
+
+function setPlaybackSpeed() {
+    const speed = document.getElementById('playbackSpeed').value;
+    document.getElementById('previewVideo').playbackRate = parseFloat(speed);
+}
+
+function switchClipTab(tabName) {
+    document.querySelectorAll('.clip-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.clip-tab-content').forEach(c => c.classList.remove('active'));
+    
+    document.querySelector(`.clip-tab[data-tab="${tabName}"]`).classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+}
+
+// ============================================
+// THUMBNAIL SCRUBBER
+// ============================================
+
+function setupThumbnailScrubber(rec) {
+    const track = document.getElementById('scrubberTrack');
+    const preview = document.getElementById('scrubberPreview');
+    const thumb = document.getElementById('scrubberThumb');
+    const time = document.getElementById('scrubberTime');
+    const handle = document.getElementById('scrubberHandle');
+    const video = document.getElementById('previewVideo');
+    
+    // Generate storyboard thumbnails (Mux provides these)
+    const baseUrl = `https://image.mux.com/${rec.playbackId}/thumbnail.jpg`;
+    
+    track.onmousemove = (e) => {
+        const rect = track.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const seekTime = percent * rec.duration;
+        
+        // Update preview position
+        preview.style.left = `${e.clientX - rect.left}px`;
+        preview.style.display = 'block';
+        
+        // Load thumbnail for this time
+        thumb.src = `${baseUrl}?time=${Math.floor(seekTime)}&width=320`;
+        time.textContent = formatTime(seekTime);
+    };
+    
+    track.onmouseleave = () => {
+        preview.style.display = 'none';
+    };
+    
+    track.onclick = (e) => {
+        const rect = track.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        video.currentTime = percent * rec.duration;
+    };
+    
+    // Update handle position on video timeupdate
+    video.ontimeupdate = () => {
+        const percent = video.currentTime / video.duration;
+        handle.style.left = `${percent * 100}%`;
+    };
+}
+
+// ============================================
+// IN/OUT POINTS
+// ============================================
+
+function setInPoint() {
+    const video = document.getElementById('previewVideo');
+    clipInPoint = video.currentTime;
+    
+    const marker = document.getElementById('inPointMarker');
+    marker.style.display = 'block';
+    marker.style.left = `${(clipInPoint / video.duration) * 100}%`;
+    
+    document.getElementById('inPointTime').value = formatTime(clipInPoint);
+    updateInOutDisplay();
+    updateTrimButton();
+}
+
+function setOutPoint() {
+    const video = document.getElementById('previewVideo');
+    clipOutPoint = video.currentTime;
+    
+    const marker = document.getElementById('outPointMarker');
+    marker.style.display = 'block';
+    marker.style.left = `${(clipOutPoint / video.duration) * 100}%`;
+    
+    document.getElementById('outPointTime').value = formatTime(clipOutPoint);
+    updateInOutDisplay();
+    updateTrimButton();
+}
+
+function clearInOut() {
+    clipInPoint = null;
+    clipOutPoint = null;
+    
+    document.getElementById('inPointMarker').style.display = 'none';
+    document.getElementById('outPointMarker').style.display = 'none';
+    document.getElementById('inPointTime').value = '';
+    document.getElementById('outPointTime').value = '';
+    
+    updateInOutDisplay();
+    updateTrimButton();
+}
+
+function goToInPoint() {
+    if (clipInPoint !== null) {
+        document.getElementById('previewVideo').currentTime = clipInPoint;
+    }
+}
+
+function goToOutPoint() {
+    if (clipOutPoint !== null) {
+        document.getElementById('previewVideo').currentTime = clipOutPoint;
+    }
+}
+
+function updateInOutDisplay() {
+    const display = document.getElementById('inOutDisplay');
+    const trimDuration = document.getElementById('trimDuration');
+    
+    if (clipInPoint !== null && clipOutPoint !== null) {
+        const duration = clipOutPoint - clipInPoint;
+        display.textContent = `${formatTime(clipInPoint)} → ${formatTime(clipOutPoint)} (${formatTime(Math.abs(duration))})`;
+        trimDuration.textContent = formatTime(Math.abs(duration));
+    } else if (clipInPoint !== null) {
+        display.textContent = `In: ${formatTime(clipInPoint)}`;
+        trimDuration.textContent = '--';
+    } else if (clipOutPoint !== null) {
+        display.textContent = `Out: ${formatTime(clipOutPoint)}`;
+        trimDuration.textContent = '--';
+    } else {
+        display.textContent = '--';
+        trimDuration.textContent = '--';
+    }
+}
+
+function updateTrimButton() {
+    const btn = document.getElementById('trimBtn');
+    btn.disabled = !(clipInPoint !== null && clipOutPoint !== null && clipInPoint < clipOutPoint);
+}
+
+async function createTrimmedClip() {
+    if (!currentPreviewAsset || clipInPoint === null || clipOutPoint === null) return;
+    
+    const duration = clipOutPoint - clipInPoint;
+    const cost = (duration / 60 * 0.015).toFixed(2);
+    
+    alert(`Trim: ${formatTime(clipInPoint)} → ${formatTime(clipOutPoint)} (${formatTime(duration)})\n\nMux Clip Creation Pricing:\n• $0.015 per minute of output\n• This clip would cost ~${cost}\n\nTo enable: Contact Scott to enable Mux Video Editing API.`);
+}
+
+// ============================================
+// CUSTOM THUMBNAIL
+// ============================================
+
+function setCustomThumbnail() {
+    if (!currentPreviewAsset) return;
+    
+    const video = document.getElementById('previewVideo');
+    const time = Math.floor(video.currentTime);
+    
+    // Mux generates thumbnails on-the-fly via URL parameters
+    // We can't permanently change the default, but we can copy a custom thumbnail URL
+    const thumbnailUrl = `https://image.mux.com/${currentPreviewAsset.playbackId}/thumbnail.jpg?time=${time}&width=1280`;
+    
+    navigator.clipboard.writeText(thumbnailUrl).then(() => {
+        alert(`Custom thumbnail URL copied!\n\nTime: ${formatTime(time)}\n\nUse this URL wherever you need this frame as a thumbnail.`);
+    }).catch(() => {
+        // Fallback - show URL in prompt
+        prompt('Custom thumbnail URL (copy this):', thumbnailUrl);
+    });
+}
+
+// ============================================
+// CHAPTERS
+// ============================================
+
+function loadChapters(assetId) {
+    const chapters = clipChapters[assetId] || [];
+    renderChapters(chapters);
+}
+
+function renderChapters(chapters) {
+    const list = document.getElementById('chaptersList');
+    const markers = document.getElementById('chapterMarkers');
+    const video = document.getElementById('previewVideo');
+    
+    if (chapters.length === 0) {
+        list.innerHTML = '<p class="empty-hint">No chapters yet. Click "Add Chapter" while playing to mark a moment.</p>';
+        markers.innerHTML = '';
+        return;
+    }
+    
+    list.innerHTML = chapters.map((ch, i) => `
+        <div class="chapter-item">
+            <span class="chapter-time" onclick="seekToChapter(${ch.time})">${formatTime(ch.time)}</span>
+            <span class="chapter-name">
+                <input type="text" value="${ch.name}" onchange="updateChapterName(${i}, this.value)">
+            </span>
+            <button class="btn btn-small btn-danger" onclick="deleteChapter(${i})">✕</button>
+        </div>
+    `).join('');
+    
+    // Render markers on timeline
+    if (currentPreviewAsset) {
+        markers.innerHTML = chapters.map(ch => {
+            const percent = (ch.time / currentPreviewAsset.duration) * 100;
+            return `<div class="chapter-marker" style="left: ${percent}%"></div>`;
+        }).join('');
+    }
+}
+
+function addChapterAtCurrentTime() {
+    if (!currentPreviewAsset) return;
+    
+    const video = document.getElementById('previewVideo');
+    const time = video.currentTime;
+    const name = prompt('Chapter name:', `Chapter ${(clipChapters[currentPreviewAsset.assetId]?.length || 0) + 1}`);
+    
+    if (!name) return;
+    
+    if (!clipChapters[currentPreviewAsset.assetId]) {
+        clipChapters[currentPreviewAsset.assetId] = [];
+    }
+    
+    clipChapters[currentPreviewAsset.assetId].push({ time, name });
+    clipChapters[currentPreviewAsset.assetId].sort((a, b) => a.time - b.time);
+    
+    renderChapters(clipChapters[currentPreviewAsset.assetId]);
+    saveChapters();
+}
+
+function seekToChapter(time) {
+    document.getElementById('previewVideo').currentTime = time;
+}
+
+function updateChapterName(index, name) {
+    if (!currentPreviewAsset) return;
+    clipChapters[currentPreviewAsset.assetId][index].name = name;
+    saveChapters();
+}
+
+function deleteChapter(index) {
+    if (!currentPreviewAsset) return;
+    clipChapters[currentPreviewAsset.assetId].splice(index, 1);
+    renderChapters(clipChapters[currentPreviewAsset.assetId]);
+    saveChapters();
+}
+
+async function saveChapters() {
+    // Save to local storage for now (could be saved to backend)
+    localStorage.setItem('clipChapters', JSON.stringify(clipChapters));
+}
+
+// Load chapters from localStorage on init
+try {
+    const saved = localStorage.getItem('clipChapters');
+    if (saved) clipChapters = JSON.parse(saved);
+} catch (e) {}
+
+// ============================================
+// COPY URL / EMBED / SHARE
+// ============================================
+
+function copyPlaybackUrl() {
+    if (!currentPreviewAsset) return;
+    
+    const url = `https://stream.mux.com/${currentPreviewAsset.playbackId}.m3u8`;
+    navigator.clipboard.writeText(url);
+    alert('HLS URL copied to clipboard!');
+}
+
+function openEmbedCode() {
+    if (!currentPreviewAsset) return;
+    updateEmbedCode();
+    document.getElementById('embedModal').classList.add('show');
+}
+
+function closeEmbed() {
+    document.getElementById('embedModal').classList.remove('show');
+}
+
+function updateEmbedCode() {
+    if (!currentPreviewAsset) return;
+    
+    const size = document.getElementById('embedSize').value;
+    const playbackId = currentPreviewAsset.playbackId;
+    
+    let code;
+    if (size === 'responsive') {
+        code = `<div style="position: relative; padding-top: 56.25%;">
+  <iframe src="https://stream.mux.com/${playbackId}.m3u8" 
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+    frameborder="0" allowfullscreen>
+  </iframe>
+</div>`;
+    } else {
+        const [w, h] = size.split('x');
+        code = `<iframe src="https://stream.mux.com/${playbackId}.m3u8" 
+  width="${w}" height="${h}" 
+  frameborder="0" allowfullscreen>
+</iframe>`;
+    }
+    
+    document.getElementById('embedCode').value = code;
+}
+
+function copyEmbedCode() {
+    const code = document.getElementById('embedCode').value;
+    navigator.clipboard.writeText(code);
+    alert('Embed code copied!');
+    closeEmbed();
+}
+
+function openShareLink() {
+    if (!currentPreviewAsset) return;
+    
+    // Generate share URL (uses Mux's public playback)
+    const url = `https://stream.mux.com/${currentPreviewAsset.playbackId}.m3u8`;
+    document.getElementById('shareUrl').value = url;
+    document.getElementById('shareModal').classList.add('show');
+}
+
+function closeShare() {
+    document.getElementById('shareModal').classList.remove('show');
+}
+
+function copyShareLink() {
+    const url = document.getElementById('shareUrl').value;
+    navigator.clipboard.writeText(url);
+    alert('Share link copied!');
+    closeShare();
+}
+
+// ============================================
+// UPDATE CLIP (from preview modal)
+// ============================================
+
+async function updateClipTitle() {
+    if (!currentPreviewAsset) return;
+    const title = document.getElementById('previewEditTitle').value.trim();
+    await updateRecording(currentPreviewAsset.assetId, { title });
+}
+
+async function updateClipNotes() {
+    if (!currentPreviewAsset) return;
+    const notes = document.getElementById('previewNotes').value.trim();
+    await updateRecording(currentPreviewAsset.assetId, { notes });
+}
+
+async function updateClipTag() {
+    if (!currentPreviewAsset) return;
+    const tag = document.getElementById('previewTag').value;
+    await updateRecording(currentPreviewAsset.assetId, { tag });
+}
+
+async function updateRecording(assetId, updates) {
+    try {
+        const response = await fetch('/api/recordings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'update',
+                assetId,
+                ...updates
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update local data
+            const rec = recordings.find(r => r.assetId === assetId);
+            if (rec) {
+                Object.assign(rec, updates);
+            }
+            renderRecordings();
+        }
+    } catch (error) {
+        console.error('Error updating recording:', error);
+    }
+}
+
+// ============================================
+// DOWNLOAD
+// ============================================
+
+async function downloadRecording(assetId) {
+    const modal = document.getElementById('downloadModal');
+    const status = document.getElementById('downloadStatus');
+    const progress = document.getElementById('downloadProgress');
+    
+    modal.classList.add('show');
+    status.textContent = 'Requesting download URL from Mux...';
+    progress.style.width = '30%';
+    
+    try {
+        const response = await fetch(`/api/recordings?action=download&assetId=${assetId}`);
+        const data = await response.json();
+        
+        if (data.success && data.downloadUrl) {
+            status.textContent = 'Opening download...';
+            progress.style.width = '100%';
+            
+            window.open(data.downloadUrl, '_blank');
+            
+            setTimeout(() => {
+                modal.classList.remove('show');
+            }, 1500);
+        } else {
+            throw new Error(data.error || 'Failed to get download URL');
+        }
+    } catch (error) {
+        console.error('Download error:', error);
+        status.textContent = 'Error: ' + error.message;
+        progress.style.width = '0%';
+        
+        setTimeout(() => {
+            modal.classList.remove('show');
+        }, 3000);
+    }
+}
+
+function downloadFromPreview() {
+    if (currentPreviewAsset) {
+        downloadRecording(currentPreviewAsset.assetId);
+    }
+}
+
+async function bulkDownload() {
+    if (selectedRecordings.size === 0) return;
+    
+    const assetIds = Array.from(selectedRecordings);
+    
+    for (let i = 0; i < assetIds.length; i++) {
+        await downloadRecording(assetIds[i]);
+        if (i < assetIds.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+    }
+}
+
+// ============================================
+// BATCH RENAME
+// ============================================
+
+function openBatchRename() {
+    if (selectedRecordings.size === 0) return;
+    
+    document.getElementById('batchRenameCount').textContent = selectedRecordings.size;
+    document.getElementById('renamePattern').value = '{stage} - Session {n}';
+    updateRenamePreview();
+    document.getElementById('batchRenameModal').classList.add('show');
+}
+
+function closeBatchRename() {
+    document.getElementById('batchRenameModal').classList.remove('show');
+}
+
+function updateRenamePreview() {
+    const pattern = document.getElementById('renamePattern').value;
+    const preview = document.getElementById('renamePreview');
+    
+    const selectedRecs = recordings.filter(r => selectedRecordings.has(r.assetId));
+    
+    preview.innerHTML = selectedRecs.slice(0, 5).map((rec, i) => {
+        const name = pattern
+            .replace('{n}', String(i + 1).padStart(3, '0'))
+            .replace('{stage}', rec.stageName || 'Unknown')
+            .replace('{date}', rec.createdFormatted?.split(',')[0] || '');
+        return `<div>${name}</div>`;
+    }).join('') + (selectedRecs.length > 5 ? `<div>... and ${selectedRecs.length - 5} more</div>` : '');
+}
+
+async function applyBatchRename() {
+    const pattern = document.getElementById('renamePattern').value;
+    const selectedRecs = recordings.filter(r => selectedRecordings.has(r.assetId));
+    
+    for (let i = 0; i < selectedRecs.length; i++) {
+        const rec = selectedRecs[i];
+        const title = pattern
+            .replace('{n}', String(i + 1).padStart(3, '0'))
+            .replace('{stage}', rec.stageName || 'Unknown')
+            .replace('{date}', rec.createdFormatted?.split(',')[0] || '');
+        
+        await updateRecording(rec.assetId, { title });
+    }
+    
+    closeBatchRename();
+    renderRecordings();
+    alert(`Renamed ${selectedRecs.length} clips`);
+}
+
+// ============================================
+// BATCH TAG
+// ============================================
+
+function openBatchTag() {
+    if (selectedRecordings.size === 0) return;
+    
+    document.getElementById('batchTagCount').textContent = selectedRecordings.size;
+    document.getElementById('batchTagModal').classList.add('show');
+}
+
+function closeBatchTag() {
+    document.getElementById('batchTagModal').classList.remove('show');
+}
+
+async function applyBatchTag(tag) {
+    const selectedRecs = recordings.filter(r => selectedRecordings.has(r.assetId));
+    
+    for (const rec of selectedRecs) {
+        await updateRecording(rec.assetId, { tag });
+    }
+    
+    closeBatchTag();
+    applyFiltersAndSort();
+    alert(`Tagged ${selectedRecs.length} clips as ${tag || 'untagged'}`);
+}
+
+// ============================================
+// EDIT MODAL
+// ============================================
+
+function openEdit(assetId) {
+    const rec = recordings.find(r => r.assetId === assetId);
+    if (!rec) return;
+    
+    currentEditAsset = rec;
+    
+    document.getElementById('editTitle').value = rec.title || '';
+    document.getElementById('editExternalId').value = rec.externalId || '';
+    document.getElementById('editNotes').value = rec.notes || '';
+    
+    document.getElementById('editModal').classList.add('show');
+}
+
+function closeEdit() {
+    document.getElementById('editModal').classList.remove('show');
+    currentEditAsset = null;
+}
+
+async function saveEdit() {
+    if (!currentEditAsset) return;
+    
+    const title = document.getElementById('editTitle').value.trim();
+    const externalId = document.getElementById('editExternalId').value.trim();
+    const notes = document.getElementById('editNotes').value.trim();
+    
+    try {
+        const response = await fetch('/api/recordings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'update',
+                assetId: currentEditAsset.assetId,
+                title,
+                externalId,
+                notes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const rec = recordings.find(r => r.assetId === currentEditAsset.assetId);
+            if (rec) {
+                rec.title = title;
+                rec.externalId = externalId;
+                rec.notes = notes;
+            }
+            
+            closeEdit();
+            renderRecordings();
+        } else {
+            throw new Error(data.error || 'Failed to save');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('Failed to save: ' + error.message);
+    }
+}
+
+// ============================================
+// DELETE
+// ============================================
+
+function openDelete(assetId) {
+    const rec = recordings.find(r => r.assetId === assetId);
+    if (!rec) return;
+    
+    currentDeleteAsset = rec;
+    document.getElementById('deleteTitle').textContent = rec.title || rec.assetId;
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDelete() {
+    document.getElementById('deleteModal').classList.remove('show');
+    currentDeleteAsset = null;
+}
+
+async function confirmDelete() {
+    if (!currentDeleteAsset) return;
+    
+    try {
+        const response = await fetch('/api/recordings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'delete',
+                assetId: currentDeleteAsset.assetId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            recordings = recordings.filter(r => r.assetId !== currentDeleteAsset.assetId);
+            selectedRecordings.delete(currentDeleteAsset.assetId);
+            
+            closeDelete();
+            applyFiltersAndSort();
+            updateStats();
+        } else {
+            throw new Error(data.error || 'Failed to delete');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        alert('Failed to delete: ' + error.message);
+    }
+}
+
+async function bulkDelete() {
+    if (selectedRecordings.size === 0) return;
+    
+    const count = selectedRecordings.size;
+    if (!confirm(`Are you sure you want to delete ${count} recording(s)? This cannot be undone.`)) {
+        return;
+    }
+    
+    const assetIds = Array.from(selectedRecordings);
+    let deleted = 0;
+    let failed = 0;
+    
+    for (const assetId of assetIds) {
+        try {
+            const response = await fetch('/api/recordings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'delete',
+                    assetId
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                recordings = recordings.filter(r => r.assetId !== assetId);
+                selectedRecordings.delete(assetId);
+                deleted++;
+            } else {
+                failed++;
+            }
+        } catch (error) {
+            failed++;
+        }
+    }
+    
+    applyFiltersAndSort();
+    updateStats();
+    
+    if (failed > 0) {
+        alert(`Deleted ${deleted} recording(s). ${failed} failed.`);
+    }
+}
+
+// ============================================
+// EXPORT
+// ============================================
+
+function exportCSV() {
+    const data = filteredRecordings.map(rec => ({
+        'Title': rec.title || '',
+        'Stage': rec.stageName || '',
+        'Date': rec.createdFormatted || '',
+        'Duration': rec.durationStr || '',
+        'Duration (seconds)': rec.duration || 0,
+        'Tag': rec.tag || '',
+        'Notes': rec.notes || '',
+        'Asset ID': rec.assetId || '',
+        'Playback ID': rec.playbackId || '',
+        'External ID': rec.externalId || '',
+        'Status': rec.status || ''
+    }));
+    
+    if (data.length === 0) {
+        alert('No recordings to export');
+        return;
+    }
+    
+    const headers = Object.keys(data[0]);
+    const rows = [
+        headers.join(','),
+        ...data.map(row => headers.map(h => `"${(row[h] || '').toString().replace(/"/g, '""')}"`).join(','))
+    ];
+    
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `yabun-recordings-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+}
+
+function exportFinalCutXML() {
+    const data = filteredRecordings;
+    
+    if (data.length === 0) {
+        alert('No recordings to export');
+        return;
+    }
+    
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.9">
+    <resources>
+`;
+    
+    data.forEach((rec, i) => {
+        const duration = Math.round((rec.duration || 0) * 1000);
+        xml += `        <asset id="r${i+1}" name="${escapeXml(rec.title || rec.assetId)}" duration="${duration}/1000s" hasVideo="1" hasAudio="1">
+            <media-rep kind="original-media" src="https://stream.mux.com/${rec.playbackId}.m3u8"/>
+        </asset>
+`;
+    });
+    
+    xml += `    </resources>
+    <library>
+        <event name="Yabun 2025 Recordings">
+`;
+    
+    data.forEach((rec, i) => {
+        xml += `            <clip name="${escapeXml(rec.title || rec.assetId)}" ref="r${i+1}"/>
+`;
+    });
+    
+    xml += `        </event>
+    </library>
+</fcpxml>`;
+    
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `yabun-recordings-${new Date().toISOString().split('T')[0]}.fcpxml`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+}
+
+function escapeXml(str) {
+    return str.replace(/[<>&'"]/g, c => ({
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        "'": '&apos;',
+        '"': '&quot;'
+    }[c]));
+}

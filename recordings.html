@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recordings Manager | Yabun 2025</title>
+    <link rel="stylesheet" href="css/recordings.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <h1>🎬 Recordings Manager</h1>
+            <p>Enter producer password to access</p>
+            <input type="password" id="loginPassword" placeholder="Password" autofocus>
+            <button onclick="checkLogin()">Enter</button>
+            <p id="loginError" class="error-text">Incorrect password</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="main-app" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1>🎬 Recordings Manager</h1>
+                <span class="subtitle">Yabun Festival 2025</span>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" onclick="refreshRecordings()">🔄 Refresh</button>
+                <button class="btn btn-secondary" onclick="exportCSV()">📊 Export CSV</button>
+                <button class="btn btn-secondary" onclick="exportFinalCutXML()">🎬 FinalCut XML</button>
+                <a href="/" class="btn btn-secondary">← Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value" id="statTotal">--</span>
+                <span class="stat-label">Recordings</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="statDuration">--</span>
+                <span class="stat-label">Total Duration</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="statMainStage">--</span>
+                <span class="stat-label">Main Stage</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="statOther">--</span>
+                <span class="stat-label">Other</span>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input type="text" id="searchInput" placeholder="🔍 Search recordings..." oninput="filterRecordings()">
+                <select id="stageFilter" onchange="filterRecordings()">
+                    <option value="">All Stages</option>
+                    <option value="Main Stage">Main Stage</option>
+                    <option value="Yabun Yarns">Yabun Yarns</option>
+                    <option value="Corroboree">Corroboree</option>
+                    <option value="Speak Out">Speak Out</option>
+                    <option value="Old Test Stream">Old Test Stream</option>
+                </select>
+                <select id="durationFilter" onchange="filterRecordings()">
+                    <option value="">Any Duration</option>
+                    <option value="1">Over 1 min</option>
+                    <option value="5">Over 5 mins</option>
+                    <option value="10">Over 10 mins</option>
+                    <option value="30">Over 30 mins</option>
+                    <option value="short">Under 2 mins (tests)</option>
+                </select>
+                <select id="tagFilter" onchange="filterRecordings()">
+                    <option value="">All Tags</option>
+                    <option value="keep">🟢 Keep</option>
+                    <option value="review">🟡 Review</option>
+                    <option value="archive">📦 Archived</option>
+                    <option value="none">No Tag</option>
+                </select>
+                <select id="sortBy" onchange="sortRecordings()">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="duration-desc">Longest First</option>
+                    <option value="duration-asc">Shortest First</option>
+                    <option value="stage">By Stage</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid View">▦</button>
+                    <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List View">☰</button>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <span class="last-refresh" id="lastRefresh">--</span>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    Select All
+                </label>
+                <span class="selection-count" id="selectionCount"></span>
+                <button class="btn btn-warning btn-small" id="selectShortBtn" onclick="selectShortClips()" title="Select clips under 2 mins">⚡ Short</button>
+                <button class="btn btn-secondary" id="batchRenameBtn" onclick="openBatchRename()" disabled>✏️ Rename</button>
+                <button class="btn btn-secondary" id="batchTagBtn" onclick="openBatchTag()" disabled>🏷️ Tag</button>
+                <button class="btn btn-danger" id="bulkDeleteBtn" onclick="bulkDelete()" disabled>🗑 Delete</button>
+                <button class="btn btn-primary" id="bulkDownloadBtn" onclick="bulkDownload()" disabled>⬇ Download</button>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts Hint -->
+        <div class="shortcuts-hint" id="shortcutsHint">
+            <span>⌨️ Shortcuts:</span>
+            <kbd>A</kbd> Select All
+            <kbd>D</kbd> Download
+            <kbd>Delete</kbd> Delete
+            <kbd>R</kbd> Refresh
+            <kbd>?</kbd> Help
+        </div>
+
+        <!-- Recordings Grid View -->
+        <div id="recordingsGrid" class="recordings-grid">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Recordings List View -->
+        <div id="recordingsList" class="recordings-list" style="display: none;">
+            <table class="recordings-table">
+                <thead>
+                    <tr>
+                        <th class="col-checkbox"><input type="checkbox" id="selectAllList" onchange="toggleSelectAll()"></th>
+                        <th class="col-thumb">Preview</th>
+                        <th class="col-title">Title</th>
+                        <th class="col-stage">Stage</th>
+                        <th class="col-date">Date</th>
+                        <th class="col-duration">Duration</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="recordingsTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading recordings...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <p>📹 No recordings found</p>
+            <button class="btn btn-primary" onclick="refreshRecordings()">Refresh from Mux</button>
+        </div>
+    </div>
+
+    <!-- Preview Modal - Full Clip Editor -->
+    <div id="previewModal" class="modal">
+        <div class="modal-overlay" onclick="closePreview()"></div>
+        <div class="modal-content modal-fullscreen">
+            <div class="modal-header">
+                <h2 id="previewTitle">Preview</h2>
+                <div class="modal-header-actions">
+                    <button class="btn btn-secondary btn-small" onclick="copyPlaybackUrl()" title="Copy HLS URL">🔗 Copy URL</button>
+                    <button class="btn btn-secondary btn-small" onclick="openEmbedCode()" title="Get Embed Code">&lt;/&gt; Embed</button>
+                    <button class="btn btn-secondary btn-small" onclick="openShareLink()" title="Create Share Link">🔗 Share</button>
+                </div>
+                <button class="btn-close" onclick="closePreview()">✕</button>
+            </div>
+            <div class="modal-body clip-editor">
+                <!-- Video Player Section -->
+                <div class="player-section">
+                    <div class="video-container">
+                        <video id="previewVideo" controls></video>
+                        <!-- Playback Speed -->
+                        <div class="playback-controls">
+                            <label>Speed:</label>
+                            <select id="playbackSpeed" onchange="setPlaybackSpeed()">
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2x</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Thumbnail Scrubber -->
+                    <div class="thumbnail-scrubber" id="thumbnailScrubber">
+                        <div class="scrubber-track" id="scrubberTrack">
+                            <div class="scrubber-preview" id="scrubberPreview">
+                                <img id="scrubberThumb" src="" alt="">
+                                <span id="scrubberTime">0:00</span>
+                            </div>
+                            <div class="scrubber-handle" id="scrubberHandle"></div>
+                            <!-- In/Out Points -->
+                            <div class="in-point" id="inPointMarker" style="display:none;"></div>
+                            <div class="out-point" id="outPointMarker" style="display:none;"></div>
+                            <!-- Chapter Markers -->
+                            <div class="chapter-markers" id="chapterMarkers"></div>
+                        </div>
+                        <div class="scrubber-actions">
+                            <button class="btn btn-small" onclick="setInPoint()" title="Set In Point">[</button>
+                            <button class="btn btn-small" onclick="setOutPoint()" title="Set Out Point">]</button>
+                            <button class="btn btn-small" onclick="clearInOut()" title="Clear In/Out">Clear</button>
+                            <span class="in-out-display" id="inOutDisplay">--</span>
+                            <button class="btn btn-small btn-primary" onclick="setCustomThumbnail()" title="Set current frame as thumbnail">🖼️ Set Thumbnail</button>
+                        </div>
+                    </div>
+
+                    <!-- Audio Waveform -->
+                    <div class="audio-waveform" id="audioWaveform">
+                        <canvas id="waveformCanvas"></canvas>
+                        <div class="waveform-loading" id="waveformLoading">Loading waveform...</div>
+                    </div>
+                </div>
+
+                <!-- Info & Edit Section -->
+                <div class="info-section">
+                    <!-- Tabs -->
+                    <div class="clip-tabs">
+                        <button class="clip-tab active" data-tab="info" onclick="switchClipTab('info')">📊 Info</button>
+                        <button class="clip-tab" data-tab="chapters" onclick="switchClipTab('chapters')">📍 Chapters</button>
+                        <button class="clip-tab" data-tab="trim" onclick="switchClipTab('trim')">✂️ Trim</button>
+                        <button class="clip-tab" data-tab="technical" onclick="switchClipTab('technical')">⚙️ Technical</button>
+                    </div>
+
+                    <!-- Info Tab -->
+                    <div class="clip-tab-content active" id="tab-info">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Stage</label>
+                                <span id="previewStage">--</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Recorded</label>
+                                <span id="previewDate">--</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Duration</label>
+                                <span id="previewDuration">--</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Tag</label>
+                                <select id="previewTag" onchange="updateClipTag()">
+                                    <option value="">No Tag</option>
+                                    <option value="keep">🟢 Keep</option>
+                                    <option value="review">🟡 Review</option>
+                                    <option value="archive">📦 Archive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="previewEditTitle" class="input-field" onchange="updateClipTitle()">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="previewNotes" class="input-field" rows="3" placeholder="Add notes..." onchange="updateClipNotes()"></textarea>
+                        </div>
+                        <div class="info-item">
+                            <label>Asset ID</label>
+                            <code id="previewAssetId">--</code>
+                        </div>
+                    </div>
+
+                    <!-- Chapters Tab -->
+                    <div class="clip-tab-content" id="tab-chapters">
+                        <div class="chapters-list" id="chaptersList">
+                            <p class="empty-hint">No chapters yet. Click "Add Chapter" while playing to mark a moment.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="addChapterAtCurrentTime()">➕ Add Chapter at Current Time</button>
+                    </div>
+
+                    <!-- Trim Tab -->
+                    <div class="clip-tab-content" id="tab-trim">
+                        <div class="trim-info">
+                            <div class="trim-point">
+                                <label>In Point</label>
+                                <input type="text" id="inPointTime" class="input-field input-small" placeholder="0:00" readonly>
+                                <button class="btn btn-small" onclick="goToInPoint()">▶</button>
+                            </div>
+                            <div class="trim-point">
+                                <label>Out Point</label>
+                                <input type="text" id="outPointTime" class="input-field input-small" placeholder="--" readonly>
+                                <button class="btn btn-small" onclick="goToOutPoint()">▶</button>
+                            </div>
+                            <div class="trim-point">
+                                <label>New Duration</label>
+                                <span id="trimDuration">--</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="createTrimmedClip()" id="trimBtn" disabled>✂️ Create Trimmed Clip</button>
+                        <p class="hint">Set In and Out points on the timeline, then create a new trimmed clip.</p>
+                    </div>
+
+                    <!-- Technical Tab -->
+                    <div class="clip-tab-content" id="tab-technical">
+                        <div class="tech-grid">
+                            <div class="tech-item">
+                                <label>Resolution</label>
+                                <span id="techResolution">--</span>
+                            </div>
+                            <div class="tech-item">
+                                <label>Aspect Ratio</label>
+                                <span id="techAspect">--</span>
+                            </div>
+                            <div class="tech-item">
+                                <label>Frame Rate</label>
+                                <span id="techFrameRate">--</span>
+                            </div>
+                            <div class="tech-item">
+                                <label>Video Codec</label>
+                                <span id="techVideoCodec">--</span>
+                            </div>
+                            <div class="tech-item">
+                                <label>Audio Codec</label>
+                                <span id="techAudioCodec">--</span>
+                            </div>
+                            <div class="tech-item">
+                                <label>Max Bitrate</label>
+                                <span id="techBitrate">--</span>
+                            </div>
+                            <div class="tech-item">
+                                <label>Playback ID</label>
+                                <code id="techPlaybackId">--</code>
+                            </div>
+                            <div class="tech-item">
+                                <label>Live Stream ID</label>
+                                <code id="techStreamId">--</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="footer-left">
+                    <span class="keyboard-hint">⌨️ Space=Play ←→=Seek I=In O=Out</span>
+                </div>
+                <div class="footer-right">
+                    <button class="btn btn-secondary" onclick="closePreview()">Close</button>
+                    <button class="btn btn-primary" onclick="downloadFromPreview()">⬇ Download MP4</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-overlay" onclick="closeEdit()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Recording</h2>
+                <button class="btn-close" onclick="closeEdit()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="editTitle" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>External ID (for FinalCut)</label>
+                    <input type="text" id="editExternalId" class="input-field" placeholder="e.g. main-stage-session-001">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="editNotes" class="input-field" rows="3" placeholder="Add notes for post-production..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEdit()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEdit()">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-overlay" onclick="closeDelete()"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>⚠️ Delete Recording?</h2>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this recording?</p>
+                <p class="delete-title" id="deleteTitle">--</p>
+                <p class="warning-text">This action cannot be undone. The recording will be permanently deleted from Mux.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDelete()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">🗑 Delete Forever</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Progress Modal -->
+    <div id="downloadModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>⬇️ Preparing Download</h2>
+            </div>
+            <div class="modal-body">
+                <p id="downloadStatus">Requesting download URL from Mux...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="downloadProgress"></div>
+                </div>
+                <p class="download-hint">MP4 downloads are generated on-demand and may take a moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Rename Modal -->
+    <div id="batchRenameModal" class="modal">
+        <div class="modal-overlay" onclick="closeBatchRename()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Batch Rename</h2>
+                <button class="btn-close" onclick="closeBatchRename()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p><span id="batchRenameCount">0</span> clips selected</p>
+                <div class="form-group">
+                    <label>Rename Pattern</label>
+                    <input type="text" id="renamePattern" class="input-field" placeholder="e.g. Main Stage - Session {n}">
+                    <p class="hint">Use {n} for sequential number, {stage} for stage name, {date} for date</p>
+                </div>
+                <div class="form-group">
+                    <label>Preview</label>
+                    <div class="rename-preview" id="renamePreview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchRename()">Cancel</button>
+                <button class="btn btn-primary" onclick="applyBatchRename()">✅ Apply Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Tag Modal -->
+    <div id="batchTagModal" class="modal">
+        <div class="modal-overlay" onclick="closeBatchTag()"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>🏷️ Batch Tag</h2>
+                <button class="btn-close" onclick="closeBatchTag()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p><span id="batchTagCount">0</span> clips selected</p>
+                <div class="tag-options">
+                    <button class="tag-btn" data-tag="keep" onclick="applyBatchTag('keep')">🟢 Keep</button>
+                    <button class="tag-btn" data-tag="review" onclick="applyBatchTag('review')">🟡 Review</button>
+                    <button class="tag-btn" data-tag="archive" onclick="applyBatchTag('archive')">📦 Archive</button>
+                    <button class="tag-btn" data-tag="" onclick="applyBatchTag('')">❌ Clear Tag</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embed Code Modal -->
+    <div id="embedModal" class="modal">
+        <div class="modal-overlay" onclick="closeEmbed()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>&lt;/&gt; Embed Code</h2>
+                <button class="btn-close" onclick="closeEmbed()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Embed Size</label>
+                    <select id="embedSize" onchange="updateEmbedCode()">
+                        <option value="640x360">640 x 360</option>
+                        <option value="854x480">854 x 480</option>
+                        <option value="1280x720" selected>1280 x 720</option>
+                        <option value="1920x1080">1920 x 1080</option>
+                        <option value="responsive">Responsive</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Embed Code</label>
+                    <textarea id="embedCode" class="input-field code-field" rows="5" readonly></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="copyEmbedCode()">📋 Copy Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Link Modal -->
+    <div id="shareModal" class="modal">
+        <div class="modal-overlay" onclick="closeShare()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔗 Share Link</h2>
+                <button class="btn-close" onclick="closeShare()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Link Expiry</label>
+                    <select id="shareExpiry">
+                        <option value="1h">1 Hour</option>
+                        <option value="24h" selected>24 Hours</option>
+                        <option value="7d">7 Days</option>
+                        <option value="30d">30 Days</option>
+                        <option value="never">Never</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Share URL</label>
+                    <input type="text" id="shareUrl" class="input-field" readonly>
+                </div>
+                <button class="btn btn-primary" onclick="copyShareLink()">📋 Copy Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcutsModal" class="modal">
+        <div class="modal-overlay" onclick="closeShortcuts()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <button class="btn-close" onclick="closeShortcuts()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-section">
+                    <h3>List View</h3>
+                    <div class="shortcut-row"><kbd>A</kbd> Select All / Deselect All</div>
+                    <div class="shortcut-row"><kbd>D</kbd> Download Selected</div>
+                    <div class="shortcut-row"><kbd>Delete</kbd> Delete Selected</div>
+                    <div class="shortcut-row"><kbd>R</kbd> Refresh from Mux</div>
+                    <div class="shortcut-row"><kbd>G</kbd> Grid View</div>
+                    <div class="shortcut-row"><kbd>L</kbd> List View</div>
+                    <div class="shortcut-row"><kbd>?</kbd> Show Shortcuts</div>
+                </div>
+                <div class="shortcuts-section">
+                    <h3>Clip Preview</h3>
+                    <div class="shortcut-row"><kbd>Space</kbd> Play / Pause</div>
+                    <div class="shortcut-row"><kbd>←</kbd> Seek Back 5s</div>
+                    <div class="shortcut-row"><kbd>→</kbd> Seek Forward 5s</div>
+                    <div class="shortcut-row"><kbd>I</kbd> Set In Point</div>
+                    <div class="shortcut-row"><kbd>O</kbd> Set Out Point</div>
+                    <div class="shortcut-row"><kbd>M</kbd> Add Chapter Marker</div>
+                    <div class="shortcut-row"><kbd>Esc</kbd> Close Preview</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/recordings.js"></script>
+</body>
+</html>

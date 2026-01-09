@@ -1,0 +1,55 @@
+{
+  "eventName": "Yabun Festival 2025",
+  "streamBaseUrl": "https://stream.mux.com/",
+  "expiryDate": "2026-01-27T23:59:00",
+  "producerPassword": "Live2Stream",
+  "eventInfo": {
+    "date": "Sunday 26 January 2025",
+    "callTime": "7:00 AM",
+    "liveStart": "10:00 AM",
+    "liveEnd": "6:00 PM",
+    "role": "Production Crew",
+    "brief": "Monitor your assigned stage. Report any audio/video issues to Scott immediately via WhatsApp.",
+    "whatsappLink": "https://chat.whatsapp.com/xxxxxxxxx",
+    "producerName": "Scott",
+    "producerPhone": "0412 XXX XXX"
+  },
+  "streams": [
+    {
+      "name": "Main Stage",
+      "playbackId": "SRaLbHORMpqkvcB7cF3ziu7D701QzTxrzUw2GOFTfRf00",
+      "liveStreamId": "spDSZGOT2fRmqVkMpvaiPMjnBD1qW8800ghXCHoJojBc",
+      "streamKey": "ENTER_STREAM_KEY",
+      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
+    },
+    {
+      "name": "Yabun Yarns",
+      "playbackId": "ENTER_PLAYBACK_ID",
+      "liveStreamId": "ENTER_LIVE_STREAM_ID",
+      "streamKey": "ENTER_STREAM_KEY",
+      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
+    },
+    {
+      "name": "Corroboree",
+      "playbackId": "ENTER_PLAYBACK_ID",
+      "liveStreamId": "ENTER_LIVE_STREAM_ID",
+      "streamKey": "ENTER_STREAM_KEY",
+      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
+    },
+    {
+      "name": "Speak Out",
+      "playbackId": "ENTER_PLAYBACK_ID",
+      "liveStreamId": "ENTER_LIVE_STREAM_ID",
+      "streamKey": "ENTER_STREAM_KEY",
+      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
+    }
+  ],
+  "visibility": {
+    "vuMeters": true,
+    "streamStatus": true,
+    "duration": true,
+    "bitrate": true,
+    "viewers": false
+  },
+  "defaultBandwidth": "medium"
+}
