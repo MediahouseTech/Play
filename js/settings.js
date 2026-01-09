@@ -203,9 +203,6 @@ async function toggleBreakModeMain(streamIndex, setToBreak) {
                 button.onclick = () => toggleBreakModeMain(streamIndex, !setToBreak);
             }
             
-            // Also update settings modal if open
-            populateBreakModeControls();
-            
             console.log(`[Settings] Stream ${streamIndex} set to ${setToBreak ? 'BREAK' : 'LIVE'}`);
             
             // Notify app.js to update players immediately
@@ -401,9 +398,6 @@ function populateSettings() {
     
     // Populate stream configs
     populateStreamConfigs();
-    
-    // Populate break mode controls
-    populateBreakModeControls();
     
     console.log('[Settings] Form populated');
 }

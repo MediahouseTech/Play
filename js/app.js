@@ -303,11 +303,15 @@ async function checkStreamStatus(liveStreamId) {
         // STRICT CHECK: Only "active" status means encoder is actually streaming
         const isLive = data.status === 'active';
         
-        console.log(`[App] Mux API: Stream ${liveStreamId.substring(0,8)}... status: "${data.status}", isLive: ${isLive}`);
+        // Get playbackId from API response (first one)
+        const playbackId = data.playbackIds && data.playbackIds.length > 0 ? data.playbackIds[0] : null;
+        
+        console.log(`[App] Mux API: Stream ${liveStreamId.substring(0,8)}... status: "${data.status}", isLive: ${isLive}, playbackId: ${playbackId ? playbackId.substring(0,8)+'...' : 'none'}`);
         
         return { 
             isLive: isLive, 
             status: data.status,
+            playbackId: playbackId,
             error: null 
         };
         
@@ -389,6 +393,10 @@ async function initStreamPlayer(index, liveStreamId, playbackId) {
     statusEl.textContent = '⏳ Checking...';
     const status = await checkStreamStatus(liveStreamId);
     
+    // Use playbackId from API if config doesn't have one
+    const actualPlaybackId = playbackId || status.playbackId;
+    video.playbackId = actualPlaybackId;
+    
     if (!status.isLive) {
         console.log(`[App] Stream ${index} is NOT live (status: ${status.status}) - showing poster`);
         statusEl.textContent = '⏹ Not Live';
@@ -396,15 +404,15 @@ async function initStreamPlayer(index, liveStreamId, playbackId) {
         overlayEl.style.display = 'flex';
         
         // Start polling for when stream goes live
-        startStreamPoller(index, liveStreamId, playbackId);
+        startStreamPoller(index, liveStreamId, actualPlaybackId);
         return;
     }
     
     // Stream IS live - load it
-    console.log(`[App] Stream ${index} IS LIVE - loading player`);
+    console.log(`[App] Stream ${index} IS LIVE - loading player with playbackId: ${actualPlaybackId}`);
     video.isLive = true;
     overlayEl.style.display = 'none';
-    loadHlsPlayer(index, playbackId);
+    loadHlsPlayer(index, actualPlaybackId);
 }
 
 /**
