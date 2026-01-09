@@ -54,10 +54,10 @@ class VUMeter {
             minSliver: 0.03,        // Minimum 3% bar when silent (tiny sliver)
             smoothingFactor: 0.25,  // How quickly meter responds (0.1=slow, 0.5=fast)
             peakDecay: 0.98,        // How fast peak falls
-            // Calibration: typical audio byte rates
-            // These may need adjustment based on actual Mux streams
-            minBytesPerSec: 5000,   // Below this = silence
-            maxBytesPerSec: 200000  // Above this = loud
+            // Calibration: typical audio byte rates for Mux HLS streams
+            // Adjusted based on real-world testing - streams show ~10-30k bytes/sec
+            minBytesPerSec: 500,    // Below this = silence
+            maxBytesPerSec: 40000   // Above this = full meter
         };
         
         // Draw initial state
