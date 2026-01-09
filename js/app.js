@@ -350,7 +350,7 @@ function createPlayerWrapper(stream, index) {
                 </div>
             </div>
             <div class="vu-container" id="vu-container-${index}">
-                <canvas id="vu-canvas-${index}" class="vu-canvas" width="80" height="120"></canvas>
+                <canvas id="vu-canvas-${index}" class="vu-canvas" width="70" height="300"></canvas>
             </div>
         </div>
         <div class="player-stats">
@@ -558,7 +558,7 @@ function loadHlsPlayer(index, playbackId) {
     // Start continuous status polling to detect when encoder stops
     startLiveStatusPoller(index, video.liveStreamId);
     
-    // Initialize VU meter (user must click to activate due to Web Audio API restrictions)
+    // Initialize VU meter (auto-starts when video plays)
     setupVuMeter(index);
 }
 
@@ -738,7 +738,8 @@ function stopLiveStatusPoller(index) {
 }
 
 /**
- * Initialize VU meter for a stream (click to activate)
+ * Initialize VU meter for a stream
+ * NEW: Uses byte-rate detection, no user interaction required!
  */
 function setupVuMeter(index) {
     const video = document.getElementById(`video-${index}`);
@@ -755,22 +756,31 @@ function setupVuMeter(index) {
         console.log(`[VU] Created VU meter for stream ${index}`);
     }
     
-    // Set up click handler to initialize audio (required for Web Audio API)
-    canvas.addEventListener('click', async () => {
-        const vu = vuMeters[index];
-        if (!vu) return;
-        
-        if (vu.status === 'waiting' || vu.status === 'error') {
-            console.log(`[VU] User clicked canvas ${index}, initializing...`);
-            const success = await vu.init();
-            if (success) {
-                vu.start();
-                console.log(`[VU] Stream ${index} VU meter active!`);
-            } else {
-                console.error(`[VU] Failed to init VU meter ${index}:`, vu.errorMsg);
-            }
+    const vu = vuMeters[index];
+    
+    // Initialize (check browser support)
+    if (vu.init()) {
+        // Auto-start when video is playing
+        if (!video.paused && video.readyState >= 2) {
+            vu.start();
+            console.log(`[VU] Auto-started VU meter for stream ${index}`);
         }
-    });
+        
+        // Start/stop with video playback
+        video.addEventListener('playing', () => {
+            vu.start();
+            console.log(`[VU] Started VU meter on video play (stream ${index})`);
+        });
+        
+        video.addEventListener('pause', () => {
+            vu.stop();
+            console.log(`[VU] Stopped VU meter on video pause (stream ${index})`);
+        });
+        
+        video.addEventListener('ended', () => {
+            vu.stop();
+        });
+    }
 }
 
 /**
