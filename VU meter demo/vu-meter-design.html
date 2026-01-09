@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VU Meter Design - Broadcast Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a2e;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        
+        .demo-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .panel-demo {
+            background: #12121c;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 420px;
+        }
+        
+        .panel-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .live-badge {
+            background: #22c55e;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .panel-content {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+        }
+        
+        .video-placeholder {
+            flex: 1;
+            aspect-ratio: 16/9;
+            background: linear-gradient(45deg, #2a2a3e 25%, #1f1f30 25%, #1f1f30 50%, #2a2a3e 50%, #2a2a3e 75%, #1f1f30 75%);
+            background-size: 20px 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 12px;
+        }
+        
+        /* ==================== */
+        /* VU METER COMPONENT   */
+        /* ==================== */
+        
+        .audio-meters {
+            width: 90px;
+            background: #0a0a12;
+            border-radius: 6px;
+            padding: 8px 6px;
+            border: 1px solid #2a2a3e;
+        }
+        
+        .meters-header {
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        
+        .meters-title {
+            color: #888;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        
+        .meters-row {
+            display: flex;
+            gap: 4px;
+            height: 180px;
+        }
+        
+        .meter-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .meter-label {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        
+        .meter-label span {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .meter-label.lufs span {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .meter-label.peak span {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+        }
+        
+        .meter-track {
+            flex: 1;
+            background: #050508;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #1a1a25;
+        }
+        
+        /* Scale markings */
+        .meter-scale {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2px 0;
+            pointer-events: none;
+        }
+        
+        .scale-mark {
+            font-size: 7px;
+            color: #444;
+            text-align: right;
+            padding-right: 3px;
+            line-height: 1;
+        }
+        
+        /* Meter fill with segments */
+        .meter-fill {
+            position: absolute;
+            bottom: 0;
+            left: 2px;
+            right: 2px;
+            border-radius: 2px;
+            transition: height 0.1s ease-out;
+        }
+        
+        .meter-fill.lufs-fill {
+            background: linear-gradient(to top,
+                #22c55e 0%,
+                #22c55e 60%,
+                #eab308 60%,
+                #eab308 80%,
+                #ef4444 80%,
+                #ef4444 100%
+            );
+        }
+        
+        .meter-fill.peak-fill {
+            background: linear-gradient(to top,
+                #22c55e 0%,
+                #22c55e 60%,
+                #eab308 60%,
+                #eab308 80%,
+                #ef4444 80%,
+                #ef4444 100%
+            );
+        }
+        
+        /* Segment lines overlay */
+        .meter-segments {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+        }
+        
+        .segment-line {
+            flex: 1;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Peak hold indicator */
+        .peak-hold {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            height: 3px;
+            background: #fff;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+            transition: bottom 0.05s ease-out;
+        }
+        
+        /* Current value display */
+        .meter-value {
+            text-align: center;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #1a1a25;
+        }
+        
+        .meter-value span {
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        }
+        
+        .meter-column.lufs-column .meter-value span {
+            color: #3b82f6;
+        }
+        
+        .meter-column.peak-column .meter-value span {
+            color: #f59e0b;
+        }
+        
+        /* Panel footer */
+        .panel-footer {
+            padding: 8px 15px;
+            border-top: 1px solid #2a2a3e;
+            display: flex;
+            gap: 15px;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .panel-footer span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Standalone meter for detail view */
+        .standalone-meter {
+            background: #0a0a12;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #2a2a3e;
+            width: 140px;
+        }
+        
+        .standalone-meter .meters-row {
+            height: 280px;
+        }
+        
+        .standalone-meter .meter-value span {
+            font-size: 14px;
+        }
+        
+        .design-notes {
+            margin-top: 60px;
+            padding: 20px;
+            background: #12121c;
+            border-radius: 8px;
+            border: 1px solid #2a2a3e;
+            max-width: 600px;
+        }
+        
+        .design-notes h2 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .design-notes ul {
+            color: #aaa;
+            font-size: 13px;
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+        
+        .design-notes li {
+            margin-bottom: 5px;
+        }
+        
+        .design-notes code {
+            background: #1a1a2e;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>VU Meter Component Design</h1>
+    <p class="subtitle">Broadcast-style audio meters for Mediahouse Crew Dashboard</p>
+    
+    <div class="demo-container">
+        <!-- Full Panel Demo -->
+        <div>
+            <p style="color: #666; font-size: 12px; margin-bottom: 10px;">Integrated in panel (actual size)</p>
+            <div class="panel-demo">
+                <div class="panel-header">
+                    <span class="panel-title">Main Stage</span>
+                    <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+                </div>
+                <div class="panel-content">
+                    <div class="video-placeholder">VIDEO PLAYER</div>
+                    
+                    <!-- VU METER COMPONENT -->
+                    <div class="audio-meters">
+                        <div class="meters-header">
+                            <span class="meters-title">Audio</span>
+                        </div>
+                        <div class="meters-row">
+                            <!-- LUFS Meter -->
+                            <div class="meter-column lufs-column">
+                                <div class="meter-label lufs"><span>LUFS</span></div>
+                                <div class="meter-track">
+                                    <div class="meter-scale">
+                                        <span class="scale-mark">0</span>
+                                        <span class="scale-mark">-6</span>
+                                        <span class="scale-mark">-12</span>
+                                        <span class="scale-mark">-18</span>
+                                        <span class="scale-mark">-24</span>
+                                        <span class="scale-mark">-36</span>
+                                    </div>
+                                    <div class="meter-fill lufs-fill" style="height: 65%;"></div>
+                                    <div class="meter-segments">
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                    </div>
+                                </div>
+                                <div class="meter-value"><span>-14.2</span></div>
+                            </div>
+                            
+                            <!-- Peak Meter -->
+                            <div class="meter-column peak-column">
+                                <div class="meter-label peak"><span>PEAK</span></div>
+                                <div class="meter-track">
+                                    <div class="meter-scale">
+                                        <span class="scale-mark">0</span>
+                                        <span class="scale-mark">-6</span>
+                                        <span class="scale-mark">-12</span>
+                                        <span class="scale-mark">-18</span>
+                                        <span class="scale-mark">-24</span>
+                                        <span class="scale-mark">-36</span>
+                                    </div>
+                                    <div class="meter-fill peak-fill" style="height: 75%;"></div>
+                                    <div class="peak-hold" style="bottom: 78%;"></div>
+                                    <div class="meter-segments">
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                        <div class="segment-line"></div>
+                                    </div>
+                                </div>
+                                <div class="meter-value"><span>-8.5</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <span>⏱ 00:15:32</span>
+                    <span>📡 4.7 Mbps</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Standalone larger view -->
+        <div>
+            <p style="color: #666; font-size: 12px; margin-bottom: 10px;">Detailed view (if needed)</p>
+            <div class="standalone-meter">
+                <div class="meters-header">
+                    <span class="meters-title">Audio Levels</span>
+                </div>
+                <div class="meters-row">
+                    <div class="meter-column lufs-column">
+                        <div class="meter-label lufs"><span>LUFS</span></div>
+                        <div class="meter-track">
+                            <div class="meter-scale">
+                                <span class="scale-mark">0</span>
+                                <span class="scale-mark">-6</span>
+                                <span class="scale-mark">-12</span>
+                                <span class="scale-mark">-18</span>
+                                <span class="scale-mark">-24</span>
+                                <span class="scale-mark">-36</span>
+                            </div>
+                            <div class="meter-fill lufs-fill" style="height: 70%;"></div>
+                            <div class="meter-segments">
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                            </div>
+                        </div>
+                        <div class="meter-value"><span>-12.1</span></div>
+                    </div>
+                    <div class="meter-column peak-column">
+                        <div class="meter-label peak"><span>PEAK</span></div>
+                        <div class="meter-track">
+                            <div class="meter-scale">
+                                <span class="scale-mark">0</span>
+                                <span class="scale-mark">-6</span>
+                                <span class="scale-mark">-12</span>
+                                <span class="scale-mark">-18</span>
+                                <span class="scale-mark">-24</span>
+                                <span class="scale-mark">-36</span>
+                            </div>
+                            <div class="meter-fill peak-fill" style="height: 80%;"></div>
+                            <div class="peak-hold" style="bottom: 85%;"></div>
+                            <div class="meter-segments">
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                                <div class="segment-line"></div>
+                            </div>
+                        </div>
+                        <div class="meter-value"><span>-4.2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="design-notes">
+        <h2>Design Features</h2>
+        <ul>
+            <li><strong>LUFS</strong> (blue) - Momentary loudness, updates every ~400ms</li>
+            <li><strong>PEAK</strong> (amber) - True peak with hold indicator (white line)</li>
+            <li>Color zones: <code>Green</code> safe, <code>Yellow</code> caution (-12 to -6), <code>Red</code> danger (above -6)</li>
+            <li>Segment lines for professional broadcast look</li>
+            <li>Scale markings: 0, -6, -12, -18, -24, -36 dB</li>
+            <li>Numeric readout below each meter</li>
+            <li>Fits within existing panel width (~90px)</li>
+            <li>Dark theme matches dashboard aesthetic</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Simulate meter movement
+        function animateMeters() {
+            const lufsFills = document.querySelectorAll('.lufs-fill');
+            const peakFills = document.querySelectorAll('.peak-fill');
+            const peakHolds = document.querySelectorAll('.peak-hold');
+            const lufsValues = document.querySelectorAll('.lufs-column .meter-value span');
+            const peakValues = document.querySelectorAll('.peak-column .meter-value span');
+            
+            setInterval(() => {
+                // Simulate LUFS between -24 and -8
+                const lufsDb = -24 + Math.random() * 16 + Math.sin(Date.now() / 500) * 4;
+                const lufsPercent = Math.max(0, Math.min(100, ((lufsDb + 36) / 36) * 100));
+                
+                // Simulate Peak between -18 and -3
+                const peakDb = -18 + Math.random() * 15 + Math.sin(Date.now() / 300) * 3;
+                const peakPercent = Math.max(0, Math.min(100, ((peakDb + 36) / 36) * 100));
+                
+                lufsFills.forEach(fill => fill.style.height = lufsPercent + '%');
+                peakFills.forEach(fill => fill.style.height = peakPercent + '%');
+                peakHolds.forEach(hold => hold.style.bottom = (peakPercent + 3) + '%');
+                
+                lufsValues.forEach(val => val.textContent = lufsDb.toFixed(1));
+                peakValues.forEach(val => val.textContent = peakDb.toFixed(1));
+            }, 150);
+        }
+        
+        animateMeters();
+    </script>
+</body>
+</html>

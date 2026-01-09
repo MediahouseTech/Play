@@ -161,6 +161,210 @@ html, body {
 }
 
 /* ============================================
+   VU METERS - Broadcast Style
+   Real-time audio level meters
+   ============================================ */
+
+.vu-container {
+    display: flex;
+    flex-direction: column;
+    width: 72px;
+    min-width: 72px;
+    background: #0a0a12;
+    border-radius: 6px;
+    border: 1px solid #2a2a3e;
+    overflow: hidden;
+}
+
+.vu-meters {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 6px 4px;
+}
+
+.vu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px 6px 4px;
+    border-bottom: 1px solid #2a2a3e;
+    margin-bottom: 6px;
+}
+
+.vu-title {
+    font-size: 8px;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.vu-status {
+    font-size: 8px;
+    transition: color 0.3s;
+}
+
+.vu-status[data-status="active"] {
+    color: var(--live);
+}
+
+.vu-status[data-status="connecting"] {
+    color: var(--warning);
+    animation: pulse 1s infinite;
+}
+
+.vu-status[data-status="disconnected"],
+.vu-status[data-status="removed"] {
+    color: var(--error);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.vu-meters-row {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+    min-height: 140px;
+}
+
+.vu-meter-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.vu-label {
+    text-align: center;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 2px 3px;
+    border-radius: 2px;
+    margin-bottom: 4px;
+}
+
+.vu-label-lufs {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.vu-label-peak {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.vu-track {
+    flex: 1;
+    background: #050508;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #1a1a25;
+    min-height: 100px;
+}
+
+.vu-scale {
+    position: absolute;
+    right: 1px;
+    top: 2px;
+    bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.vu-scale span {
+    font-size: 6px;
+    color: #444;
+    line-height: 1;
+    text-align: right;
+}
+
+.vu-fill {
+    position: absolute;
+    bottom: 0;
+    left: 2px;
+    right: 2px;
+    border-radius: 1px;
+    transition: height 0.08s ease-out;
+    background: linear-gradient(to top,
+        #22c55e 0%,
+        #22c55e 60%,
+        #eab308 60%,
+        #eab308 80%,
+        #ef4444 80%,
+        #ef4444 100%
+    );
+}
+
+.vu-peak-hold {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    height: 2px;
+    background: #fff;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+    transition: bottom 0.05s ease-out;
+    z-index: 3;
+}
+
+.vu-segments {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.vu-segments::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 4px,
+        rgba(0, 0, 0, 0.4) 4px,
+        rgba(0, 0, 0, 0.4) 5px
+    );
+}
+
+.vu-value {
+    text-align: center;
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+.vu-meter-col:first-child .vu-value {
+    color: #3b82f6;
+}
+
+.vu-meter-col:last-child .vu-value {
+    color: #f59e0b;
+}
+
+/* Hide VU meters when toggled off */
+.hide-streamHealth .vu-container {
+    display: none;
+}
+
+/* ============================================
    DANGER ZONE
    ============================================ */
 

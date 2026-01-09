@@ -349,9 +349,7 @@ function createPlayerWrapper(stream, index) {
                     <div class="overlay-message">⏹ Not Live</div>
                 </div>
             </div>
-            <div class="vu-container" id="vu-container-${index}">
-                <canvas id="vu-canvas-${index}" class="vu-canvas" width="70" height="300"></canvas>
-            </div>
+            <div class="vu-container" id="vu-container-${index}"></div>
         </div>
         <div class="player-stats">
             <span class="stat stat-duration" id="duration-${index}">⏱ --:--:--</span>
@@ -739,48 +737,47 @@ function stopLiveStatusPoller(index) {
 
 /**
  * Initialize VU meter for a stream
- * NEW: Uses byte-rate detection, no user interaction required!
+ * NEW: Uses WebSocket connection to server-side FFmpeg analyzer
  */
 function setupVuMeter(index) {
     const video = document.getElementById(`video-${index}`);
-    const canvas = document.getElementById(`vu-canvas-${index}`);
+    const container = document.getElementById(`vu-container-${index}`);
     
-    if (!video || !canvas) {
+    if (!video || !container) {
         console.error(`[VU] Missing elements for stream ${index}`);
         return;
     }
     
-    // Create VU meter instance if not exists
-    if (!vuMeters[index]) {
-        vuMeters[index] = new VUMeter(video, canvas);
-        console.log(`[VU] Created VU meter for stream ${index}`);
+    // Get stream config for HLS URL
+    const stream = config?.streams?.[index];
+    if (!stream || !stream.playbackId) {
+        console.error(`[VU] No stream config for index ${index}`);
+        return;
     }
     
-    const vu = vuMeters[index];
+    const hlsUrl = `https://stream.mux.com/${stream.playbackId}.m3u8`;
+    const streamId = `stream-${index}`;
     
-    // Initialize (check browser support)
-    if (vu.init()) {
-        // Auto-start when video is playing
-        if (!video.paused && video.readyState >= 2) {
-            vu.start();
-            console.log(`[VU] Auto-started VU meter for stream ${index}`);
-        }
-        
-        // Start/stop with video playback
-        video.addEventListener('playing', () => {
-            vu.start();
-            console.log(`[VU] Started VU meter on video play (stream ${index})`);
-        });
-        
-        video.addEventListener('pause', () => {
-            vu.stop();
-            console.log(`[VU] Stopped VU meter on video pause (stream ${index})`);
-        });
-        
-        video.addEventListener('ended', () => {
-            vu.stop();
-        });
+    // Destroy existing VU meter if any
+    if (vuMeters[index]) {
+        vuMeters[index].destroy();
+        delete vuMeters[index];
     }
+    
+    // Create new VU meter instance
+    vuMeters[index] = new VUMeter(container, streamId);
+    console.log(`[VU] Created VU meter for stream ${index}`);
+    
+    // Register stream with audio analyzer server
+    VUMeter.registerStream(streamId, hlsUrl)
+        .then(success => {
+            if (success) {
+                console.log(`[VU] Registered stream ${index} with analyzer`);
+            } else {
+                console.warn(`[VU] Failed to register stream ${index}`);
+            }
+        })
+        .catch(e => console.error(`[VU] Registration error:`, e));
 }
 
 /**
@@ -788,7 +785,17 @@ function setupVuMeter(index) {
  */
 function stopVuMeter(index) {
     if (vuMeters[index]) {
-        vuMeters[index].stop();
+        const streamId = `stream-${index}`;
+        vuMeters[index].destroy();
+        delete vuMeters[index];
+        
+        // Remove stream from analyzer server
+        const analyzer = window.getAudioAnalyzer ? window.getAudioAnalyzer() : null;
+        if (analyzer) {
+            analyzer.removeStream(streamId)
+                .catch(e => console.warn(`[VU] Failed to remove stream ${index}:`, e));
+        }
+        
         console.log(`[VU] Stopped VU meter for stream ${index}`);
     }
 }
