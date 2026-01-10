@@ -1,5 +1,5 @@
 /**
- * VU-METER.JS - Mediahouse Crew Dashboard
+ * VU-METER.JS - Mediahouse Crew Dashboard v3.0
  * Real-time audio meters via WebSocket to FFmpeg analyzer
  * 
  * ARCHITECTURE:
