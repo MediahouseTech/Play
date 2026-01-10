@@ -168,6 +168,13 @@ class VUMeter {
     }
     
     render() {
+        // Safari fix: sync height with video container
+        this.syncHeight();
+        
+        // Re-sync after video loads (Safari timing issue)
+        setTimeout(() => this.syncHeight(), 500);
+        setTimeout(() => this.syncHeight(), 1500);
+        
         this.container.innerHTML = `
             <div class="vu-meters">
                 <div class="vu-header">
@@ -274,6 +281,16 @@ class VUMeter {
         }
         const analyzer = getAudioAnalyzer();
         analyzer.unsubscribe(this.streamId);
+    }
+    
+    // Safari fix: sync VU meter height with video container
+    syncHeight() {
+        const playerContent = this.container.closest('.player-content');
+        const videoContainer = playerContent?.querySelector('.video-container');
+        if (videoContainer && videoContainer.offsetHeight > 50) {
+            this.container.style.height = videoContainer.offsetHeight + 'px';
+            console.log('[VU] Synced height to', videoContainer.offsetHeight, 'px');
+        }
     }
     
     // Static method to register stream with analyzer

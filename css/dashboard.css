@@ -766,9 +766,12 @@ html, body {
     display: flex;
     gap: 8px;
     padding: 8px;
+    /* Safari fix: explicit height for flex children */
+    min-height: 200px;
 }
 
 .video-container {
+    -webkit-flex: 1;
     flex: 1;
     aspect-ratio: 16/9;
     background: #000;
@@ -782,7 +785,12 @@ html, body {
     object-fit: contain;
 }
 
-/* VU container styles are defined in VU METERS section above */
+/* Safari fix: override VU container with explicit height */
+.player-content .vu-container {
+    height: auto;
+    -webkit-align-self: stretch;
+    align-self: stretch;
+}
 
 .vu-canvas {
     display: block;
