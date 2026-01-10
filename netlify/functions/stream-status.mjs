@@ -1,15 +1,17 @@
 /**
- * STREAM-STATUS.MJS - Check Mux Live Stream Status
+ * STREAM-STATUS.MJS - Check Live Stream Status (INSTANT via webhooks)
  * 
- * Calls Mux API to check if a live stream is actually live (active)
- * or idle (not streaming). This prevents playing recordings when
- * the encoder has stopped.
+ * PRIORITY ORDER:
+ * 1. Check Netlify Blob for encoder state (instant - set by webhooks)
+ * 2. Fall back to Mux API if no blob data (60s delay during reconnect window)
  * 
  * Returns:
- *   - status: "active" | "idle" | "disabled"
+ *   - status: "active" | "idle" | "disconnected" | "connected"
  *   - isLive: true/false
- *   - playbackId: the playback ID checked
+ *   - source: "webhook" | "api" (so you know if it's instant or delayed)
  */
+
+import { getStore } from "@netlify/blobs";
 
 export default async function handler(request) {
     // Handle CORS preflight
@@ -24,7 +26,7 @@ export default async function handler(request) {
         });
     }
 
-    // Get Mux credentials (hardcoded temporarily for testing)
+    // Get Mux credentials
     const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID || '7952c3b8-1fba-4bf8-b95a-219aee11cfe6';
     const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET || 'kIT/Bs5wfBOIkVjljFAFT/EjqxVFKJ+kmKKyFXXRuRIO3HyyES5OZUBpXwfmezViqwnLCPGN0E8';
 
@@ -51,7 +53,6 @@ export default async function handler(request) {
             const body = await request.json();
             liveStreamId = body.liveStreamId;
         } catch (e) {
-            // Try query params as fallback
             const url = new URL(request.url);
             liveStreamId = url.searchParams.get('liveStreamId');
         }
@@ -70,7 +71,42 @@ export default async function handler(request) {
     }
 
     try {
-        // Call Mux API to get live stream status
+        // STEP 1: Check Netlify Blob for instant encoder state (from webhooks)
+        const store = getStore("yabun-dashboard");
+        const encoderStates = await store.get("encoder-states", { type: "json" });
+        
+        if (encoderStates && encoderStates[liveStreamId]) {
+            const webhookState = encoderStates[liveStreamId];
+            
+            // Only trust webhook for DISCONNECTED or IDLE (instant detection)
+            // For connected/active/unknown, fall back to API for accuracy
+            if (webhookState.status === 'disconnected' || webhookState.status === 'idle') {
+                console.log(`[stream-status] INSTANT (webhook): ${liveStreamId} = ${webhookState.status}`);
+                
+                return new Response(JSON.stringify({
+                    liveStreamId: liveStreamId,
+                    status: webhookState.status,
+                    isLive: false,
+                    source: 'webhook',
+                    timestamp: webhookState.timestamp,
+                    playbackIds: []
+                }), {
+                    status: 200,
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate'
+                    }
+                });
+            }
+            
+            // For connected/active, still verify with API but log webhook state
+            console.log(`[stream-status] Webhook says ${webhookState.status}, verifying with API...`);
+        }
+
+        // STEP 2: Fall back to Mux API (has 60s reconnect window delay)
+        console.log(`[stream-status] No webhook data, falling back to Mux API for ${liveStreamId}`);
+        
         const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64');
         
         const response = await fetch(`https://api.mux.com/video/v1/live-streams/${liveStreamId}`, {
@@ -99,11 +135,11 @@ export default async function handler(request) {
         const data = await response.json();
         const stream = data.data;
 
-        // Return status info
         return new Response(JSON.stringify({
             liveStreamId: stream.id,
             status: stream.status,
             isLive: stream.status === 'active',
+            source: 'api',
             playbackIds: stream.playback_ids?.map(p => p.id) || [],
             reconnectWindow: stream.reconnect_window,
             createdAt: stream.created_at
@@ -134,5 +170,3 @@ export default async function handler(request) {
 export const config = {
     path: "/api/stream-status"
 };
-// Trigger redeploy Thu Jan  8 16:52:12 AEDT 2026
-// Redeploy 1767851847
