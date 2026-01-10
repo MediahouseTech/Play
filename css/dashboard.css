@@ -166,10 +166,14 @@ html, body {
    ============================================ */
 
 .vu-container {
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
     width: 72px;
     min-width: 72px;
+    height: 100%;
+    min-height: 200px;
     background: #0a0a12;
     border-radius: 6px;
     border: 1px solid #2a2a3e;
@@ -177,19 +181,28 @@ html, body {
 }
 
 .vu-meters {
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
+    -webkit-flex: 1;
+    flex: 1;
     height: 100%;
     padding: 6px 4px;
 }
 
 .vu-header {
+    display: -webkit-flex;
     display: flex;
+    -webkit-justify-content: space-between;
     justify-content: space-between;
+    -webkit-align-items: center;
     align-items: center;
     padding: 0 4px 6px 4px;
     border-bottom: 1px solid #2a2a3e;
     margin-bottom: 6px;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .vu-title {
@@ -202,6 +215,7 @@ html, body {
 
 .vu-status {
     font-size: 8px;
+    -webkit-transition: color 0.3s;
     transition: color 0.3s;
 }
 
@@ -211,6 +225,7 @@ html, body {
 
 .vu-status[data-status="connecting"] {
     color: var(--warning);
+    -webkit-animation: pulse 1s infinite;
     animation: pulse 1s infinite;
 }
 
@@ -219,23 +234,37 @@ html, body {
     color: var(--error);
 }
 
+@-webkit-keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
 }
 
 .vu-meters-row {
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
     gap: 3px;
+    -webkit-flex: 1;
     flex: 1;
     min-height: 140px;
+    height: 100%;
 }
 
 .vu-meter-col {
+    -webkit-flex: 1;
     flex: 1;
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
     min-width: 0;
+    height: 100%;
 }
 
 .vu-label {
@@ -246,6 +275,8 @@ html, body {
     padding: 2px 3px;
     border-radius: 2px;
     margin-bottom: 4px;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .vu-label-lufs {
@@ -259,6 +290,7 @@ html, body {
 }
 
 .vu-track {
+    -webkit-flex: 1;
     flex: 1;
     background: #050508;
     border-radius: 2px;
@@ -273,8 +305,11 @@ html, body {
     right: 1px;
     top: 2px;
     bottom: 2px;
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
+    -webkit-justify-content: space-between;
     justify-content: space-between;
     pointer-events: none;
     z-index: 2;
@@ -293,7 +328,16 @@ html, body {
     left: 2px;
     right: 2px;
     border-radius: 1px;
+    -webkit-transition: height 0.08s ease-out;
     transition: height 0.08s ease-out;
+    background: -webkit-linear-gradient(bottom,
+        #22c55e 0%,
+        #22c55e 60%,
+        #eab308 60%,
+        #eab308 80%,
+        #ef4444 80%,
+        #ef4444 100%
+    );
     background: linear-gradient(to top,
         #22c55e 0%,
         #22c55e 60%,
@@ -310,7 +354,9 @@ html, body {
     right: 2px;
     height: 2px;
     background: #fff;
+    -webkit-box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
     box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+    -webkit-transition: bottom 0.05s ease-out;
     transition: bottom 0.05s ease-out;
     z-index: 3;
 }
@@ -321,7 +367,9 @@ html, body {
     left: 0;
     right: 0;
     bottom: 0;
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
     pointer-events: none;
     z-index: 1;
@@ -334,6 +382,13 @@ html, body {
     left: 0;
     right: 0;
     bottom: 0;
+    background: -webkit-repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 4px,
+        rgba(0, 0, 0, 0.4) 4px,
+        rgba(0, 0, 0, 0.4) 5px
+    );
     background: repeating-linear-gradient(
         to bottom,
         transparent 0px,
@@ -349,6 +404,8 @@ html, body {
     font-size: 9px;
     font-weight: 700;
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .vu-meter-col:first-child .vu-value {
