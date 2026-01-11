@@ -193,12 +193,14 @@ body {
 }
 
 .btn-danger {
-    background: var(--pp-error);
-    color: white;
+    background: var(--pp-bg-hover);
+    color: var(--pp-text-secondary);
+    border: 1px solid var(--pp-border-subtle);
 }
 
 .btn-danger:hover {
-    background: #dc2626;
+    background: var(--pp-bg-active);
+    color: var(--pp-text-primary);
 }
 
 .btn-small {
@@ -535,26 +537,32 @@ body {
 .recording-actions .btn {
     flex: 1;
     justify-content: center;
-    font-size: var(--pp-font-size-xs);
-    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 6px;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Card button styles */
+/* RENAME button - Purple (matches toolbar) */
 .btn-edit {
-    background: var(--pp-bg-hover);
-    color: var(--pp-text-secondary);
-    border: 1px solid var(--pp-border-subtle);
+    background: #581c87;
+    color: #c4b5fd;
+    border: 1px solid #581c87;
 }
 
 .btn-edit:hover {
-    background: var(--pp-bg-active);
-    color: var(--pp-text-primary);
+    background: #6b21a8;
 }
 
 .btn-edit .icon {
-    stroke: var(--pp-text-muted);
+    stroke: #c4b5fd;
+    width: 14px;
+    height: 14px;
 }
 
+/* DOWNLOAD button - Blue */
 .btn-download {
     background: #1e3a5f;
     color: #93c5fd;
@@ -567,20 +575,26 @@ body {
 
 .btn-download .icon {
     stroke: #60a5fa;
+    width: 14px;
+    height: 14px;
 }
 
+/* DELETE button - Mono grey (NOT red) */
 .btn-delete {
-    background: #7f1d1d;
-    color: #fca5a5;
-    border: 1px solid #7f1d1d;
+    background: var(--pp-bg-hover);
+    color: var(--pp-text-secondary);
+    border: 1px solid var(--pp-border-subtle);
 }
 
 .btn-delete:hover {
-    background: #991b1b;
+    background: var(--pp-bg-active);
+    color: var(--pp-text-primary);
 }
 
 .btn-delete .icon {
-    stroke: #fecaca;
+    stroke: var(--pp-text-muted);
+    width: 14px;
+    height: 14px;
 }
 
 /* Recording date with calendar icon */
