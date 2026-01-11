@@ -121,7 +121,7 @@ body {
     margin: 0 auto;
 }
 
-/* Header */
+/* Header - Premiere style */
 .header {
     display: flex;
     justify-content: space-between;
@@ -129,33 +129,43 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 16px;
+    padding: 12px 16px;
+    background: var(--pp-bg-surface);
+    border-radius: var(--pp-radius-md);
+    border: 1px solid var(--pp-border-subtle);
 }
 
 .header-left h1 {
-    font-size: 1.5rem;
-    margin-bottom: 4px;
+    font-size: var(--pp-font-size-sm);
+    font-weight: 600;
+    color: var(--pp-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
 }
 
 .header-left .subtitle {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    color: var(--pp-text-muted);
+    font-size: var(--pp-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .header-right {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
-/* Buttons */
+/* Buttons - Premiere style */
 .btn {
     padding: 10px 16px;
     border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: var(--pp-radius-sm);
+    font-size: var(--pp-font-size-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--pp-transition-fast);
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -163,36 +173,37 @@ body {
 }
 
 .btn-primary {
-    background: var(--accent);
+    background: var(--pp-accent);
     color: white;
 }
 
 .btn-primary:hover {
-    background: var(--accent-hover);
+    background: var(--pp-accent-hover);
 }
 
 .btn-secondary {
-    background: var(--bg-card);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
+    background: var(--pp-bg-surface);
+    color: var(--pp-text-primary);
+    border: 1px solid var(--pp-border-subtle);
 }
 
 .btn-secondary:hover {
-    background: var(--bg-hover);
+    background: var(--pp-bg-hover);
+    border-color: var(--pp-border);
 }
 
 .btn-danger {
-    background: var(--error);
+    background: var(--pp-error);
     color: white;
 }
 
 .btn-danger:hover {
-    background: var(--error-hover);
+    background: #dc2626;
 }
 
 .btn-small {
     padding: 6px 10px;
-    font-size: 0.8rem;
+    font-size: var(--pp-font-size-xs);
 }
 
 .btn:disabled {
@@ -371,25 +382,24 @@ body {
 .recordings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    gap: 16px;
 }
 
 .recording-card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background: var(--pp-bg-panel);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-md);
     overflow: hidden;
-    transition: all 0.2s;
+    transition: all var(--pp-transition-fast);
 }
 
 .recording-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
+    border-color: var(--pp-border);
 }
 
 .recording-card.selected {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    border-color: var(--pp-accent);
+    box-shadow: 0 0 0 2px var(--pp-accent-muted);
 }
 
 .recording-card.archived {
@@ -489,18 +499,20 @@ body {
 .stage-badge {
     display: inline-block;
     padding: 4px 10px;
-    background: var(--accent);
-    border-radius: 20px;
-    font-size: 0.75rem;
+    background: var(--pp-accent);
+    border-radius: var(--pp-radius-pill);
+    font-size: var(--pp-font-size-xs);
     font-weight: 600;
     color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.stage-badge.main-stage { background: #8b5cf6; }
-.stage-badge.yabun-yarns { background: #f59e0b; }
-.stage-badge.corroboree { background: #10b981; }
-.stage-badge.speak-out { background: #ef4444; }
-.stage-badge.old-test { background: #6b7280; }
+.stage-badge.main-stage { background: var(--pp-stage-main); }
+.stage-badge.yabun-yarns { background: var(--pp-stage-yarns); }
+.stage-badge.corroboree { background: var(--pp-stage-corroboree); }
+.stage-badge.speak-out { background: var(--pp-stage-speakout); }
+.stage-badge.old-test { background: var(--pp-stage-test); }
 
 /* Card Actions */
 .recording-actions {
