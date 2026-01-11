@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recordings Manager | Yabun 2025</title>
-    <link rel="stylesheet" href="css/premiere-theme.css?v=1.0">
-    <link rel="stylesheet" href="css/recordings.css?v=2.0">
+    <link rel="stylesheet" href="css/premiere-theme.css?v=2.0">
+    <link rel="stylesheet" href="css/recordings.css?v=4.0">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
         <div class="login-box">
-            <h1>🎬 Recordings Manager</h1>
+            <h1>
+                <svg class="icon icon-lg" viewBox="0 0 24 24" style="display:inline; vertical-align:middle; margin-right:8px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                Recordings Manager
+            </h1>
             <p>Enter producer password to access</p>
             <input type="password" id="loginPassword" placeholder="Password" autofocus>
             <button onclick="checkLogin()">Enter</button>
@@ -25,14 +28,29 @@
         <!-- Header -->
         <header class="header">
             <div class="header-left">
-                <h1>🎬 Recordings Manager</h1>
+                <h1>
+                    <svg class="icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    Recordings Manager
+                </h1>
                 <span class="subtitle">Yabun Festival 2025</span>
             </div>
             <div class="header-right">
-                <button class="btn btn-secondary" onclick="refreshRecordings()">🔄 Refresh</button>
-                <button class="btn btn-secondary" onclick="exportCSV()">📊 Export CSV</button>
-                <button class="btn btn-secondary" onclick="exportFinalCutXML()">🎬 FinalCut XML</button>
-                <a href="/" class="btn btn-secondary">← Dashboard</a>
+                <button class="btn btn-secondary" onclick="refreshRecordings()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                    Refresh
+                </button>
+                <button class="btn btn-secondary" onclick="exportCSV()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+                    Export CSV
+                </button>
+                <button class="btn btn-secondary" onclick="exportFinalCutXML()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                    FinalCut XML
+                </button>
+                <a href="/" class="btn btn-secondary">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                    Dashboard
+                </a>
             </div>
         </header>
 
@@ -47,19 +65,19 @@
                 <span class="stat-label">Total Duration</span>
             </div>
             <div class="stat-item">
-                <span class="stat-value" id="statMainStage">--</span>
-                <span class="stat-label">Main Stage</span>
+                <span class="stat-value" id="statSelected">0</span>
+                <span class="stat-label">Selected</span>
             </div>
             <div class="stat-item">
-                <span class="stat-value" id="statOther">--</span>
-                <span class="stat-label">Other</span>
+                <span class="stat-value" id="statUntagged">--</span>
+                <span class="stat-label">Untagged</span>
             </div>
         </div>
 
-        <!-- Toolbar -->
+        <!-- Toolbar - Condensed single line -->
         <div class="toolbar">
             <div class="toolbar-left">
-                <input type="text" id="searchInput" placeholder="🔍 Search recordings..." oninput="filterRecordings()">
+                <input type="text" id="searchInput" placeholder="Search recordings..." oninput="filterRecordings()">
                 <select id="stageFilter" onchange="filterRecordings()">
                     <option value="">All Stages</option>
                     <option value="Main Stage">Main Stage</option>
@@ -74,13 +92,13 @@
                     <option value="5">Over 5 mins</option>
                     <option value="10">Over 10 mins</option>
                     <option value="30">Over 30 mins</option>
-                    <option value="short">Under 2 mins (tests)</option>
+                    <option value="short">Under 2 mins</option>
                 </select>
                 <select id="tagFilter" onchange="filterRecordings()">
                     <option value="">All Tags</option>
-                    <option value="keep">🟢 Keep</option>
-                    <option value="review">🟡 Review</option>
-                    <option value="archive">📦 Archived</option>
+                    <option value="keep">Keep</option>
+                    <option value="review">Review</option>
+                    <option value="archive">Archived</option>
                     <option value="none">No Tag</option>
                 </select>
                 <select id="sortBy" onchange="sortRecordings()">
@@ -91,33 +109,38 @@
                     <option value="stage">By Stage</option>
                 </select>
                 <div class="view-toggle">
-                    <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid View">▦</button>
-                    <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List View">☰</button>
+                    <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid View">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List View">
+                        <svg viewBox="0 0 24 24"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                    </button>
                 </div>
             </div>
             <div class="toolbar-right">
-                <span class="last-refresh" id="lastRefresh">--</span>
+                <span class="last-refresh" id="lastRefresh">Updated: --</span>
                 <label class="checkbox-label">
                     <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                     Select All
                 </label>
-                <span class="selection-count" id="selectionCount"></span>
-                <button class="btn btn-warning btn-small" id="selectShortBtn" onclick="selectShortClips()" title="Select clips under 2 mins">⚡ Short</button>
-                <button class="btn btn-secondary" id="batchRenameBtn" onclick="openBatchRename()" disabled>✏️ Rename</button>
-                <button class="btn btn-secondary" id="batchTagBtn" onclick="openBatchTag()" disabled>🏷️ Tag</button>
-                <button class="btn btn-danger" id="bulkDeleteBtn" onclick="bulkDelete()" disabled>🗑 Delete</button>
-                <button class="btn btn-primary" id="bulkDownloadBtn" onclick="bulkDownload()" disabled>⬇ Download</button>
+                <button class="btn btn-warning btn-small" id="selectShortBtn" onclick="selectShortClips()" title="Select clips under 2 mins">Short</button>
+                <button class="btn btn-secondary" id="batchRenameBtn" onclick="openBatchRename()" disabled>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                    Rename
+                </button>
+                <button class="btn btn-secondary" id="batchTagBtn" onclick="openBatchTag()" disabled>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                    Tag
+                </button>
+                <button class="btn btn-danger" id="bulkDeleteBtn" onclick="bulkDelete()" disabled>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    Delete
+                </button>
+                <button class="btn btn-primary" id="bulkDownloadBtn" onclick="bulkDownload()" disabled>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    Download
+                </button>
             </div>
-        </div>
-
-        <!-- Keyboard Shortcuts Hint -->
-        <div class="shortcuts-hint" id="shortcutsHint">
-            <span>⌨️ Shortcuts:</span>
-            <kbd>A</kbd> Select All
-            <kbd>D</kbd> Download
-            <kbd>Delete</kbd> Delete
-            <kbd>R</kbd> Refresh
-            <kbd>?</kbd> Help
         </div>
 
         <!-- Recordings Grid View -->
@@ -153,9 +176,20 @@
 
         <!-- Empty State -->
         <div id="emptyState" class="empty-state" style="display: none;">
-            <p>📹 No recordings found</p>
+            <p>No recordings found</p>
             <button class="btn btn-primary" onclick="refreshRecordings()">Refresh from Mux</button>
         </div>
+
+        <!-- Footer with Keyboard Shortcuts -->
+        <footer class="app-footer">
+            <div class="footer-shortcuts">
+                <span class="footer-shortcut"><kbd>A</kbd> Select All</span>
+                <span class="footer-shortcut"><kbd>D</kbd> Download</span>
+                <span class="footer-shortcut"><kbd>Delete</kbd> Delete</span>
+                <span class="footer-shortcut"><kbd>R</kbd> Refresh</span>
+                <span class="footer-shortcut"><kbd>?</kbd> Help</span>
+            </div>
+        </footer>
     </div>
 
     <!-- Preview Modal - Full Clip Editor -->

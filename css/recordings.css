@@ -1,11 +1,11 @@
 /* ============================================
    RECORDINGS MANAGER - CSS
-   Adobe Premiere Pro inspired theme
+   Broadcast Standard Dark UI
    
-   REQUIRES: premiere-theme.css loaded first for CSS variables
+   REQUIRES: premiere-theme.css loaded first
    ============================================ */
 
-/* Legacy variable mapping - maps old names to new Premiere theme */
+/* Legacy variable mapping */
 :root {
     --bg-dark: var(--pp-bg-app);
     --bg-panel: var(--pp-bg-panel);
@@ -19,7 +19,7 @@
     --success: var(--pp-live);
     --warning: var(--pp-warning);
     --error: var(--pp-error);
-    --error-hover: #dc2626;
+    --error-hover: var(--pp-btn-danger-hover);
 }
 
 * {
@@ -211,168 +211,177 @@ body {
     cursor: not-allowed;
 }
 
-/* Stats Bar */
+/* Stats Bar - 4 columns: Recordings, Duration, Selected, Untagged */
 .stats-bar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: var(--pp-space-lg);
 }
 
 .stat-item {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
+    background: var(--pp-bg-panel);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-md);
+    padding: 16px 12px;
     text-align: center;
 }
 
 .stat-value {
     display: block;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--accent);
+    color: var(--pp-accent);
+    font-family: var(--pp-font-mono);
 }
 
 .stat-label {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    color: var(--pp-text-secondary);
+    font-size: var(--pp-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
 }
 
-/* Toolbar */
+/* Responsive stats */
+@media (max-width: 768px) {
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Toolbar - Condensed to single line */
 .toolbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    background: var(--bg-panel);
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    gap: 12px;
+    margin-bottom: var(--pp-space-lg);
+    flex-wrap: nowrap;
+    background: var(--pp-bg-panel);
+    padding: 12px 16px;
+    border-radius: var(--pp-radius-md);
+    border: 1px solid var(--pp-border-subtle);
 }
 
 .toolbar-left {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
     flex: 1;
+    min-width: 0;
 }
 
 .toolbar-right {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
-    flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
-.toolbar input[type="text"],
+.toolbar input[type="text"] {
+    padding: 8px 12px;
+    background: var(--pp-bg-input);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-md);
+    color: var(--pp-text-primary);
+    font-size: var(--pp-font-size-sm);
+    width: 160px;
+}
+
 .toolbar select {
-    padding: 10px 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    min-width: 180px;
+    padding: 8px 12px;
+    background: var(--pp-bg-input);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-md);
+    color: var(--pp-text-primary);
+    font-size: var(--pp-font-size-sm);
+    min-width: 120px;
 }
 
 .toolbar input:focus,
 .toolbar select:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--pp-accent);
 }
 
 .checkbox-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    gap: 6px;
+    color: var(--pp-text-secondary);
+    font-size: var(--pp-font-size-sm);
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .checkbox-label input {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     cursor: pointer;
 }
 
 .selection-count {
-    color: var(--accent);
+    color: var(--pp-accent);
     font-weight: 600;
-    font-size: 0.9rem;
-    min-width: 80px;
+    font-size: var(--pp-font-size-sm);
+    white-space: nowrap;
 }
 
 .last-refresh {
-    color: var(--text-secondary);
-    font-size: 0.8rem;
+    color: var(--pp-text-muted);
+    font-size: var(--pp-font-size-xs);
     padding: 4px 8px;
-    background: var(--bg-card);
-    border-radius: 4px;
+    background: var(--pp-bg-input);
+    border-radius: var(--pp-radius-sm);
+    white-space: nowrap;
 }
 
 .btn-warning {
-    background: var(--warning);
-    color: #000;
+    background: var(--pp-warning);
+    color: var(--pp-text-inverse);
 }
 
 .btn-warning:hover {
-    background: #e59100;
+    background: #d97706;
 }
 
-.shortcuts-hint {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    flex-wrap: wrap;
-}
-
-.shortcuts-hint kbd {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-family: monospace;
-    font-size: 0.8rem;
-    color: var(--text-primary);
-}
-
+/* View toggle */
 .view-toggle {
     display: flex;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    background: var(--pp-bg-input);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-md);
     overflow: hidden;
 }
 
 .view-btn {
     background: transparent;
     border: none;
-    color: var(--text-secondary);
-    padding: 8px 12px;
-    font-size: 1.1rem;
+    color: var(--pp-icon);
+    padding: 8px 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--pp-transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .view-btn:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
+    color: var(--pp-icon-hover);
+    background: var(--pp-bg-hover);
 }
 
 .view-btn.active {
-    color: var(--accent);
-    background: var(--bg-hover);
+    color: var(--pp-accent);
+    background: var(--pp-bg-hover);
+}
+
+.view-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
 }
 
 /* ============================================
@@ -1363,4 +1372,99 @@ textarea.input-field {
     .preview-info {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================
+   FOOTER - Keyboard Shortcuts
+   Persistent, thin, non-intrusive
+   ============================================ */
+
+.app-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: var(--pp-bg-panel);
+    border-top: 1px solid var(--pp-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 0 16px;
+    z-index: var(--pp-z-sticky);
+}
+
+.footer-shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--pp-font-size-xs);
+    color: var(--pp-text-muted);
+}
+
+.footer-shortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.footer-shortcut kbd {
+    background: var(--pp-bg-input);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-sm);
+    padding: 2px 6px;
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-font-size-xs);
+    color: var(--pp-text-secondary);
+}
+
+/* Add bottom padding to main content to account for footer */
+.main-app {
+    padding-bottom: 60px;
+}
+
+/* Hide footer on mobile - not enough space */
+@media (max-width: 768px) {
+    .app-footer {
+        display: none;
+    }
+    
+    .main-app {
+        padding-bottom: 20px;
+    }
+}
+
+/* ============================================
+   ICON STYLING - Mono icons
+   ============================================ */
+
+.icon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--pp-icon);
+    stroke-width: 2;
+    fill: none;
+    flex-shrink: 0;
+}
+
+.icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.icon-lg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Icon hover states */
+button:hover .icon,
+a:hover .icon {
+    stroke: var(--pp-icon-hover);
+}
+
+.btn-primary .icon,
+.btn-danger .icon {
+    stroke: currentColor;
 }

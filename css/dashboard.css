@@ -1,17 +1,18 @@
 /**
  * DASHBOARD.CSS - Mediahouse Crew Dashboard
- * Adobe Premiere Pro inspired theme
+ * Broadcast Standard Dark UI
  * 
- * REQUIRES: premiere-theme.css loaded first for CSS variables
+ * REQUIRES: premiere-theme.css loaded first
  * 
- * Design: Professional dark theme matching Adobe Premiere Pro
- * - Warm dark greys (not pure black)
- * - Off-white text (not pure white)
- * - Muted accent colors
- * - Thin borders, flat design
+ * Design: Dark Studio Philosophy
+ * - Cool dark greys (never warm)
+ * - Text never pure white (prevents halation)
+ * - Elevation via grey shades, no shadows
+ * - Saturated colors only for status
+ * - Desaturated mono icons
  */
 
-/* Legacy variable mapping - maps old names to new Premiere theme */
+/* Legacy variable mapping */
 :root {
     --bg-dark: var(--pp-bg-app);
     --bg-panel: var(--pp-bg-panel);
@@ -91,14 +92,14 @@ html, body {
 }
 
 /* ============================================
-   TABS - Premiere style
-   Subtle until selected, then blue highlight
+   TABS - Broadcast style
+   Flat, tight radius, cool colors
    ============================================ */
 
 .tabs {
     display: flex;
     gap: 2px;
-    margin-bottom: 12px;
+    margin-bottom: var(--pp-space-md);
     background: var(--pp-bg-input);
     padding: 3px;
     border-radius: var(--pp-radius-md);
@@ -106,7 +107,7 @@ html, body {
 
 .tab-btn {
     flex: 1;
-    padding: 10px;
+    padding: 10px 16px;
     background: transparent;
     border: none;
     border-radius: var(--pp-radius-sm);
@@ -115,6 +116,10 @@ html, body {
     font-weight: 500;
     cursor: pointer;
     transition: all var(--pp-transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .tab-btn:hover {
@@ -123,8 +128,17 @@ html, body {
 }
 
 .tab-btn.active {
-    background: var(--pp-accent);
-    color: white;
+    background: var(--pp-btn-primary);
+    color: #ffffff;
+}
+
+/* Tab icons */
+.tab-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
 }
 
 .tab-content {
@@ -136,20 +150,20 @@ html, body {
 }
 
 /* ============================================
-   PLAYER SELECTOR - Premiere style pills
+   PLAYER SELECTOR - Broadcast style pills
    ============================================ */
 
 .player-selector {
     display: flex;
     gap: 6px;
-    margin-bottom: 12px;
+    margin-bottom: var(--pp-space-md);
     overflow-x: auto;
     padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
 }
 
 .selector-btn {
-    padding: 8px 16px;
+    padding: 8px 14px;
     background: var(--pp-bg-panel);
     border: 1px solid var(--pp-border-subtle);
     border-radius: var(--pp-radius-pill);
@@ -167,15 +181,15 @@ html, body {
 }
 
 .selector-btn.active {
-    background: var(--pp-accent);
-    border-color: var(--pp-accent);
-    color: white;
+    background: var(--pp-btn-primary);
+    border-color: var(--pp-btn-primary);
+    color: #ffffff;
 }
 
 .bandwidth-btn.active {
-    background: var(--pp-accent);
-    border-color: var(--pp-accent);
-    color: white;
+    background: var(--pp-btn-primary);
+    border-color: var(--pp-btn-primary);
+    color: #ffffff;
 }
 
 /* ============================================
@@ -894,52 +908,77 @@ html, body {
 }
 
 /* ============================================
-   BUTTONS - Premiere style
-   Subtle by default, blue for primary actions
+   BUTTONS - Broadcast style
+   Flat, rich colors, no gradients
    ============================================ */
 
 .btn {
     padding: 10px 16px;
     border: none;
-    border-radius: var(--pp-radius-sm);
+    border-radius: var(--pp-radius-md);
     font-size: var(--pp-font-size-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all var(--pp-transition-fast);
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 40px;
+    min-width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
 }
 
 .btn-primary {
-    background: var(--pp-accent);
-    color: white;
+    background: var(--pp-btn-primary);
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background: var(--pp-accent-hover);
+    background: var(--pp-btn-primary-hover);
 }
 
 .btn-secondary {
-    background: var(--pp-bg-surface);
+    background: var(--pp-btn-secondary);
     color: var(--pp-text-primary);
-    border: 1px solid var(--pp-border-subtle);
+    border: 1px solid var(--pp-border);
 }
 
 .btn-secondary:hover {
-    background: var(--pp-bg-hover);
-    border-color: var(--pp-border);
+    background: var(--pp-btn-secondary-hover);
+}
+
+.btn-danger {
+    background: var(--pp-btn-danger);
+    color: #ffffff;
+}
+
+.btn-danger:hover {
+    background: var(--pp-btn-danger-hover);
 }
 
 .btn-settings {
     background: var(--pp-bg-surface);
-    color: var(--pp-text-secondary);
+    color: var(--pp-icon);
     padding: 8px 12px;
     border: 1px solid var(--pp-border-subtle);
 }
 
 .btn-settings:hover {
-    color: var(--pp-text-primary);
+    color: var(--pp-icon-hover);
     background: var(--pp-bg-hover);
+}
+
+.btn-settings svg {
+    width: 18px;
+    height: 18px;
 }
 
 
@@ -1044,21 +1083,31 @@ html, body {
 }
 
 /* ============================================
-   INFO CARD
+   INFO CARD - Event Info Tab
+   Responsive width with max constraint
    ============================================ */
 
 .info-card {
-    background: var(--bg-panel);
-    border-radius: 8px;
-    padding: 16px;
-    border: 1px solid var(--border);
+    background: var(--pp-bg-panel);
+    border-radius: var(--pp-radius-md);
+    padding: var(--pp-space-lg);
+    border: 1px solid var(--pp-border-subtle);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Full width on mobile/tablet */
+@media (max-width: 1024px) {
+    .info-card {
+        max-width: 100%;
+    }
 }
 
 .info-row {
     display: flex;
     justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--pp-border-subtle);
 }
 
 .info-row:last-child {
@@ -1066,13 +1115,14 @@ html, body {
 }
 
 .info-label {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    color: var(--pp-text-secondary);
+    font-size: var(--pp-font-size-sm);
 }
 
 .info-value {
     font-weight: 500;
     text-align: right;
+    color: var(--pp-text-primary);
 }
 
 .info-brief {
@@ -1086,14 +1136,19 @@ html, body {
 
 .whatsapp-btn {
     display: block;
-    background: #25D366;
-    color: white;
+    background: var(--pp-btn-success);
+    color: #ffffff;
     text-align: center;
     padding: 14px;
-    border-radius: 8px;
+    border-radius: var(--pp-radius-md);
     text-decoration: none;
     font-weight: 600;
-    margin-top: 16px;
+    margin-top: var(--pp-space-lg);
+    transition: background var(--pp-transition-fast);
+}
+
+.whatsapp-btn:hover {
+    background: var(--pp-btn-success-hover);
 }
 
 /* ============================================
