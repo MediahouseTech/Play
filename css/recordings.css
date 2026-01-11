@@ -193,14 +193,17 @@ body {
 }
 
 .btn-danger {
-    background: var(--pp-bg-hover);
-    color: var(--pp-text-secondary);
-    border: 1px solid var(--pp-border-subtle);
+    background: #7f1d1d;
+    color: #fecaca;
+    border: 1px solid #7f1d1d;
 }
 
 .btn-danger:hover {
-    background: var(--pp-bg-active);
-    color: var(--pp-text-primary);
+    background: #991b1b;
+}
+
+.btn-danger .icon {
+    stroke: #fecaca;
 }
 
 .btn-small {
@@ -562,37 +565,36 @@ body {
     height: 14px;
 }
 
-/* DOWNLOAD button - Blue */
+/* DOWNLOAD button - Blue (matches toolbar) */
 .btn-download {
-    background: #1e3a5f;
-    color: #93c5fd;
-    border: 1px solid #1e3a5f;
+    background: var(--pp-btn-primary);
+    color: #ffffff;
+    border: 1px solid var(--pp-btn-primary);
 }
 
 .btn-download:hover {
-    background: #1e4976;
+    background: var(--pp-btn-primary-hover);
 }
 
 .btn-download .icon {
-    stroke: #60a5fa;
+    stroke: #ffffff;
     width: 14px;
     height: 14px;
 }
 
-/* DELETE button - Mono grey (NOT red) */
+/* DELETE button - Deep red with MONO icon */
 .btn-delete {
-    background: var(--pp-bg-hover);
-    color: var(--pp-text-secondary);
-    border: 1px solid var(--pp-border-subtle);
+    background: #7f1d1d;
+    color: #fecaca;
+    border: 1px solid #7f1d1d;
 }
 
 .btn-delete:hover {
-    background: var(--pp-bg-active);
-    color: var(--pp-text-primary);
+    background: #991b1b;
 }
 
 .btn-delete .icon {
-    stroke: var(--pp-text-muted);
+    stroke: #fecaca;
     width: 14px;
     height: 14px;
 }
