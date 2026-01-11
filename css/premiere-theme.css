@@ -1,0 +1,156 @@
+/**
+ * PREMIERE-THEME.CSS - Shared Design Tokens
+ * Adobe Premiere Pro inspired dark theme
+ * 
+ * USAGE: Import this file BEFORE dashboard.css or recordings.css
+ * Both interfaces will share these design tokens for consistency.
+ * 
+ * Design Philosophy:
+ * - Dark but not harsh (no pure black)
+ * - Text is off-white (no pure white) 
+ * - Blue accent used sparingly
+ * - Thin borders, flat design
+ * - Professional, understated aesthetic
+ */
+
+:root {
+    /* ============================================
+       BACKGROUND HIERARCHY
+       Warm dark greys, NOT pure black
+       ============================================ */
+    --pp-bg-app: #1e1e1e;           /* Deepest - app background */
+    --pp-bg-panel: #252525;          /* Panels, cards */
+    --pp-bg-surface: #2d2d2d;        /* Elevated surfaces, headers */
+    --pp-bg-input: #1a1a1a;          /* Input fields, wells */
+    --pp-bg-hover: #3a3a3a;          /* Hover states */
+    --pp-bg-active: #404040;         /* Active/pressed states */
+    
+    /* ============================================
+       BORDERS
+       Subtle, thin, almost invisible
+       ============================================ */
+    --pp-border: #3a3a3a;            /* Standard borders */
+    --pp-border-subtle: #2a2a2a;     /* Very subtle dividers */
+    --pp-border-focus: #4a90d9;      /* Focus rings */
+    
+    /* ============================================
+       TEXT HIERARCHY
+       Off-white primary, NOT pure white
+       ============================================ */
+    --pp-text-primary: #e0e0e0;      /* Main text */
+    --pp-text-secondary: #9a9a9a;    /* Labels, hints */
+    --pp-text-muted: #666666;        /* Disabled, tertiary */
+    --pp-text-inverse: #1e1e1e;      /* Text on light backgrounds */
+    
+    /* ============================================
+       ACCENT COLORS
+       Muted Premiere blue
+       ============================================ */
+    --pp-accent: #4a90d9;            /* Primary accent */
+    --pp-accent-hover: #5a9fe8;      /* Accent hover */
+    --pp-accent-muted: rgba(74, 144, 217, 0.15); /* Accent backgrounds */
+    
+    /* Timeline/Audio - Premiere teal */
+    --pp-timeline: #5cb3cc;
+    --pp-timeline-muted: rgba(92, 179, 204, 0.2);
+    
+    /* ============================================
+       STATUS COLORS
+       Slightly softer than typical web colors
+       ============================================ */
+    --pp-live: #4ade80;              /* Live/Success - soft green */
+    --pp-live-bg: rgba(74, 222, 128, 0.15);
+    
+    --pp-warning: #fbbf24;           /* Warning/Caution - amber */
+    --pp-warning-bg: rgba(251, 191, 36, 0.15);
+    
+    --pp-error: #f87171;             /* Error/Danger - soft red */
+    --pp-error-bg: rgba(248, 113, 113, 0.15);
+    
+    --pp-break: #ff6b6b;             /* Break mode - distinct red */
+    --pp-break-bg: rgba(255, 107, 107, 0.1);
+    
+    /* ============================================
+       VU METER COLORS
+       Broadcast standard with Premiere aesthetic
+       ============================================ */
+    --pp-vu-safe: #22c55e;           /* -60 to -12 dB */
+    --pp-vu-caution: #eab308;        /* -12 to -6 dB */
+    --pp-vu-danger: #ef4444;         /* -6 to 0 dB */
+    --pp-vu-peak: #ffffff;           /* Peak hold indicator */
+    --pp-vu-bg: #0a0a12;             /* Meter background */
+    --pp-vu-track: #050508;          /* Track inside meter */
+    
+    /* ============================================
+       TYPOGRAPHY
+       System fonts, clean hierarchy
+       ============================================ */
+    --pp-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --pp-font-mono: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+    
+    --pp-font-size-xs: 0.7rem;       /* 11px - VU labels */
+    --pp-font-size-sm: 0.8rem;       /* 13px - Meta, badges */
+    --pp-font-size-base: 0.9rem;     /* 14px - Body text */
+    --pp-font-size-md: 1rem;         /* 16px - Headings */
+    --pp-font-size-lg: 1.2rem;       /* 19px - Modal titles */
+    --pp-font-size-xl: 1.5rem;       /* 24px - Page titles */
+    
+    /* ============================================
+       SPACING
+       Consistent padding/margins
+       ============================================ */
+    --pp-space-xs: 4px;
+    --pp-space-sm: 8px;
+    --pp-space-md: 12px;
+    --pp-space-lg: 16px;
+    --pp-space-xl: 24px;
+    
+    /* ============================================
+       BORDERS & RADIUS
+       Subtle rounding, thin lines
+       ============================================ */
+    --pp-radius-sm: 4px;             /* Buttons, inputs */
+    --pp-radius-md: 6px;             /* Cards, panels */
+    --pp-radius-lg: 8px;             /* Modals */
+    --pp-radius-pill: 20px;          /* Pills, badges */
+    
+    --pp-border-width: 1px;
+    
+    /* ============================================
+       SHADOWS
+       Minimal - Premiere is mostly flat
+       ============================================ */
+    --pp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --pp-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --pp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    
+    /* ============================================
+       TRANSITIONS
+       Quick, subtle animations
+       ============================================ */
+    --pp-transition-fast: 0.1s ease;
+    --pp-transition-base: 0.2s ease;
+    --pp-transition-slow: 0.3s ease;
+    
+    /* ============================================
+       Z-INDEX SCALE
+       Consistent layering
+       ============================================ */
+    --pp-z-dropdown: 100;
+    --pp-z-sticky: 200;
+    --pp-z-modal-backdrop: 900;
+    --pp-z-modal: 1000;
+    --pp-z-toast: 1100;
+}
+
+/* ============================================
+   STAGE-SPECIFIC COLORS
+   Consistent across dashboard and recordings
+   ============================================ */
+:root {
+    --pp-stage-main: #8b5cf6;        /* Purple - Main Stage */
+    --pp-stage-yarns: #f59e0b;       /* Orange - Yabun Yarns */
+    --pp-stage-corroboree: #10b981;  /* Teal - Corroboree Ground */
+    --pp-stage-speakout: #ef4444;    /* Red - Speak Out */
+    --pp-stage-test: #6b7280;        /* Grey - Test streams */
+}

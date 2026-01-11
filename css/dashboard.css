@@ -1,28 +1,29 @@
 /**
  * DASHBOARD.CSS - Mediahouse Crew Dashboard
- * Dark theme, mobile-first, high contrast for outdoor use
+ * Adobe Premiere Pro inspired theme
  * 
- * Color Zones:
- * - Background: #121212 (near black)
- * - Panels: #1e1e1e, #2d2d2d
- * - Text: #ffffff (primary), #a0a0a0 (secondary)
- * - Accent: #00a8e8 (blue)
- * - Live: #22c55e (green)
- * - Warning: #eab308 (yellow)
- * - Error: #ef4444 (red)
+ * REQUIRES: premiere-theme.css loaded first for CSS variables
+ * 
+ * Design: Professional dark theme matching Adobe Premiere Pro
+ * - Warm dark greys (not pure black)
+ * - Off-white text (not pure white)
+ * - Muted accent colors
+ * - Thin borders, flat design
  */
 
+/* Legacy variable mapping - maps old names to new Premiere theme */
 :root {
-    --bg-dark: #121212;
-    --bg-panel: #1e1e1e;
-    --bg-panel-light: #2d2d2d;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a0;
-    --accent: #00a8e8;
-    --live: #22c55e;
-    --warning: #eab308;
-    --error: #ef4444;
-    --border: #3a3a3a;
+    --bg-dark: var(--pp-bg-app);
+    --bg-panel: var(--pp-bg-panel);
+    --bg-panel-light: var(--pp-bg-surface);
+    --bg-card: var(--pp-bg-panel);
+    --text-primary: var(--pp-text-primary);
+    --text-secondary: var(--pp-text-secondary);
+    --accent: var(--pp-accent);
+    --live: var(--pp-live);
+    --warning: var(--pp-warning);
+    --error: var(--pp-error);
+    --border: var(--pp-border);
 }
 
 * {

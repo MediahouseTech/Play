@@ -1,20 +1,24 @@
 /* ============================================
    RECORDINGS MANAGER - CSS
+   Adobe Premiere Pro inspired theme
+   
+   REQUIRES: premiere-theme.css loaded first for CSS variables
    ============================================ */
 
+/* Legacy variable mapping - maps old names to new Premiere theme */
 :root {
-    --bg-dark: #0a0a0f;
-    --bg-panel: #12121a;
-    --bg-card: #1a1a24;
-    --bg-hover: #252530;
-    --border: #2a2a3a;
-    --text-primary: #ffffff;
-    --text-secondary: #888899;
-    --accent: #3b82f6;
-    --accent-hover: #2563eb;
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --error: #ef4444;
+    --bg-dark: var(--pp-bg-app);
+    --bg-panel: var(--pp-bg-panel);
+    --bg-card: var(--pp-bg-surface);
+    --bg-hover: var(--pp-bg-hover);
+    --border: var(--pp-border);
+    --text-primary: var(--pp-text-primary);
+    --text-secondary: var(--pp-text-secondary);
+    --accent: var(--pp-accent);
+    --accent-hover: var(--pp-accent-hover);
+    --success: var(--pp-live);
+    --warning: var(--pp-warning);
+    --error: var(--pp-error);
     --error-hover: #dc2626;
 }
 
