@@ -52,21 +52,23 @@ html, body {
 }
 
 .header {
-    background: var(--bg-panel);
-    padding: 12px 16px;
+    background: var(--pp-bg-surface);
+    padding: 10px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--pp-border-subtle);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .header h1 {
-    font-size: 1.1rem;
+    font-size: var(--pp-font-size-sm);
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--pp-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .header-actions {
@@ -89,31 +91,39 @@ html, body {
 }
 
 /* ============================================
-   TABS
+   TABS - Premiere style
+   Subtle until selected, then blue highlight
    ============================================ */
 
 .tabs {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     margin-bottom: 12px;
+    background: var(--pp-bg-input);
+    padding: 3px;
+    border-radius: var(--pp-radius-md);
 }
 
 .tab-btn {
     flex: 1;
     padding: 10px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--pp-radius-sm);
+    color: var(--pp-text-secondary);
+    font-size: var(--pp-font-size-base);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--pp-transition-fast);
+}
+
+.tab-btn:hover {
+    color: var(--pp-text-primary);
+    background: var(--pp-bg-hover);
 }
 
 .tab-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--pp-accent);
     color: white;
 }
 
@@ -126,7 +136,7 @@ html, body {
 }
 
 /* ============================================
-   PLAYER SELECTOR
+   PLAYER SELECTOR - Premiere style pills
    ============================================ */
 
 .player-selector {
@@ -135,29 +145,36 @@ html, body {
     margin-bottom: 12px;
     overflow-x: auto;
     padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .selector-btn {
-    padding: 8px 14px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    padding: 8px 16px;
+    background: var(--pp-bg-panel);
+    border: 1px solid var(--pp-border-subtle);
+    border-radius: var(--pp-radius-pill);
+    color: var(--pp-text-secondary);
+    font-size: var(--pp-font-size-sm);
     white-space: nowrap;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--pp-transition-fast);
+}
+
+.selector-btn:hover {
+    background: var(--pp-bg-hover);
+    color: var(--pp-text-primary);
+    border-color: var(--pp-border);
 }
 
 .selector-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--pp-accent);
+    border-color: var(--pp-accent);
     color: white;
 }
 
 .bandwidth-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--pp-accent);
+    border-color: var(--pp-accent);
     color: white;
 }
 
@@ -712,49 +729,61 @@ html, body {
 }
 
 /* ============================================
-   PLAYER WRAPPER
+   PLAYER WRAPPER - Premiere panel style
    ============================================ */
 
 .player-wrapper {
-    background: var(--bg-panel);
-    border-radius: 8px;
+    background: var(--pp-bg-panel);
+    border-radius: var(--pp-radius-md);
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 1px solid var(--pp-border-subtle);
+    transition: border-color var(--pp-transition-fast);
+}
+
+.player-wrapper:hover {
+    border-color: var(--pp-border);
 }
 
 .player-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    background: var(--bg-panel-light);
-    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    background: var(--pp-bg-surface);
+    border-bottom: 1px solid var(--pp-border-subtle);
 }
 
 .stream-name {
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: var(--pp-font-size-sm);
+    color: var(--pp-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stream-status {
-    font-size: 0.8rem;
-    padding: 3px 8px;
-    border-radius: 12px;
-    background: var(--bg-dark);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--pp-radius-pill);
+    background: var(--pp-bg-input);
+    color: var(--pp-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stream-status.live {
-    background: var(--live);
-    color: white;
+    background: var(--pp-live);
+    color: var(--pp-text-inverse);
 }
 
 .stream-status.break {
-    background: #ff453a;
+    background: var(--pp-break);
     color: white;
 }
 
 .stream-status.error {
-    background: var(--error);
+    background: var(--pp-error);
     color: white;
 }
 
@@ -802,23 +831,28 @@ html, body {
 }
 
 /* ============================================
-   PLAYER STATS
+   PLAYER STATS - Premiere timeline info style
    ============================================ */
 
 .player-stats {
     display: flex;
-    gap: 12px;
-    padding: 8px 12px;
-    background: var(--bg-panel-light);
-    border-top: 1px solid var(--border);
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    gap: 16px;
+    padding: 6px 12px;
+    background: var(--pp-bg-surface);
+    border-top: 1px solid var(--pp-border-subtle);
+    font-size: var(--pp-font-size-xs);
+    color: var(--pp-text-secondary);
+    font-family: var(--pp-font-mono);
 }
 
 .stat {
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+.stat strong {
+    color: var(--pp-text-primary);
 }
 
 /* Hide stats when toggled off */
@@ -860,36 +894,52 @@ html, body {
 }
 
 /* ============================================
-   BUTTONS
+   BUTTONS - Premiere style
+   Subtle by default, blue for primary actions
    ============================================ */
 
 .btn {
     padding: 10px 16px;
     border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    border-radius: var(--pp-radius-sm);
+    font-size: var(--pp-font-size-sm);
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--pp-transition-fast);
     min-height: 44px;
     min-width: 44px;
 }
 
 .btn-primary {
-    background: var(--accent);
+    background: var(--pp-accent);
     color: white;
 }
 
+.btn-primary:hover {
+    background: var(--pp-accent-hover);
+}
+
 .btn-secondary {
-    background: var(--bg-panel-light);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
+    background: var(--pp-bg-surface);
+    color: var(--pp-text-primary);
+    border: 1px solid var(--pp-border-subtle);
+}
+
+.btn-secondary:hover {
+    background: var(--pp-bg-hover);
+    border-color: var(--pp-border);
 }
 
 .btn-settings {
-    background: var(--bg-panel-light);
-    color: var(--text-primary);
+    background: var(--pp-bg-surface);
+    color: var(--pp-text-secondary);
     padding: 8px 12px;
+    border: 1px solid var(--pp-border-subtle);
+}
+
+.btn-settings:hover {
+    color: var(--pp-text-primary);
+    background: var(--pp-bg-hover);
 }
 
 
