@@ -132,6 +132,15 @@ html, body {
     color: #ffffff;
 }
 
+/* Tab dividers */
+.tab-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--pp-border);
+    margin: 0 2px;
+    align-self: center;
+}
+
 /* Tab icons */
 .tab-btn svg {
     width: 16px;

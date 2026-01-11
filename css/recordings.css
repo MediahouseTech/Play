@@ -523,18 +523,167 @@ body {
 .stage-badge.speak-out { background: var(--pp-stage-speakout); }
 .stage-badge.old-test { background: var(--pp-stage-test); }
 
-/* Card Actions */
+/* Card Actions - Labeled buttons */
 .recording-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     padding: 12px 16px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-card);
+    border-top: 1px solid var(--pp-border-subtle);
+    background: var(--pp-bg-surface);
 }
 
 .recording-actions .btn {
     flex: 1;
     justify-content: center;
+    font-size: var(--pp-font-size-xs);
+    padding: 8px 10px;
+}
+
+/* Card button styles */
+.btn-edit {
+    background: var(--pp-bg-hover);
+    color: var(--pp-text-secondary);
+    border: 1px solid var(--pp-border-subtle);
+}
+
+.btn-edit:hover {
+    background: var(--pp-bg-active);
+    color: var(--pp-text-primary);
+}
+
+.btn-edit .icon {
+    stroke: var(--pp-text-muted);
+}
+
+.btn-download {
+    background: #1e3a5f;
+    color: #93c5fd;
+    border: 1px solid #1e3a5f;
+}
+
+.btn-download:hover {
+    background: #1e4976;
+}
+
+.btn-download .icon {
+    stroke: #60a5fa;
+}
+
+.btn-delete {
+    background: #7f1d1d;
+    color: #fca5a5;
+    border: 1px solid #7f1d1d;
+}
+
+.btn-delete:hover {
+    background: #991b1b;
+}
+
+.btn-delete .icon {
+    stroke: #fecaca;
+}
+
+/* Recording date with calendar icon */
+.recording-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--pp-text-muted);
+    font-size: var(--pp-font-size-sm);
+}
+
+.recording-date .icon {
+    stroke: var(--pp-text-muted);
+}
+
+/* Untagged indicator */
+.recording-card.untagged {
+    border-style: dashed;
+}
+
+.tag-badge.untagged {
+    background: var(--pp-bg-hover);
+    color: var(--pp-text-muted);
+    border: 1px dashed var(--pp-text-muted);
+}
+
+/* Tag badges */
+.tag-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: var(--pp-radius-sm);
+    font-size: var(--pp-font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tag-badge.keep {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.tag-badge.review {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.tag-badge.archive {
+    background: rgba(100, 100, 100, 0.2);
+    color: #9ca3af;
+}
+
+/* Toolbar button colors */
+.btn-short {
+    background: #92400e;
+    color: #fcd34d;
+    border: 1px solid #92400e;
+}
+
+.btn-short:hover {
+    background: #a16207;
+}
+
+.btn-short .icon {
+    stroke: #fcd34d;
+}
+
+.btn-rename {
+    background: #581c87;
+    color: #c4b5fd;
+    border: 1px solid #581c87;
+}
+
+.btn-rename:hover:not(:disabled) {
+    background: #6b21a8;
+}
+
+.btn-rename .icon {
+    stroke: #c4b5fd;
+}
+
+.btn-tag {
+    background: #14532d;
+    color: #86efac;
+    border: 1px solid #14532d;
+}
+
+.btn-tag:hover:not(:disabled) {
+    background: #166534;
+}
+
+.btn-tag .icon {
+    stroke: #86efac;
+}
+
+/* Disabled state for toolbar buttons */
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+    background: inherit;
 }
 
 /* ============================================
@@ -641,8 +790,18 @@ body {
 
 .col-date {
     width: 180px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    font-size: var(--pp-font-size-sm);
+    color: var(--pp-text-secondary);
+}
+
+.date-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.date-cell .icon {
+    stroke: var(--pp-text-muted);
 }
 
 .col-duration {
@@ -651,17 +810,17 @@ body {
 }
 
 .col-actions {
-    width: 200px;
+    width: 140px;
 }
 
 .list-actions {
     display: flex;
-    gap: 6px;
+    gap: 4px;
 }
 
 .list-actions .btn {
-    padding: 6px 10px;
-    font-size: 0.8rem;
+    padding: 6px 8px;
+    font-size: var(--pp-font-size-xs);
 }
 
 /* ============================================

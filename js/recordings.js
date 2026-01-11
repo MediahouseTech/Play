@@ -359,10 +359,11 @@ function renderRecordings() {
         
         const stageClass = getStageClass(rec.stageName);
         const isSelected = selectedRecordings.has(rec.assetId);
-        const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '';
+        const isUntagged = !rec.tag;
+        const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '<span class="tag-badge untagged">NO TAG</span>';
         
         return `
-            <div class="recording-card ${isSelected ? 'selected' : ''}" 
+            <div class="recording-card ${isSelected ? 'selected' : ''} ${isUntagged ? 'untagged' : ''}" 
                  data-asset-id="${rec.assetId}">
                 <div class="recording-thumbnail" onclick="openPreview('${rec.assetId}')">
                     <input type="checkbox" class="select-checkbox" 
@@ -380,14 +381,24 @@ function renderRecordings() {
                         <span class="stage-badge ${stageClass}">${rec.stageName}</span>
                         ${tagBadge}
                     </div>
-                    <div class="recording-meta">
-                        <span>📅 ${rec.createdFormatted || formatDate(rec.createdAt)}</span>
+                    <div class="recording-date">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>${rec.createdFormatted || formatDate(rec.createdAt)}</span>
                     </div>
                 </div>
                 <div class="recording-actions">
-                    <button class="btn btn-secondary btn-small" onclick="openEdit('${rec.assetId}')">✏️</button>
-                    <button class="btn btn-primary btn-small" onclick="downloadRecording('${rec.assetId}')">⬇️</button>
-                    <button class="btn btn-danger btn-small" onclick="openDelete('${rec.assetId}')">🗑️</button>
+                    <button class="btn btn-edit btn-small" onclick="openEdit('${rec.assetId}')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                        RENAME
+                    </button>
+                    <button class="btn btn-download btn-small" onclick="downloadRecording('${rec.assetId}')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        DOWNLOAD
+                    </button>
+                    <button class="btn btn-delete btn-small" onclick="openDelete('${rec.assetId}')">
+                        <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        DELETE
+                    </button>
                 </div>
             </div>
         `;
@@ -401,10 +412,11 @@ function renderRecordings() {
         
         const stageClass = getStageClass(rec.stageName);
         const isSelected = selectedRecordings.has(rec.assetId);
-        const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '';
+        const isUntagged = !rec.tag;
+        const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '<span class="tag-badge untagged">NO TAG</span>';
         
         return `
-            <tr class="${isSelected ? 'selected' : ''}" data-asset-id="${rec.assetId}">
+            <tr class="${isSelected ? 'selected' : ''} ${isUntagged ? 'untagged' : ''}" data-asset-id="${rec.assetId}">
                 <td class="col-checkbox">
                     <input type="checkbox" ${isSelected ? 'checked' : ''} 
                            onchange="toggleSelect('${rec.assetId}')">
@@ -419,13 +431,24 @@ function renderRecordings() {
                 <td class="col-stage">
                     <span class="stage-badge ${stageClass}">${rec.stageName}</span>
                 </td>
-                <td class="col-date">${rec.createdFormatted || formatDate(rec.createdAt)}</td>
+                <td class="col-date">
+                    <div class="date-cell">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        ${rec.createdFormatted || formatDate(rec.createdAt)}
+                    </div>
+                </td>
                 <td class="col-duration">${rec.durationStr}</td>
                 <td class="col-actions">
                     <div class="list-actions">
-                        <button class="btn btn-secondary btn-small" onclick="openEdit('${rec.assetId}')" title="Edit">✏️</button>
-                        <button class="btn btn-primary btn-small" onclick="downloadRecording('${rec.assetId}')" title="Download">⬇️</button>
-                        <button class="btn btn-danger btn-small" onclick="openDelete('${rec.assetId}')" title="Delete">🗑️</button>
+                        <button class="btn btn-edit btn-small" onclick="openEdit('${rec.assetId}')" title="Rename">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                        </button>
+                        <button class="btn btn-download btn-small" onclick="downloadRecording('${rec.assetId}')" title="Download">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                        <button class="btn btn-delete btn-small" onclick="openDelete('${rec.assetId}')" title="Delete">
+                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -446,25 +469,69 @@ function getStageClass(stageName) {
 
 function getTagLabel(tag) {
     const labels = {
-        'keep': '🟢 Keep',
-        'review': '🟡 Review',
-        'archive': '📦'
+        'keep': 'KEEP',
+        'review': 'REVIEW',
+        'archive': 'ARCHIVED'
     };
-    return labels[tag] || tag;
+    return labels[tag] || tag.toUpperCase();
 }
 
 function formatDate(timestamp) {
-    if (!timestamp) return '--';
-    const date = new Date(parseInt(timestamp) * 1000);
-    return date.toLocaleString('en-AU', {
+    // Handle null, undefined, 0, or invalid timestamps
+    if (!timestamp || timestamp === '0' || timestamp === 0) return '--';
+    
+    // Parse timestamp - could be Unix seconds, milliseconds, or ISO string
+    let date;
+    const ts = parseInt(timestamp);
+    
+    // Check if it's a valid number
+    if (isNaN(ts) || ts < 86400) {
+        // Less than 1 day in seconds = invalid
+        return '--';
+    }
+    
+    // Mux uses Unix seconds, but check if it might be milliseconds
+    if (ts > 1000000000000) {
+        date = new Date(ts); // Already milliseconds
+    } else {
+        date = new Date(ts * 1000); // Convert seconds to milliseconds
+    }
+    
+    // Validate the date is reasonable (after year 2000)
+    if (date.getFullYear() < 2000 || isNaN(date.getTime())) {
+        return '--';
+    }
+    
+    // Check if it's today or yesterday for relative display
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const recordDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const timeStr = date.toLocaleString('en-AU', {
         timeZone: 'Australia/Sydney',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
-    });
+    }).toLowerCase();
+    
+    if (recordDate.getTime() === today.getTime()) {
+        return `Today, ${timeStr}`;
+    } else if (recordDate.getTime() === yesterday.getTime()) {
+        return `Yesterday, ${timeStr}`;
+    } else {
+        // Show full date for older recordings (DD/MM/YYYY format)
+        return date.toLocaleString('en-AU', {
+            timeZone: 'Australia/Sydney',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }).replace(',', '');
+    }
 }
 
 function formatTime(seconds) {
@@ -476,13 +543,13 @@ function formatTime(seconds) {
 function updateStats() {
     const totalCount = recordings.filter(r => r.tag !== 'archive').length;
     const totalDuration = recordings.filter(r => r.tag !== 'archive').reduce((sum, r) => sum + (r.duration || 0), 0);
-    const mainStageCount = recordings.filter(r => r.stageName?.includes('Main') && r.tag !== 'archive').length;
-    const otherCount = totalCount - mainStageCount;
+    const selectedCount = selectedRecordings.size;
+    const untaggedCount = recordings.filter(r => !r.tag && r.tag !== 'archive').length;
     
     document.getElementById('statTotal').textContent = totalCount;
     document.getElementById('statDuration').textContent = formatDurationLong(totalDuration);
-    document.getElementById('statMainStage').textContent = mainStageCount;
-    document.getElementById('statOther').textContent = otherCount;
+    document.getElementById('statSelected').textContent = selectedCount;
+    document.getElementById('statUntagged').textContent = untaggedCount;
 }
 
 function formatDurationLong(seconds) {
@@ -570,20 +637,27 @@ function updateBulkButtons() {
     const hasSelection = selectedRecordings.size > 0;
     const count = selectedRecordings.size;
     
+    // Disable/enable bulk buttons
     document.getElementById('bulkDeleteBtn').disabled = !hasSelection;
     document.getElementById('bulkDownloadBtn').disabled = !hasSelection;
     document.getElementById('batchRenameBtn').disabled = !hasSelection;
     document.getElementById('batchTagBtn').disabled = !hasSelection;
     
+    // Update selection count display
     const countDisplay = document.getElementById('selectionCount');
     if (countDisplay) {
         countDisplay.textContent = hasSelection ? `${count} selected` : '';
     }
     
-    document.getElementById('bulkDeleteBtn').textContent = 
-        hasSelection ? `🗑 Delete (${count})` : '🗑 Delete';
-    document.getElementById('bulkDownloadBtn').textContent = 
-        hasSelection ? `⬇ Download (${count})` : '⬇ Download';
+    // Update button labels with counts (using innerHTML for SVG icons)
+    const deleteBtn = document.getElementById('bulkDeleteBtn');
+    const downloadBtn = document.getElementById('bulkDownloadBtn');
+    
+    deleteBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete${hasSelection ? ` (${count})` : ''}`;
+    downloadBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download${hasSelection ? ` (${count})` : ''}`;
+    
+    // Update stats to reflect current selection
+    document.getElementById('statSelected').textContent = count;
 }
 
 // ============================================
