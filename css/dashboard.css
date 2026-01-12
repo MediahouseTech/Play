@@ -1335,6 +1335,38 @@ html, body {
     background: #245c3a;
 }
 
+.btn-save-streams {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-save-streams:hover {
+    background: #16a34a;
+}
+
+.btn-save-streams:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-save-streams .icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
 .btn-lock .icon {
     width: 14px;
     height: 14px;

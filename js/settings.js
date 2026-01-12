@@ -594,6 +594,12 @@ function populateStreamConfigs() {
                     ${isLocked ? ICONS.lock : ICONS.unlock}
                     ${isLocked ? 'Locked' : 'Unlocked'}
                 </button>
+                ${!isLocked ? `
+                    <button type="button" class="btn btn-save-streams" onclick="saveStreamConfig()" title="Save stream changes">
+                        ${ICONS.check}
+                        Save Streams
+                    </button>
+                ` : ''}
                 <button type="button" class="btn btn-create-mux" onclick="showNewStreamForm()" ${isLocked ? 'disabled' : ''} title="Create new stream in Mux">
                     ${ICONS.plus}
                     Create in Mux
@@ -761,12 +767,73 @@ function deleteStream(index) {
     const stream = settingsConfig.streams[index];
     if (!stream) return;
     
-    if (!confirm(`Delete "${stream.name || 'Stream ' + (index + 1)}"?\n\nThis removes it from the dashboard.\nThe livestream still exists in Mux.`)) {
+    if (!confirm(`Delete "${stream.name || 'Stream ' + (index + 1)}"?\n\nThis removes it from the dashboard.\nThe livestream still exists in Mux.\n\nClick "Save Streams" to confirm.`)) {
         return;
     }
     
     settingsConfig.streams.splice(index, 1);
     populateStreamConfigs();
+}
+
+/**
+ * Save stream configuration to server
+ */
+async function saveStreamConfig() {
+    const button = document.querySelector('.btn-save-streams');
+    if (button) {
+        button.innerHTML = '<span class="spinner"></span> Saving...';
+        button.disabled = true;
+    }
+    
+    // Gather current stream data from inputs
+    settingsConfig.streams.forEach((stream, index) => {
+        stream.name = document.getElementById(`streamname-${index}`)?.value || stream.name || '';
+        stream.tag = document.getElementById(`streamtag-${index}`)?.value || '';
+    });
+    
+    try {
+        const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settingsConfig)
+        });
+        
+        if (!response.ok) throw new Error('Save failed');
+        
+        // Sync with global config
+        if (typeof config !== 'undefined') {
+            Object.assign(config, settingsConfig);
+        }
+        
+        // Refresh Break Mode and players
+        await populateMainBreakControls();
+        if (typeof initPlayers === 'function') {
+            initPlayers();
+        }
+        
+        if (button) {
+            button.innerHTML = `${ICONS.check} Saved!`;
+            button.classList.add('btn-success');
+            setTimeout(() => {
+                button.innerHTML = `${ICONS.check} Save Streams`;
+                button.classList.remove('btn-success');
+                button.disabled = false;
+            }, 2000);
+        }
+        
+        console.log('[Settings] Stream config saved');
+        
+    } catch (error) {
+        console.error('[Settings] Stream config save failed:', error);
+        if (button) {
+            button.innerHTML = '❌ Failed';
+            setTimeout(() => {
+                button.innerHTML = `${ICONS.check} Save Streams`;
+                button.disabled = false;
+            }, 2000);
+        }
+        alert('Failed to save stream configuration: ' + error.message);
+    }
 }
 
 /**
