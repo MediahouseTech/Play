@@ -1222,6 +1222,32 @@ html, body {
     margin: 0;
 }
 
+.btn-delete-stream {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    background: #4a1c1c;
+    color: #f87171;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete-stream:hover {
+    background: #7f1d1d;
+}
+
+.btn-delete-stream .icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
 .btn-create-mux {
     display: flex;
     align-items: center;

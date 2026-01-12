@@ -664,11 +664,27 @@ function populateStreamConfigs() {
  * Render a single stream card
  */
 function renderStreamCard(stream, index) {
+    const isLocked = settingsConfig.streamConfigLocked !== false;
     return `
         <div class="stream-config" data-index="${index}">
             <div class="stream-header">
-                <h4>Stream ${index + 1}: ${stream.name}</h4>
-                <span class="stream-tag" style="background: ${getTagColor(stream.tag)}; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem;">${stream.tag || 'No tag'}</span>
+                <h4>Stream ${index + 1}</h4>
+                ${!isLocked ? `
+                    <button type="button" class="btn-delete-stream" onclick="deleteStream(${index})" title="Delete this stream">
+                        ${ICONS.trash}
+                        Delete
+                    </button>
+                ` : ''}
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Stream Name</label>
+                    <input type="text" id="streamname-${index}" class="input-field" value="${stream.name || ''}" ${isLocked ? 'readonly' : ''} onchange="updateStreamField(${index}, 'name', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>Tag (for Recording Manager)</label>
+                    <input type="text" id="streamtag-${index}" class="input-field" value="${stream.tag || ''}" ${isLocked ? 'readonly' : ''} placeholder="e.g. Main" onchange="updateStreamField(${index}, 'tag', this.value)">
+                </div>
             </div>
             <div class="config-row">
                 <label>Live Stream ID</label>
@@ -711,6 +727,46 @@ function renderStreamCard(stream, index) {
             </div>
         </div>
     `;
+}
+
+/**
+ * Update a field on an existing stream
+ */
+function updateStreamField(index, field, value) {
+    if (!settingsConfig.streams || !settingsConfig.streams[index]) return;
+    settingsConfig.streams[index][field] = value;
+    
+    // If updating tag, also update tags list
+    if (field === 'tag' && value) {
+        if (!settingsConfig.tags) settingsConfig.tags = [];
+        const tagExists = settingsConfig.tags.some(t => t.name.toLowerCase() === value.toLowerCase());
+        if (!tagExists) {
+            const hue = Math.abs(value.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0) % 360);
+            settingsConfig.tags.push({
+                id: value.toLowerCase().replace(/\s+/g, '_'),
+                name: value,
+                color: `hsl(${hue}, 60%, 45%)`,
+                icon: '🎬'
+            });
+        }
+    }
+}
+
+/**
+ * Delete a stream
+ */
+function deleteStream(index) {
+    if (settingsConfig.streamConfigLocked !== false) return;
+    
+    const stream = settingsConfig.streams[index];
+    if (!stream) return;
+    
+    if (!confirm(`Delete "${stream.name || 'Stream ' + (index + 1)}"?\n\nThis removes it from the dashboard.\nThe livestream still exists in Mux.`)) {
+        return;
+    }
+    
+    settingsConfig.streams.splice(index, 1);
+    populateStreamConfigs();
 }
 
 /**
