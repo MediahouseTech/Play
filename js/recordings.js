@@ -1195,7 +1195,7 @@ async function updateRecording(assetId, updates) {
 
 /**
  * Generate download filename from recording data
- * Format: {LivestreamName}-{DD-MM-YY}.mp4
+ * Format: {LivestreamName}-{DD-MM-YY}_{HH-MM}.mp4
  */
 function generateDownloadFilename(rec) {
     // Get livestream name (or fallback)
@@ -1204,8 +1204,8 @@ function generateDownloadFilename(rec) {
     // Convert spaces to hyphens, remove special chars
     name = name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
     
-    // Get date from createdAt timestamp
-    let dateStr = 'Unknown-Date';
+    // Get date and time from createdAt timestamp
+    let dateTimeStr = 'Unknown-Date';
     if (rec.createdAt && rec.createdAt !== '0') {
         const ts = parseInt(rec.createdAt);
         const date = ts > 1000000000000 ? new Date(ts) : new Date(ts * 1000);
@@ -1213,11 +1213,13 @@ function generateDownloadFilename(rec) {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = String(date.getFullYear()).slice(-2);
-            dateStr = `${day}-${month}-${year}`;
+            const hours = String(date.getHours()).padStart(2, '0');
+            const mins = String(date.getMinutes()).padStart(2, '0');
+            dateTimeStr = `${day}-${month}-${year}_${hours}-${mins}`;
         }
     }
     
-    return `${name}-${dateStr}.mp4`;
+    return `${name}-${dateTimeStr}.mp4`;
 }
 
 async function downloadRecording(assetId) {
