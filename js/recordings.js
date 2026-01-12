@@ -1193,7 +1193,37 @@ async function updateRecording(assetId, updates) {
 // DOWNLOAD
 // ============================================
 
+/**
+ * Generate download filename from recording data
+ * Format: {LivestreamName}-{DD-MM-YY}.mp4
+ */
+function generateDownloadFilename(rec) {
+    // Get livestream name (or fallback)
+    let name = rec.stageName || rec.title || 'Recording';
+    
+    // Convert spaces to hyphens, remove special chars
+    name = name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+    
+    // Get date from createdAt timestamp
+    let dateStr = 'Unknown-Date';
+    if (rec.createdAt && rec.createdAt !== '0') {
+        const ts = parseInt(rec.createdAt);
+        const date = ts > 1000000000000 ? new Date(ts) : new Date(ts * 1000);
+        if (!isNaN(date.getTime()) && date.getFullYear() > 2000) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            dateStr = `${day}-${month}-${year}`;
+        }
+    }
+    
+    return `${name}-${dateStr}.mp4`;
+}
+
 async function downloadRecording(assetId) {
+    const rec = recordings.find(r => r.assetId === assetId);
+    const filename = rec ? generateDownloadFilename(rec) : `recording-${assetId}.mp4`;
+    
     const modal = document.getElementById('downloadModal');
     const status = document.getElementById('downloadStatus');
     const progress = document.getElementById('downloadProgress');
@@ -1207,14 +1237,26 @@ async function downloadRecording(assetId) {
         const data = await response.json();
         
         if (data.success && data.downloadUrl) {
-            status.textContent = 'Opening download...';
+            status.innerHTML = `Downloading: <strong>${filename}</strong>`;
             progress.style.width = '100%';
             
-            window.open(data.downloadUrl, '_blank');
+            // Create download link with proper filename
+            const link = document.createElement('a');
+            link.href = data.downloadUrl;
+            link.download = filename;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show filename reminder (in case browser ignores download attribute)
+            setTimeout(() => {
+                status.innerHTML = `Save as: <strong>${filename}</strong>`;
+            }, 500);
             
             setTimeout(() => {
                 modal.classList.remove('show');
-            }, 1500);
+            }, 3000);
         } else {
             throw new Error(data.error || 'Failed to get download URL');
         }
