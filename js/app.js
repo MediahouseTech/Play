@@ -419,6 +419,12 @@ function createPlayerWrapper(stream, index) {
                 <svg class="stat-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 <span>--</span>
             </span>
+            <span class="stats-spacer"></span>
+            <span class="break-control" id="break-control-${index}" style="display: none;">
+                <span class="break-stream-name">${stream.name}</span>
+                <span class="break-status-badge" id="break-badge-${index}">LIVE</span>
+                <button class="btn-break-inline" id="break-btn-${index}" onclick="toggleBreakModeInline(${index})" title="Toggle break mode">BREAK</button>
+            </span>
         </div>
     `;
     
@@ -1120,6 +1126,9 @@ function applyBreakModeToStream(index, isOnBreak, fallbackId) {
         if (overlayEl) overlayEl.style.display = 'none';
         if (wrapper) wrapper.classList.add('on-break');
         
+        // Update inline badge
+        updateInlineBreakBadge(index, true);
+        
         // Load fallback video (loops)
         loadFallbackVideo(index, fallbackId);
         
@@ -1138,6 +1147,9 @@ function applyBreakModeToStream(index, isOnBreak, fallbackId) {
         
         // Remove break styling
         if (wrapper) wrapper.classList.remove('on-break');
+        
+        // Update inline badge
+        updateInlineBreakBadge(index, false);
         
         // Update status to checking
         if (statusEl) {
@@ -1213,6 +1225,73 @@ function handleBreakModeChange(streamIndex, isOnBreak, fallbackId) {
     
     // Apply the change immediately (don't wait for poller)
     applyBreakModeToStream(streamIndex, isOnBreak, fallbackId || FALLBACK_PLAYBACK_ID);
+}
+
+/**
+ * Update inline break badge for a stream
+ * @param {number} index - Stream index
+ * @param {boolean} isOnBreak - Whether stream is on break
+ */
+function updateInlineBreakBadge(index, isOnBreak) {
+    const badge = document.getElementById(`break-badge-${index}`);
+    const btn = document.getElementById(`break-btn-${index}`);
+    
+    if (badge) {
+        badge.textContent = isOnBreak ? 'BREAK' : 'LIVE';
+        badge.classList.toggle('on-break', isOnBreak);
+    }
+    
+    if (btn) {
+        btn.textContent = isOnBreak ? 'GO LIVE' : 'BREAK';
+        btn.classList.toggle('go-live', isOnBreak);
+    }
+}
+
+/**
+ * Toggle break mode from inline button
+ * @param {number} index - Stream index
+ */
+async function toggleBreakModeInline(index) {
+    const currentState = breakModeState[String(index)] === true;
+    const newState = !currentState;
+    
+    console.log(`[App] toggleBreakModeInline: stream ${index} -> ${newState ? 'BREAK' : 'LIVE'}`);
+    
+    try {
+        const response = await fetch('/api/break-mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                streamIndex: index,
+                isOnBreak: newState,
+                updatedBy: 'producer-inline'
+            })
+        });
+        
+        if (response.ok) {
+            // Apply immediately
+            handleBreakModeChange(index, newState, breakModeState.fallbackPlaybackId);
+        } else {
+            console.error('[App] Failed to toggle break mode');
+        }
+    } catch (error) {
+        console.error('[App] Break mode toggle error:', error);
+    }
+}
+
+/**
+ * Show inline break controls for all streams (called after producer login)
+ */
+function showInlineBreakControls() {
+    document.querySelectorAll('.break-control').forEach(el => {
+        el.style.display = 'flex';
+    });
+    
+    // Update badges to current state
+    for (let i = 0; i < 4; i++) {
+        const isOnBreak = breakModeState[String(i)] === true;
+        updateInlineBreakBadge(i, isOnBreak);
+    }
 }
 
 // Initialize on DOM ready

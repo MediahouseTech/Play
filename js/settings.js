@@ -119,11 +119,10 @@ function checkPassword() {
  * Show break mode panel on main dashboard (after producer login)
  */
 function showBreakModePanel() {
-    const panel = document.getElementById('breakModePanel');
-    if (panel) {
-        panel.style.display = 'block';
-        populateMainBreakControls();
-        console.log('[Settings] Break mode panel shown on dashboard');
+    // Now uses inline controls in each player's stats bar
+    if (typeof showInlineBreakControls === 'function') {
+        showInlineBreakControls();
+        console.log('[Settings] Inline break controls shown on dashboard');
     }
 }
 

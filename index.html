@@ -7,7 +7,7 @@
     <title>Crew Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="css/premiere-theme.css?v=3.0">
-    <link rel="stylesheet" href="css/dashboard.css?v=11.6">
+    <link rel="stylesheet" href="css/dashboard.css?v=11.7">
 </head>
 <body>
     <div class="dashboard">
@@ -49,16 +49,8 @@
                 <!-- Players Container -->
                 <div id="playerContainer" class="grid-view"></div>
                 
-                <!-- Break Mode Controls (Producer Only) -->
-                <div id="breakModePanel" class="break-mode-panel" style="display: none;">
-                    <div class="break-mode-header">
-                        <h3>🎬 Break Mode</h3>
-                        <span class="break-mode-hint">Switch stages to holding video during breaks</span>
-                    </div>
-                    <div id="breakModeControlsMain" class="break-mode-grid-main">
-                        <!-- Populated by JavaScript after producer login -->
-                    </div>
-                </div>
+                <!-- Break Mode Controls - Hidden, integrated into each player -->
+                <div id="breakModePanel" style="display: none;"></div>
             </div>
 
             <!-- Event Info Tab -->
@@ -229,8 +221,8 @@
     <script src="js/utils.js?v=3.0"></script>
     <script src="js/vu-meter.js?v=3.1"></script>
     <script src="js/visibility.js?v=3.0"></script>
-    <script src="js/settings.js?v=8.1"></script>
-    <script src="js/app.js?v=3.7"></script>
+    <script src="js/settings.js?v=8.2"></script>
+    <script src="js/app.js?v=3.8"></script>
     <script>
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {

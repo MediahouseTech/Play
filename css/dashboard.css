@@ -917,6 +917,7 @@ html, body {
 
 .player-stats {
     display: flex;
+    align-items: center;
     gap: 16px;
     padding: 6px 12px;
     background: var(--pp-bg-surface);
@@ -949,6 +950,63 @@ html, body {
 .hide-duration .stat-duration { display: none; }
 .hide-bitrate .stat-bitrate { display: none; }
 .hide-viewers .stat-viewers { display: none; }
+
+/* Stats spacer - pushes break controls to right */
+.stats-spacer {
+    flex: 1;
+}
+
+/* Inline Break Controls */
+.break-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.break-stream-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+}
+
+.break-status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    background: var(--success);
+    color: white;
+}
+
+.break-status-badge.on-break {
+    background: var(--error);
+}
+
+.btn-break-inline {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--error);
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-break-inline:hover {
+    background: #dc2626;
+}
+
+.btn-break-inline.go-live {
+    background: var(--success);
+}
+
+.btn-break-inline.go-live:hover {
+    background: #16a34a;
+}
 
 /* ============================================
    VISIBILITY TOGGLES
