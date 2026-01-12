@@ -365,30 +365,49 @@ async function toggleBreakMode(streamIndex, setToBreak) {
 // ============================================
 
 /**
+ * Default utility tags - used when no tags exist in config
+ */
+const DEFAULT_UTILITY_TAGS = [
+    { id: 'keep', name: 'Keep', color: '#22c55e', icon: '🟢' },
+    { id: 'review', name: 'Review', color: '#f59e0b', icon: '🟡' },
+    { id: 'archive', name: 'Archive', color: '#6b7280', icon: '📦' },
+    { id: 'old_test', name: 'Old Test Stream', color: '#8b5cf6', icon: '🟣' }
+];
+
+/**
  * Populate tags configuration in settings
  */
 function populateTagsConfig() {
     const container = document.getElementById('tagsConfig');
-    if (!container || !settingsConfig?.tags) return;
+    if (!container) return;
+    
+    // Initialize tags array if it doesn't exist
+    if (!settingsConfig.tags || settingsConfig.tags.length === 0) {
+        settingsConfig.tags = JSON.parse(JSON.stringify(DEFAULT_UTILITY_TAGS));
+        console.log('[Settings] Initialized default utility tags');
+    }
     
     container.innerHTML = settingsConfig.tags.map((tag, index) => `
         <div class="tag-config-row" data-index="${index}">
             <input type="color" 
                    class="tag-color-picker" 
                    value="${tag.color || '#6b7280'}" 
-                   onchange="updateTagColor(${index}, this.value)">
+                   onchange="updateTagColor(${index}, this.value)"
+                   title="Tag color">
             <input type="text" 
                    class="input-field tag-icon-input" 
                    value="${tag.icon || ''}" 
                    placeholder="🏷️"
                    maxlength="2"
-                   onchange="updateTagIcon(${index}, this.value)">
+                   onchange="updateTagIcon(${index}, this.value)"
+                   title="Tag icon (emoji)">
             <input type="text" 
                    class="input-field tag-name-input" 
                    value="${tag.name || ''}" 
                    placeholder="Tag Name"
-                   onchange="updateTagName(${index}, this.value)">
-            <button class="btn btn-danger btn-small btn-delete-tag" 
+                   onchange="updateTagName(${index}, this.value)"
+                   title="Tag name">
+            <button class="btn btn-danger btn-delete-tag" 
                     onclick="deleteTag(${index})" 
                     title="Delete tag">
                 🗑️

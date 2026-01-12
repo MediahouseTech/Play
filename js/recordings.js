@@ -27,8 +27,9 @@ const AUTH_SESSION_KEY = 'producerAuth';
 // Default tags (fallback if config not loaded)
 const DEFAULT_TAGS = [
     { id: 'keep', name: 'Keep', color: '#22c55e', icon: '🟢' },
-    { id: 'review', name: 'Review', color: '#eab308', icon: '🟡' },
-    { id: 'archive', name: 'Archive', color: '#6b7280', icon: '📦' }
+    { id: 'review', name: 'Review', color: '#f59e0b', icon: '🟡' },
+    { id: 'archive', name: 'Archive', color: '#6b7280', icon: '📦' },
+    { id: 'old_test', name: 'Old Test Stream', color: '#8b5cf6', icon: '🟣' }
 ];
 
 // ============================================
@@ -314,7 +315,6 @@ function sortRecordings() {
 
 function applyFiltersAndSort() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const stageFilter = document.getElementById('stageFilter').value;
     const durationFilter = document.getElementById('durationFilter').value;
     const tagFilter = document.getElementById('tagFilter').value;
     const sortBy = document.getElementById('sortBy').value;
@@ -327,8 +327,6 @@ function applyFiltersAndSort() {
             rec.createdFormatted?.toLowerCase().includes(searchTerm) ||
             rec.externalId?.toLowerCase().includes(searchTerm) ||
             rec.notes?.toLowerCase().includes(searchTerm);
-        
-        const matchesStage = !stageFilter || rec.stageName === stageFilter;
         
         let matchesDuration = true;
         if (durationFilter === 'short') {
@@ -349,7 +347,7 @@ function applyFiltersAndSort() {
             return false;
         }
         
-        return matchesSearch && matchesStage && matchesDuration && matchesTag;
+        return matchesSearch && matchesDuration && matchesTag;
     });
     
     // Sort

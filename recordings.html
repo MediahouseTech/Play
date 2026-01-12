@@ -67,14 +67,6 @@
         <div class="toolbar">
             <div class="toolbar-left">
                 <input type="text" id="searchInput" placeholder="Search recordings..." oninput="filterRecordings()">
-                <select id="stageFilter" onchange="filterRecordings()">
-                    <option value="">All Stages</option>
-                    <option value="Main Stage">Main Stage</option>
-                    <option value="Yabun Yarns">Yabun Yarns</option>
-                    <option value="Corroboree">Corroboree</option>
-                    <option value="Speak Out">Speak Out</option>
-                    <option value="Old Test Stream">Old Test Stream</option>
-                </select>
                 <select id="durationFilter" onchange="filterRecordings()">
                     <option value="">Any Duration</option>
                     <option value="1">Over 1 min</option>
@@ -85,17 +77,13 @@
                 </select>
                 <select id="tagFilter" onchange="filterRecordings()">
                     <option value="">All Tags</option>
-                    <option value="keep">Keep</option>
-                    <option value="review">Review</option>
-                    <option value="archive">Archived</option>
-                    <option value="none">No Tag</option>
+                    <!-- Populated dynamically by populateTagFilters() -->
                 </select>
                 <select id="sortBy" onchange="sortRecordings()">
                     <option value="date-desc">Newest First</option>
                     <option value="date-asc">Oldest First</option>
                     <option value="duration-desc">Longest First</option>
                     <option value="duration-asc">Shortest First</option>
-                    <option value="stage">By Stage</option>
                 </select>
                 <div class="view-toggle">
                     <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid View">

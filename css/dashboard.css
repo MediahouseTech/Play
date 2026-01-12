@@ -1441,8 +1441,8 @@ html, body {
 .tag-config-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px;
+    gap: 10px;
+    padding: 10px 12px;
     background: var(--bg-panel);
     border-radius: 6px;
     border: 1px solid var(--border);
@@ -1450,26 +1450,41 @@ html, body {
 
 .tag-color-picker {
     width: 40px;
+    min-width: 40px;
     height: 36px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     padding: 2px;
+    flex-shrink: 0;
 }
 
 .tag-icon-input {
     width: 50px !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
     text-align: center;
     font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
 .tag-name-input {
     flex: 1;
+    min-width: 100px;
 }
 
+/* Override btn styles for tag delete button */
 .btn-delete-tag {
-    padding: 6px 10px !important;
-    font-size: 0.9rem;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    font-size: 1rem !important;
+    flex-shrink: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-add-tag {
