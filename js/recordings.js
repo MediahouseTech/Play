@@ -17,8 +17,19 @@ let clipInPoint = null;
 let clipOutPoint = null;
 let previewModalOpen = false;
 
+// Dynamic config (loaded from server)
+let dashboardConfig = null;
+let customTags = [];
+
 const PRODUCER_PASSWORD = 'Live2Stream';
 const AUTH_SESSION_KEY = 'producerAuth';
+
+// Default tags (fallback if config not loaded)
+const DEFAULT_TAGS = [
+    { id: 'keep', name: 'Keep', color: '#22c55e', icon: '🟢' },
+    { id: 'review', name: 'Review', color: '#eab308', icon: '🟡' },
+    { id: 'archive', name: 'Archive', color: '#6b7280', icon: '📦' }
+];
 
 // ============================================
 // INITIALIZATION
@@ -56,10 +67,74 @@ function checkLogin() {
     }
 }
 
-function showApp() {
+async function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
+    
+    // Load config first (for tags and streams)
+    await loadConfig();
+    
+    // Populate dynamic dropdowns
+    populateTagFilters();
+    populateStageFilter();
+    
+    // Then load recordings
     loadRecordings();
+}
+
+/**
+ * Load dashboard config (for tags and streams)
+ */
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+            dashboardConfig = await response.json();
+            customTags = dashboardConfig.tags || DEFAULT_TAGS;
+            console.log('[Recordings] Config loaded, tags:', customTags.length);
+        }
+    } catch (error) {
+        console.error('[Recordings] Failed to load config:', error);
+        customTags = DEFAULT_TAGS;
+    }
+}
+
+/**
+ * Populate tag filter dropdown with dynamic tags
+ */
+function populateTagFilters() {
+    const tagFilter = document.getElementById('tagFilter');
+    const previewTag = document.getElementById('previewTag');
+    
+    if (tagFilter) {
+        tagFilter.innerHTML = '<option value="">All Tags</option>';
+        customTags.forEach(tag => {
+            tagFilter.innerHTML += `<option value="${tag.id}">${tag.icon || ''} ${tag.name}</option>`;
+        });
+        tagFilter.innerHTML += '<option value="none">No Tag</option>';
+    }
+    
+    if (previewTag) {
+        previewTag.innerHTML = '<option value="">No Tag</option>';
+        customTags.forEach(tag => {
+            previewTag.innerHTML += `<option value="${tag.id}">${tag.icon || ''} ${tag.name}</option>`;
+        });
+    }
+}
+
+/**
+ * Populate stage filter from config streams
+ */
+function populateStageFilter() {
+    const stageFilter = document.getElementById('stageFilter');
+    if (!stageFilter || !dashboardConfig?.streams) return;
+    
+    stageFilter.innerHTML = '<option value="">All Stages</option>';
+    dashboardConfig.streams.forEach(stream => {
+        stageFilter.innerHTML += `<option value="${stream.name}">${stream.name}</option>`;
+    });
+    // Add legacy option for old recordings
+    stageFilter.innerHTML += '<option value="Old Test Stream">Old Test Stream</option>';
 }
 
 // ============================================
@@ -445,12 +520,32 @@ function getStageClass(stageName) {
 }
 
 function getTagLabel(tag) {
+    const found = customTags.find(t => t.id === tag);
+    if (found) {
+        return `${found.icon || ''} ${found.name}`;
+    }
+    // Fallback for legacy tags
     const labels = {
         'keep': '🟢 Keep',
         'review': '🟡 Review',
-        'archive': '📦'
+        'archive': '📦 Archive'
     };
     return labels[tag] || tag;
+}
+
+/**
+ * Get tag color from config
+ */
+function getTagColor(tagId) {
+    const found = customTags.find(t => t.id === tagId);
+    return found ? found.color : '#6b7280';
+}
+
+/**
+ * Get tag info from config
+ */
+function getTagInfo(tagId) {
+    return customTags.find(t => t.id === tagId) || null;
 }
 
 function formatDate(timestamp) {
@@ -1173,6 +1268,19 @@ function openBatchTag() {
     if (selectedRecordings.size === 0) return;
     
     document.getElementById('batchTagCount').textContent = selectedRecordings.size;
+    
+    // Populate dynamic tag buttons
+    const container = document.getElementById('batchTagOptions');
+    if (container) {
+        container.innerHTML = customTags.map(tag => `
+            <button class="tag-btn" style="--tag-color: ${tag.color}" onclick="applyBatchTag('${tag.id}')">
+                ${tag.icon || ''} ${tag.name}
+            </button>
+        `).join('') + `
+            <button class="tag-btn tag-btn-clear" onclick="applyBatchTag('')">❌ Clear Tag</button>
+        `;
+    }
+    
     document.getElementById('batchTagModal').classList.add('show');
 }
 

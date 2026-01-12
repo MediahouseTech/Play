@@ -51,5 +51,10 @@
     "bitrate": true,
     "viewers": false
   },
-  "defaultBandwidth": "medium"
+  "defaultBandwidth": "medium",
+  "tags": [
+    { "id": "keep", "name": "Keep", "color": "#22c55e", "icon": "🟢" },
+    { "id": "review", "name": "Review", "color": "#eab308", "icon": "🟡" },
+    { "id": "archive", "name": "Archive", "color": "#6b7280", "icon": "📦" }
+  ]
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recordings Manager | Yabun 2025</title>
-    <link rel="stylesheet" href="css/recordings.css">
+    <link rel="stylesheet" href="css/recordings.css?v=8.0">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
@@ -449,11 +449,8 @@
             </div>
             <div class="modal-body">
                 <p><span id="batchTagCount">0</span> clips selected</p>
-                <div class="tag-options">
-                    <button class="tag-btn" data-tag="keep" onclick="applyBatchTag('keep')">🟢 Keep</button>
-                    <button class="tag-btn" data-tag="review" onclick="applyBatchTag('review')">🟡 Review</button>
-                    <button class="tag-btn" data-tag="archive" onclick="applyBatchTag('archive')">📦 Archive</button>
-                    <button class="tag-btn" data-tag="" onclick="applyBatchTag('')">❌ Clear Tag</button>
+                <div class="tag-options" id="batchTagOptions">
+                    <!-- Populated dynamically by JavaScript -->
                 </div>
             </div>
         </div>
@@ -548,6 +545,6 @@
         </div>
     </div>
 
-    <script src="js/recordings.js"></script>
+    <script src="js/recordings.js?v=3.0"></script>
 </body>
 </html>

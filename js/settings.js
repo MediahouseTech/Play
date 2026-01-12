@@ -360,6 +360,117 @@ async function toggleBreakMode(streamIndex, setToBreak) {
     }
 }
 
+// ============================================
+// TAG MANAGEMENT
+// ============================================
+
+/**
+ * Populate tags configuration in settings
+ */
+function populateTagsConfig() {
+    const container = document.getElementById('tagsConfig');
+    if (!container || !settingsConfig?.tags) return;
+    
+    container.innerHTML = settingsConfig.tags.map((tag, index) => `
+        <div class="tag-config-row" data-index="${index}">
+            <input type="color" 
+                   class="tag-color-picker" 
+                   value="${tag.color || '#6b7280'}" 
+                   onchange="updateTagColor(${index}, this.value)">
+            <input type="text" 
+                   class="input-field tag-icon-input" 
+                   value="${tag.icon || ''}" 
+                   placeholder="🏷️"
+                   maxlength="2"
+                   onchange="updateTagIcon(${index}, this.value)">
+            <input type="text" 
+                   class="input-field tag-name-input" 
+                   value="${tag.name || ''}" 
+                   placeholder="Tag Name"
+                   onchange="updateTagName(${index}, this.value)">
+            <button class="btn btn-danger btn-small btn-delete-tag" 
+                    onclick="deleteTag(${index})" 
+                    title="Delete tag">
+                🗑️
+            </button>
+        </div>
+    `).join('');
+}
+
+/**
+ * Add a new tag
+ */
+function addNewTag() {
+    if (!settingsConfig.tags) {
+        settingsConfig.tags = [];
+    }
+    
+    // Generate a unique ID
+    const id = 'tag_' + Date.now();
+    
+    settingsConfig.tags.push({
+        id: id,
+        name: 'New Tag',
+        color: '#6b7280',
+        icon: '🏷️'
+    });
+    
+    populateTagsConfig();
+    
+    // Focus the new tag name input
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('.tag-name-input');
+        if (inputs.length > 0) {
+            inputs[inputs.length - 1].focus();
+            inputs[inputs.length - 1].select();
+        }
+    }, 100);
+}
+
+/**
+ * Update tag color
+ */
+function updateTagColor(index, color) {
+    if (settingsConfig.tags && settingsConfig.tags[index]) {
+        settingsConfig.tags[index].color = color;
+    }
+}
+
+/**
+ * Update tag icon
+ */
+function updateTagIcon(index, icon) {
+    if (settingsConfig.tags && settingsConfig.tags[index]) {
+        settingsConfig.tags[index].icon = icon;
+    }
+}
+
+/**
+ * Update tag name
+ */
+function updateTagName(index, name) {
+    if (settingsConfig.tags && settingsConfig.tags[index]) {
+        settingsConfig.tags[index].name = name;
+        // Also update the ID to be URL-safe version of name
+        settingsConfig.tags[index].id = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    }
+}
+
+/**
+ * Delete a tag
+ */
+function deleteTag(index) {
+    if (!settingsConfig.tags) return;
+    
+    const tag = settingsConfig.tags[index];
+    if (!confirm(`Delete tag "${tag.name}"?\n\nRecordings with this tag will become untagged.`)) {
+        return;
+    }
+    
+    settingsConfig.tags.splice(index, 1);
+    populateTagsConfig();
+}
+
 /**
  * Populate settings form with current config
  */
@@ -398,6 +509,9 @@ function populateSettings() {
     
     // Populate stream configs
     populateStreamConfigs();
+    
+    // Populate tags config
+    populateTagsConfig();
     
     console.log('[Settings] Form populated');
 }

@@ -1164,6 +1164,46 @@ body {
     color: #9ca3af;
 }
 
+/* Dynamic tag colors using CSS custom property */
+.tag-badge[style*="--tag-color"] {
+    background: color-mix(in srgb, var(--tag-color) 20%, transparent);
+    color: var(--tag-color);
+}
+
+/* Tag button styles for batch tag modal */
+.tag-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px solid var(--tag-color, var(--border));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--tag-color, var(--bg-secondary)) 10%, transparent);
+    color: var(--tag-color, var(--text));
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tag-btn:hover {
+    background: color-mix(in srgb, var(--tag-color, var(--bg-secondary)) 25%, transparent);
+    transform: translateY(-2px);
+}
+
+.tag-btn-clear {
+    --tag-color: var(--text-secondary);
+    border-style: dashed;
+}
+
+.tag-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .clip-editor {

@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Crew Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <link rel="stylesheet" href="css/dashboard.css?v=3.3">
+    <link rel="stylesheet" href="css/dashboard.css?v=4.0">
 </head>
 <body>
     <div class="dashboard">
@@ -150,6 +150,18 @@
                     </div>
                 </div>
 
+                <!-- Recording Tags Section -->
+                <div class="settings-section">
+                    <h3>🏷️ Recording Tags</h3>
+                    <p class="section-hint">Custom tags for organizing recordings. These appear in the Recording Manager.</p>
+                    <div id="tagsConfig" class="tags-config">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    <button class="btn btn-secondary btn-add-tag" onclick="addNewTag()">
+                        ➕ Add Tag
+                    </button>
+                </div>
+
                 <!-- Security Section -->
                 <div class="settings-section">
                     <h3>Security</h3>
@@ -196,7 +208,7 @@
     <script src="js/utils.js?v=3.0"></script>
     <script src="js/vu-meter.js?v=3.1"></script>
     <script src="js/visibility.js?v=3.0"></script>
-    <script src="js/settings.js?v=3.0"></script>
+    <script src="js/settings.js?v=4.0"></script>
     <script src="js/app.js?v=3.0"></script>
     <script>
         // Tab switching
