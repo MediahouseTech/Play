@@ -1086,6 +1086,8 @@ async function saveSettings() {
     
     // Gather all stream data from inputs
     settingsConfig.streams.forEach((stream, index) => {
+        stream.name = document.getElementById(`streamname-${index}`)?.value || stream.name || '';
+        stream.tag = document.getElementById(`streamtag-${index}`)?.value || '';
         stream.liveStreamId = document.getElementById(`livestreamid-${index}`)?.value || '';
         stream.playbackId = document.getElementById(`playback-${index}`)?.value || '';
         stream.streamKey = document.getElementById(`streamkey-${index}`)?.value || '';
@@ -1121,6 +1123,14 @@ async function saveSettings() {
         // Update page title if event name changed
         const titleEl = document.getElementById('eventTitle');
         if (titleEl) titleEl.textContent = settingsConfig.eventName;
+        
+        // Refresh Break Mode panel with updated streams
+        await populateMainBreakControls();
+        
+        // Refresh main dashboard if streams changed
+        if (typeof initializePlayers === 'function') {
+            initializePlayers();
+        }
         
     } catch (error) {
         console.error('[Settings] Save failed:', error);
