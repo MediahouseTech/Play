@@ -1206,13 +1206,55 @@ html, body {
     border: 1px solid var(--border);
 }
 
-.stream-config h4 {
+.stream-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.stream-header h4 {
     font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 16px;
     color: var(--accent);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
+    margin: 0;
+}
+
+.btn-create-mux {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    background: var(--pp-btn-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-create-mux:hover {
+    background: var(--pp-btn-primary-hover);
+}
+
+.btn-create-mux:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-create-mux .icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+.btn-create-mux.btn-success {
+    background: var(--success);
 }
 
 .config-row {

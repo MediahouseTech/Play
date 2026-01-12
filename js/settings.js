@@ -560,7 +560,13 @@ function populateStreamConfigs() {
     
     container.innerHTML = settingsConfig.streams.map((stream, index) => `
         <div class="stream-config" data-index="${index}">
-            <h4>Stream ${index + 1}: ${stream.name}</h4>
+            <div class="stream-header">
+                <h4>Stream ${index + 1}: ${stream.name}</h4>
+                <button type="button" class="btn btn-create-mux" onclick="createMuxLivestream(${index})" title="Create new livestream in Mux">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Create in Mux
+                </button>
+            </div>
             <div class="config-row">
                 <label>Live Stream ID</label>
                 <div class="input-with-copy">
@@ -592,6 +598,69 @@ function populateStreamConfigs() {
             </div>
         </div>
     `).join('');
+}
+
+/**
+ * Create a new livestream in Mux and populate fields
+ */
+async function createMuxLivestream(index) {
+    const stream = settingsConfig.streams[index];
+    if (!stream) return;
+    
+    // Check if already has a livestream ID
+    const existingId = document.getElementById(`livestreamid-${index}`).value;
+    if (existingId) {
+        if (!confirm(`Stream "${stream.name}" already has a Live Stream ID.\n\nCreate a NEW livestream? This won't delete the old one in Mux.`)) {
+            return;
+        }
+    }
+    
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner"></span> Creating...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/create-livestream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: stream.name })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Populate the fields
+            document.getElementById(`livestreamid-${index}`).value = data.liveStreamId;
+            document.getElementById(`playback-${index}`).value = data.playbackId;
+            document.getElementById(`streamkey-${index}`).value = data.streamKey;
+            document.getElementById(`rtmp-${index}`).value = data.rtmpUrl;
+            
+            // Visual feedback
+            button.innerHTML = '✅ Created!';
+            button.classList.add('btn-success');
+            
+            // Show success message
+            alert(`Livestream "${stream.name}" created successfully!\n\nDon't forget to Save Settings.`);
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('btn-success');
+                button.disabled = false;
+            }, 2000);
+        } else {
+            throw new Error(data.error || 'Failed to create livestream');
+        }
+    } catch (error) {
+        console.error('Create livestream error:', error);
+        button.innerHTML = '❌ Error';
+        alert('Failed to create livestream: ' + error.message);
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+    }
 }
 
 /**
