@@ -510,24 +510,6 @@ body {
     gap: 4px;
 }
 
-.stage-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background: var(--pp-accent);
-    border-radius: var(--pp-radius-pill);
-    font-size: var(--pp-font-size-xs);
-    font-weight: 600;
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stage-badge.main-stage { background: var(--pp-stage-main); }
-.stage-badge.yabun-yarns { background: var(--pp-stage-yarns); }
-.stage-badge.corroboree { background: var(--pp-stage-corroboree); }
-.stage-badge.speak-out { background: var(--pp-stage-speakout); }
-.stage-badge.old-test { background: var(--pp-stage-test); }
-
 /* Card Actions - Labeled buttons */
 .recording-actions {
     display: flex;
@@ -798,10 +780,6 @@ body {
     color: var(--text-secondary);
     font-family: monospace;
     margin-top: 4px;
-}
-
-.col-stage {
-    width: 140px;
 }
 
 .col-date {

@@ -77,7 +77,6 @@ async function showApp() {
     
     // Populate dynamic dropdowns
     populateTagFilters();
-    populateStageFilter();
     
     // Then load recordings
     loadRecordings();
@@ -121,21 +120,6 @@ function populateTagFilters() {
             previewTag.innerHTML += `<option value="${tag.id}">${tag.icon || ''} ${tag.name}</option>`;
         });
     }
-}
-
-/**
- * Populate stage filter from config streams
- */
-function populateStageFilter() {
-    const stageFilter = document.getElementById('stageFilter');
-    if (!stageFilter || !dashboardConfig?.streams) return;
-    
-    stageFilter.innerHTML = '<option value="">All Stages</option>';
-    dashboardConfig.streams.forEach(stream => {
-        stageFilter.innerHTML += `<option value="${stream.name}">${stream.name}</option>`;
-    });
-    // Add legacy option for old recordings
-    stageFilter.innerHTML += '<option value="Old Test Stream">Old Test Stream</option>';
 }
 
 // ============================================
@@ -430,7 +414,6 @@ function renderRecordings() {
             ? `https://image.mux.com/${rec.playbackId}/thumbnail.jpg?time=10&width=640`
             : '';
         
-        const stageClass = getStageClass(rec.stageName);
         const isSelected = selectedRecordings.has(rec.assetId);
         const isUntagged = !rec.tag;
         const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '<span class="tag-badge untagged">NO TAG</span>';
@@ -451,7 +434,6 @@ function renderRecordings() {
                 <div class="recording-info">
                     <div class="recording-title" title="${rec.title}">${rec.title || 'Untitled'}</div>
                     <div class="recording-meta">
-                        <span class="stage-badge ${stageClass}">${rec.stageName}</span>
                         ${tagBadge}
                     </div>
                     <div class="recording-date">
@@ -483,7 +465,6 @@ function renderRecordings() {
             ? `https://image.mux.com/${rec.playbackId}/thumbnail.jpg?time=10&width=200`
             : '';
         
-        const stageClass = getStageClass(rec.stageName);
         const isSelected = selectedRecordings.has(rec.assetId);
         const isUntagged = !rec.tag;
         const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '<span class="tag-badge untagged">NO TAG</span>';
@@ -500,9 +481,6 @@ function renderRecordings() {
                 <td class="col-title">
                     <div class="list-title" onclick="openPreview('${rec.assetId}')">${rec.title || 'Untitled'}</div>
                     ${tagBadge}
-                </td>
-                <td class="col-stage">
-                    <span class="stage-badge ${stageClass}">${rec.stageName}</span>
                 </td>
                 <td class="col-date">
                     <div class="date-cell">
@@ -527,17 +505,6 @@ function renderRecordings() {
             </tr>
         `;
     }).join('');
-}
-
-function getStageClass(stageName) {
-    if (!stageName) return '';
-    const name = stageName.toLowerCase().replace(/\s+/g, '-');
-    if (name.includes('main')) return 'main-stage';
-    if (name.includes('yarn')) return 'yabun-yarns';
-    if (name.includes('corrob')) return 'corroboree';
-    if (name.includes('speak')) return 'speak-out';
-    if (name.includes('old') || name.includes('test')) return 'old-test';
-    return '';
 }
 
 function getTagLabel(tag) {
