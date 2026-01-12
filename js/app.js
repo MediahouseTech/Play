@@ -214,6 +214,38 @@ function toggleVisibility(key, visible) {
 }
 
 /**
+ * Set scale for all player monitors
+ */
+let currentScale = 100;
+
+function setScale(scale) {
+    currentScale = scale;
+    
+    // Update UI
+    document.querySelectorAll('.scale-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (parseInt(btn.dataset.scale) === scale) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Apply scale to player container
+    const container = document.getElementById('playerContainer');
+    if (container) {
+        if (scale === 100) {
+            container.style.transform = '';
+            container.style.transformOrigin = '';
+        } else {
+            container.style.transform = `scale(${scale / 100})`;
+            container.style.transformOrigin = 'top left';
+        }
+    }
+    
+    // Save preference
+    localStorage.setItem('dashboardScale', scale);
+}
+
+/**
  * Populate event info in the info tab
  */
 function populateEventInfo() {
@@ -963,6 +995,12 @@ function applyPreferences(prefs) {
                 toggleVisibility(key, prefs.visibility[key]);
             }
         });
+    }
+    
+    // Load scale preference
+    const savedScale = localStorage.getItem('dashboardScale');
+    if (savedScale) {
+        setScale(parseInt(savedScale));
     }
 }
 

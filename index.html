@@ -7,7 +7,7 @@
     <title>Crew Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="css/premiere-theme.css?v=3.0">
-    <link rel="stylesheet" href="css/dashboard.css?v=11.5">
+    <link rel="stylesheet" href="css/dashboard.css?v=11.6">
 </head>
 <body>
     <div class="dashboard">
@@ -72,12 +72,22 @@
             </div>
         </main>
 
-        <!-- Footer with Bandwidth Controls -->
+        <!-- Footer with Bandwidth and Scale Controls -->
         <footer class="footer">
-            <span style="color: var(--text-secondary); font-size: 0.85rem;">Quality:</span>
-            <button class="btn btn-secondary bandwidth-btn" data-bandwidth="low" onclick="setBandwidth('low')" title="480p - Save data">LOW</button>
-            <button class="btn btn-secondary bandwidth-btn active" data-bandwidth="medium" onclick="setBandwidth('medium')" title="720p - Balanced">MED</button>
-            <button class="btn btn-secondary bandwidth-btn" data-bandwidth="high" onclick="setBandwidth('high')" title="1080p - Full quality">HIGH</button>
+            <div class="footer-group">
+                <span class="footer-label">Quality:</span>
+                <button class="btn btn-secondary bandwidth-btn" data-bandwidth="low" onclick="setBandwidth('low')" title="480p - Save data">LOW</button>
+                <button class="btn btn-secondary bandwidth-btn active" data-bandwidth="medium" onclick="setBandwidth('medium')" title="720p - Balanced">MED</button>
+                <button class="btn btn-secondary bandwidth-btn" data-bandwidth="high" onclick="setBandwidth('high')" title="1080p - Full quality">HIGH</button>
+            </div>
+            <div class="footer-group">
+                <span class="footer-label">Scale:</span>
+                <button class="btn btn-secondary scale-btn active" data-scale="100" onclick="setScale(100)" title="Default size">100%</button>
+                <button class="btn btn-secondary scale-btn" data-scale="110" onclick="setScale(110)" title="10% larger">110%</button>
+                <button class="btn btn-secondary scale-btn" data-scale="125" onclick="setScale(125)" title="25% larger">125%</button>
+                <button class="btn btn-secondary scale-btn" data-scale="150" onclick="setScale(150)" title="50% larger">150%</button>
+                <button class="btn btn-secondary scale-btn" data-scale="175" onclick="setScale(175)" title="75% larger">175%</button>
+            </div>
         </footer>
     </div>
 
@@ -220,7 +230,7 @@
     <script src="js/vu-meter.js?v=3.1"></script>
     <script src="js/visibility.js?v=3.0"></script>
     <script src="js/settings.js?v=8.1"></script>
-    <script src="js/app.js?v=3.3"></script>
+    <script src="js/app.js?v=3.4"></script>
     <script>
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {

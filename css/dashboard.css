@@ -88,7 +88,25 @@ html, body {
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.footer-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.scale-btn.active {
+    background: var(--accent);
+    color: white;
 }
 
 /* ============================================
