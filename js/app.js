@@ -368,9 +368,18 @@ function createPlayerWrapper(stream, index) {
             <div class="vu-container" id="vu-container-${index}"></div>
         </div>
         <div class="player-stats">
-            <span class="stat stat-duration" id="duration-${index}">⏱ --:--:--</span>
-            <span class="stat stat-bitrate" id="bitrate-${index}">📡 -- Mbps</span>
-            <span class="stat stat-viewers" id="viewers-${index}">👁 --</span>
+            <span class="stat stat-duration" id="duration-${index}">
+                <svg class="stat-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>--:--:--</span>
+            </span>
+            <span class="stat stat-bitrate" id="bitrate-${index}">
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4"/></svg>
+                <span>-- Mbps</span>
+            </span>
+            <span class="stat stat-viewers" id="viewers-${index}">
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>--</span>
+            </span>
         </div>
     `;
     
@@ -525,7 +534,10 @@ function loadHlsPlayer(index, playbackId) {
             // Update bitrate display
             const bitrate = Math.round(hls.levels[hls.currentLevel]?.bitrate / 1000000 * 10) / 10 || 0;
             const bitrateEl = document.getElementById(`bitrate-${index}`);
-            if (bitrateEl) bitrateEl.textContent = `📡 ${bitrate} Mbps`;
+            if (bitrateEl) {
+                const span = bitrateEl.querySelector('span');
+                if (span) span.textContent = `${bitrate} Mbps`;
+            }
         });
         
         hls.on(Hls.Events.ERROR, function(event, data) {
@@ -605,7 +617,10 @@ function setupVideoEvents(index) {
             const timeStr = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             
             const durationEl = document.getElementById(`duration-${index}`);
-            if (durationEl) durationEl.textContent = `⏱ ${timeStr}`;
+            if (durationEl) {
+                const span = durationEl.querySelector('span');
+                if (span) span.textContent = timeStr;
+            }
         }
     }, 1000);
     

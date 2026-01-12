@@ -749,6 +749,7 @@ html, body {
 
 /* Single stream - center with max width */
 #playerContainer.grid-view.single-stream {
+    display: block;
     max-width: 950px;
     margin: 0 auto;
 }
@@ -906,7 +907,16 @@ html, body {
 .stat {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+}
+
+.stat-icon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--pp-text-secondary);
+    stroke-width: 2;
+    fill: none;
+    flex-shrink: 0;
 }
 
 .stat strong {
