@@ -619,7 +619,7 @@ function populateStreamConfigs() {
                     <input type="text" id="newStreamName" placeholder="e.g. Main Stage" oninput="updateNewStreamData('name', this.value)">
                 </div>
                 <div class="form-group">
-                    <label>Tag (for Recording Manager)</label>
+                    <label>Tag</label>
                     <input type="text" id="newStreamTag" placeholder="e.g. Main" oninput="updateNewStreamData('tag', this.value)">
                 </div>
             </div>
@@ -682,7 +682,7 @@ function renderStreamCard(stream, index) {
                     <input type="text" id="streamname-${index}" class="input-field" value="${stream.name || ''}" ${isLocked ? 'readonly' : ''} onchange="updateStreamField(${index}, 'name', this.value)">
                 </div>
                 <div class="form-group">
-                    <label>Tag (for Recording Manager)</label>
+                    <label>Tag</label>
                     <input type="text" id="streamtag-${index}" class="input-field" value="${stream.tag || ''}" ${isLocked ? 'readonly' : ''} placeholder="e.g. Main" onchange="updateStreamField(${index}, 'tag', this.value)">
                 </div>
             </div>
