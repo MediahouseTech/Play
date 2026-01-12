@@ -749,9 +749,13 @@ html, body {
 
 /* Single stream - center with max width */
 #playerContainer.grid-view.single-stream {
-    display: block;
+    display: flex;
+    justify-content: center;
+}
+
+#playerContainer.grid-view.single-stream .player-wrapper {
     max-width: 950px;
-    margin: 0 auto;
+    width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -759,9 +763,10 @@ html, body {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    /* Override 2-col for single stream */
+    /* Override for single stream - keep centered */
     #playerContainer.grid-view.single-stream {
-        grid-template-columns: 1fr;
+        display: flex;
+        justify-content: center;
     }
 }
 
