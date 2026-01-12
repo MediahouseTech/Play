@@ -229,13 +229,22 @@ function setScale(scale) {
         }
     });
     
-    // Apply scale to player container
+    // Apply scale to player container with proper height adjustment
     const container = document.getElementById('playerContainer');
     if (container) {
-        if (scale === 100) {
-            container.style.zoom = '';
-        } else {
-            container.style.zoom = scale / 100;
+        // First reset to get natural dimensions
+        container.style.transform = '';
+        container.style.transformOrigin = '';
+        container.style.marginBottom = '';
+        
+        if (scale !== 100) {
+            const naturalHeight = container.offsetHeight;
+            const scaledHeight = naturalHeight * (scale / 100);
+            const extraHeight = scaledHeight - naturalHeight;
+            
+            container.style.transform = `scale(${scale / 100})`;
+            container.style.transformOrigin = 'top left';
+            container.style.marginBottom = `${extraHeight}px`;
         }
     }
     
