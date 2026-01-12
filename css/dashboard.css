@@ -976,12 +976,13 @@ html, body {
     padding: 2px 8px;
     border-radius: 3px;
     text-transform: uppercase;
-    background: var(--success);
-    color: white;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
 .break-status-badge.on-break {
     background: var(--error);
+    color: white;
 }
 
 .btn-break-inline {
