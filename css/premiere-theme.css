@@ -1,0 +1,163 @@
+/**
+ * PREMIERE-THEME.CSS - Broadcast Standard Design Tokens
+ * Based on "Dark Studio Philosophy" + SMPTE viewing standards
+ * 
+ * Design Principles:
+ * - Cool dark greys (slight blue undertone, never warm)
+ * - Text is light grey, NEVER pure white (prevents halation)
+ * - Elevation via grey shades, NO shadows
+ * - Saturated colors ONLY for status indicators
+ * - Desaturated icons to keep focus on video content
+ * - Tight corner radius (2-4px) for professional feel
+ */
+
+:root {
+    /* ============================================
+       BACKGROUND HIERARCHY - Cool Undertone
+       Elevation: Lighter = closer to user
+       ============================================ */
+    --pp-bg-app: #18181b;           /* Level 0: Deepest - app canvas */
+    --pp-bg-panel: #1e1e22;          /* Level 1: Panel backgrounds */
+    --pp-bg-surface: #252528;        /* Level 2: Elevated surfaces, headers */
+    --pp-bg-input: #141416;          /* Recessed: Input wells, video areas */
+    --pp-bg-hover: #2d2d32;          /* Level 3: Hover states */
+    --pp-bg-active: #333338;         /* Level 4: Active/pressed states */
+    
+    /* ============================================
+       BORDERS - Cool grey, subtle
+       ============================================ */
+    --pp-border: #333338;            /* Standard borders */
+    --pp-border-subtle: #28282d;     /* Very subtle dividers */
+    --pp-border-focus: #4a90d9;      /* Focus rings */
+    
+    /* ============================================
+       TEXT HIERARCHY - NEVER pure white
+       Prevents "halation" (glowing text effect)
+       ============================================ */
+    --pp-text-primary: #c8c8c8;      /* Main text - reduced brightness */
+    --pp-text-secondary: #8a8a8f;    /* Labels, hints */
+    --pp-text-muted: #5a5a5f;        /* Disabled, tertiary */
+    --pp-text-inverse: #18181b;      /* Text on light backgrounds */
+    
+    /* ============================================
+       ICONS - Desaturated mono
+       Keep focus on video content
+       ============================================ */
+    --pp-icon: #8a9199;              /* Default icon color - cool grey */
+    --pp-icon-hover: #b8bfc7;        /* Icon hover state */
+    --pp-icon-active: #4a90d9;       /* Active/selected icon */
+    
+    /* ============================================
+       ACCENT - Muted blue for selections
+       NOT for general decoration
+       ============================================ */
+    --pp-accent: #4a90d9;            /* Selection, focus, active tabs */
+    --pp-accent-hover: #5a9fe8;      /* Accent hover */
+    --pp-accent-muted: rgba(74, 144, 217, 0.15); /* Accent backgrounds */
+    
+    /* ============================================
+       STATUS COLORS - ONLY saturated elements
+       Reserved for critical status indicators
+       ============================================ */
+    --pp-live: #22c55e;              /* LIVE - saturated green */
+    --pp-live-bg: rgba(34, 197, 94, 0.15);
+    
+    --pp-recording: #ef4444;         /* Recording/Alert - saturated red */
+    --pp-recording-bg: rgba(239, 68, 68, 0.15);
+    
+    --pp-warning: #f59e0b;           /* Warning/Caution - amber */
+    --pp-warning-bg: rgba(245, 158, 11, 0.15);
+    
+    --pp-error: #dc2626;             /* Error - deep red */
+    --pp-error-bg: rgba(220, 38, 38, 0.15);
+    
+    /* Legacy mapping */
+    --pp-break: #dc2626;
+    --pp-break-bg: rgba(220, 38, 38, 0.1);
+    
+    /* ============================================
+       VU METER COLORS - LOCKED (Client Approved)
+       DO NOT MODIFY
+       ============================================ */
+    --pp-vu-safe: #22c55e;
+    --pp-vu-caution: #eab308;
+    --pp-vu-danger: #ef4444;
+    --pp-vu-peak: #ffffff;
+    --pp-vu-bg: #0a0a12;
+    --pp-vu-track: #050508;
+    
+    /* ============================================
+       BUTTON COLORS - Flat, rich, no gradients
+       ============================================ */
+    --pp-btn-primary: #2563eb;       /* Rich blue */
+    --pp-btn-primary-hover: #1d4ed8;
+    --pp-btn-secondary: #333338;     /* Neutral */
+    --pp-btn-secondary-hover: #3f3f46;
+    --pp-btn-danger: #b91c1c;        /* Deep red */
+    --pp-btn-danger-hover: #991b1b;
+    --pp-btn-success: #15803d;       /* Deep green */
+    --pp-btn-success-hover: #166534;
+    
+    /* ============================================
+       TYPOGRAPHY
+       ============================================ */
+    --pp-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --pp-font-mono: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+    
+    --pp-font-size-xs: 0.7rem;       /* 11px */
+    --pp-font-size-sm: 0.8rem;       /* 13px */
+    --pp-font-size-base: 0.875rem;   /* 14px */
+    --pp-font-size-md: 1rem;         /* 16px */
+    --pp-font-size-lg: 1.125rem;     /* 18px */
+    
+    /* ============================================
+       SPACING
+       ============================================ */
+    --pp-space-xs: 4px;
+    --pp-space-sm: 8px;
+    --pp-space-md: 12px;
+    --pp-space-lg: 16px;
+    --pp-space-xl: 24px;
+    
+    /* ============================================
+       BORDERS & RADIUS - Tight for pro feel
+       ============================================ */
+    --pp-radius-sm: 2px;
+    --pp-radius-md: 4px;
+    --pp-radius-lg: 6px;
+    --pp-radius-pill: 16px;
+    
+    --pp-border-width: 1px;
+    
+    /* ============================================
+       NO SHADOWS - Use elevation instead
+       ============================================ */
+    --pp-shadow-none: none;
+    
+    /* ============================================
+       TRANSITIONS
+       ============================================ */
+    --pp-transition-fast: 0.1s ease;
+    --pp-transition-base: 0.15s ease;
+    
+    /* ============================================
+       Z-INDEX SCALE
+       ============================================ */
+    --pp-z-dropdown: 100;
+    --pp-z-sticky: 200;
+    --pp-z-modal-backdrop: 900;
+    --pp-z-modal: 1000;
+    --pp-z-toast: 1100;
+}
+
+/* ============================================
+   STAGE COLORS - Slightly desaturated
+   For visual differentiation without distraction
+   ============================================ */
+:root {
+    --pp-stage-main: #7c3aed;        /* Purple - Main Stage */
+    --pp-stage-yarns: #d97706;       /* Orange - Yabun Yarns */
+    --pp-stage-corroboree: #059669;  /* Teal - Corroboree Ground */
+    --pp-stage-speakout: #dc2626;    /* Red - Speak Out */
+    --pp-stage-test: #52525b;        /* Grey - Test streams */
+}
