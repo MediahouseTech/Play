@@ -40,8 +40,11 @@ function checkExistingSession() {
         // Show producer UI elements
         showBreakModePanel();
         
-        const recordingsBtn = document.getElementById('recordingsBtn');
-        if (recordingsBtn) recordingsBtn.style.display = 'inline-flex';
+        // Show Recordings tab
+        const recordingsTabBtn = document.getElementById('recordingsTabBtn');
+        const recordingsDivider = document.getElementById('recordingsDivider');
+        if (recordingsTabBtn) recordingsTabBtn.style.display = 'inline-flex';
+        if (recordingsDivider) recordingsDivider.style.display = 'block';
     }
 }
 
@@ -95,9 +98,11 @@ function checkPassword() {
         // Show break mode panel on main dashboard
         showBreakModePanel();
         
-        // Show recordings button in header
-        const recordingsBtn = document.getElementById('recordingsBtn');
-        if (recordingsBtn) recordingsBtn.style.display = 'inline-flex';
+        // Show Recordings tab
+        const recordingsTabBtn = document.getElementById('recordingsTabBtn');
+        const recordingsDivider = document.getElementById('recordingsDivider');
+        if (recordingsTabBtn) recordingsTabBtn.style.display = 'inline-flex';
+        if (recordingsDivider) recordingsDivider.style.display = 'block';
         
         // Show settings modal
         const settingsModal = document.getElementById('settingsModal');

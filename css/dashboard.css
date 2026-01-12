@@ -519,10 +519,9 @@ html, body {
     margin-top: 16px;
 }
 
-/* Single stream - match player width and center */
+/* Single stream - match break bar to left-aligned player */
 .break-mode-panel.single-stream {
     max-width: 950px;
-    margin: 16px auto 0 auto;
 }
 
 .break-mode-header {
