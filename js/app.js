@@ -233,11 +233,9 @@ function setScale(scale) {
     const container = document.getElementById('playerContainer');
     if (container) {
         if (scale === 100) {
-            container.style.transform = '';
-            container.style.transformOrigin = '';
+            container.style.zoom = '';
         } else {
-            container.style.transform = `scale(${scale / 100})`;
-            container.style.transformOrigin = 'top left';
+            container.style.zoom = scale / 100;
         }
     }
     
