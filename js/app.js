@@ -271,6 +271,16 @@ function initPlayers() {
     
     container.innerHTML = ''; // Clear existing
     
+    // Add/remove single-stream class based on count
+    const isSingleStream = config.streams.length === 1;
+    container.classList.toggle('single-stream', isSingleStream);
+    
+    // Also update break mode panel
+    const breakPanel = document.getElementById('breakModePanel');
+    if (breakPanel) {
+        breakPanel.classList.toggle('single-stream', isSingleStream);
+    }
+    
     config.streams.forEach((stream, index) => {
         const playerWrapper = createPlayerWrapper(stream, index);
         container.appendChild(playerWrapper);

@@ -519,6 +519,12 @@ html, body {
     margin-top: 16px;
 }
 
+/* Single stream - match player width and center */
+.break-mode-panel.single-stream {
+    max-width: 950px;
+    margin: 16px auto 0 auto;
+}
+
 .break-mode-header {
     display: flex;
     align-items: center;
@@ -741,9 +747,20 @@ html, body {
     gap: 12px;
 }
 
+/* Single stream - center with max width */
+#playerContainer.grid-view.single-stream {
+    max-width: 950px;
+    margin: 0 auto;
+}
+
 @media (min-width: 768px) {
     #playerContainer.grid-view {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Override 2-col for single stream */
+    #playerContainer.grid-view.single-stream {
+        grid-template-columns: 1fr;
     }
 }
 
