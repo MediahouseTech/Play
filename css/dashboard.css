@@ -1257,6 +1257,285 @@ html, body {
     background: var(--success);
 }
 
+/* Stream Config Header */
+.stream-config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.stream-config-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.stream-config-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Lock Button */
+.btn-lock {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-lock.locked {
+    background: #4a1c1c;
+    color: #f87171;
+}
+
+.btn-lock.locked:hover {
+    background: #5c2424;
+}
+
+.btn-lock.unlocked {
+    background: #1c4a2e;
+    color: #4ade80;
+}
+
+.btn-lock.unlocked:hover {
+    background: #245c3a;
+}
+
+.btn-lock .icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* Locked State Container */
+.streams-container {
+    position: relative;
+    transition: all 0.3s;
+}
+
+.streams-container.locked {
+    pointer-events: none;
+}
+
+.streams-container.locked .stream-config {
+    opacity: 0.5;
+    filter: grayscale(30%);
+}
+
+.streams-container.locked::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 10px,
+        rgba(0,0,0,0.03) 10px,
+        rgba(0,0,0,0.03) 20px
+    );
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 8px;
+}
+
+/* Copy buttons still work when locked */
+.streams-container.locked .btn-copy {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.streams-container.locked .btn-copy:hover {
+    background: var(--bg-panel);
+}
+
+/* Mono Copy Icon Button */
+.btn-copy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-copy:hover {
+    background: var(--bg-panel);
+    border-color: var(--accent);
+}
+
+.btn-copy .icon {
+    width: 18px;
+    height: 18px;
+    stroke: var(--text-secondary);
+    stroke-width: 2;
+    fill: none;
+}
+
+.btn-copy:hover .icon {
+    stroke: var(--text-primary);
+}
+
+.btn-copy.copied {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.btn-copy.copied .icon {
+    stroke: white;
+}
+
+/* New Stream Form */
+.new-stream-form {
+    background: var(--bg-dark);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 16px;
+}
+
+.new-stream-form.hidden {
+    display: none;
+}
+
+.new-stream-form h4 {
+    color: var(--accent);
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-row.full {
+    grid-template-columns: 1fr;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-group input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-group input.auto-filled {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: var(--success);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.btn-save-stream {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save-stream:hover {
+    background: #16a34a;
+}
+
+.btn-save-stream:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-cancel-stream {
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel-stream:hover {
+    background: var(--bg-panel);
+    color: var(--text-primary);
+}
+
+/* Empty State */
+.streams-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.streams-empty .icon {
+    width: 48px;
+    height: 48px;
+    stroke: var(--border);
+    stroke-width: 1.5;
+    fill: none;
+    margin-bottom: 12px;
+}
+
+.streams-empty p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
 .config-row {
     margin-bottom: 14px;
 }
@@ -1296,7 +1575,39 @@ html, body {
     border-color: var(--accent);
 }
 
-.btn-copy, .btn-show {
+/* Show/Hide Button (for password fields) */
+.btn-show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-show:hover {
+    background: var(--bg-panel);
+    border-color: var(--accent);
+}
+
+.btn-show .icon {
+    width: 18px;
+    height: 18px;
+    stroke: var(--text-secondary);
+    stroke-width: 2;
+    fill: none;
+}
+
+.btn-show:hover .icon {
+    stroke: var(--text-primary);
+}
+
+.btn-copy, .btn-show-old {
     padding: 10px 14px;
     background: var(--bg-panel-light);
     border: 1px solid var(--border);

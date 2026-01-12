@@ -552,71 +552,255 @@ function setCheckbox(id, checked) {
 }
 
 /**
+ * SVG Icons for Stream Config
+ */
+const ICONS = {
+    lock: '<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    unlock: '<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',
+    copy: '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    plus: '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+    stream: '<svg class="icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+    check: '<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+    eye: '<svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg class="icon" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+    trash: '<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+};
+
+// Track new stream form state
+let newStreamData = {
+    name: '',
+    tag: '',
+    liveStreamId: '',
+    playbackId: '',
+    streamKey: '',
+    rtmpUrl: 'rtmp://global-live.mux.com:5222/app'
+};
+
+/**
  * Create stream configuration sections
  */
 function populateStreamConfigs() {
     const container = document.getElementById('streamConfigs');
-    if (!container || !settingsConfig.streams) return;
+    if (!container) return;
     
-    container.innerHTML = settingsConfig.streams.map((stream, index) => `
+    const isLocked = settingsConfig.streamConfigLocked !== false;
+    const streams = settingsConfig.streams || [];
+    
+    container.innerHTML = `
+        <div class="stream-config-header">
+            <h3>Stream Configuration</h3>
+            <div class="stream-config-actions">
+                <button type="button" class="btn-lock ${isLocked ? 'locked' : 'unlocked'}" onclick="toggleStreamLock()" title="${isLocked ? 'Unlock to edit' : 'Lock configuration'}">
+                    ${isLocked ? ICONS.lock : ICONS.unlock}
+                    ${isLocked ? 'Locked' : 'Unlocked'}
+                </button>
+                <button type="button" class="btn btn-create-mux" onclick="showNewStreamForm()" ${isLocked ? 'disabled' : ''} title="Create new stream in Mux">
+                    ${ICONS.plus}
+                    Create in Mux
+                </button>
+            </div>
+        </div>
+        
+        <div id="streamsContainer" class="streams-container ${isLocked ? 'locked' : ''}">
+            ${streams.length === 0 ? `
+                <div class="streams-empty">
+                    ${ICONS.stream}
+                    <p>No streams configured</p>
+                    <p style="font-size: 0.8rem; margin-top: 8px;">Unlock and click "Create in Mux" to add streams</p>
+                </div>
+            ` : streams.map((stream, index) => renderStreamCard(stream, index)).join('')}
+        </div>
+        
+        <div id="newStreamForm" class="new-stream-form hidden">
+            <h4>New Stream</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Stream Name *</label>
+                    <input type="text" id="newStreamName" placeholder="e.g. Main Stage" oninput="updateNewStreamData('name', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>Tag (for Recording Manager)</label>
+                    <input type="text" id="newStreamTag" placeholder="e.g. Main" oninput="updateNewStreamData('tag', this.value)">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Live Stream ID</label>
+                    <input type="text" id="newLiveStreamId" disabled placeholder="Auto-filled after creation">
+                </div>
+                <div class="form-group">
+                    <label>Playback ID</label>
+                    <input type="text" id="newPlaybackId" disabled placeholder="Auto-filled after creation">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Stream Key</label>
+                    <input type="text" id="newStreamKey" disabled placeholder="Auto-filled after creation">
+                </div>
+                <div class="form-group">
+                    <label>RTMP URL</label>
+                    <input type="text" id="newRtmpUrl" disabled value="rtmp://global-live.mux.com:5222/app">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-create-mux" id="btnCreateInMux" onclick="createNewMuxLivestream()">
+                    ${ICONS.plus}
+                    Create in Mux
+                </button>
+                <button type="button" class="btn-save-stream" id="btnSaveStream" onclick="saveNewStream()" disabled>
+                    ${ICONS.check}
+                    Save Stream
+                </button>
+                <button type="button" class="btn-cancel-stream" onclick="cancelNewStream()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Render a single stream card
+ */
+function renderStreamCard(stream, index) {
+    return `
         <div class="stream-config" data-index="${index}">
             <div class="stream-header">
                 <h4>Stream ${index + 1}: ${stream.name}</h4>
-                <button type="button" class="btn btn-create-mux" onclick="createMuxLivestream(${index})" title="Create new livestream in Mux">
-                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    Create in Mux
-                </button>
+                <span class="stream-tag" style="background: ${getTagColor(stream.tag)}; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem;">${stream.tag || 'No tag'}</span>
             </div>
             <div class="config-row">
                 <label>Live Stream ID</label>
                 <div class="input-with-copy">
-                    <input type="text" id="livestreamid-${index}" class="input-field" value="${stream.liveStreamId || ''}" placeholder="Mux Live Stream ID (for status check)">
-                    <button type="button" class="btn-copy" onclick="copyToClipboard(document.getElementById('livestreamid-${index}').value, this)">📋</button>
+                    <input type="text" id="livestreamid-${index}" class="input-field" value="${stream.liveStreamId || ''}" readonly>
+                    <button type="button" class="btn-copy" onclick="copyField('livestreamid-${index}', this)" title="Copy">
+                        ${ICONS.copy}
+                    </button>
                 </div>
             </div>
             <div class="config-row">
                 <label>Playback ID</label>
                 <div class="input-with-copy">
-                    <input type="text" id="playback-${index}" class="input-field" value="${stream.playbackId || ''}" placeholder="Mux Playback ID (for video URL)">
-                    <button type="button" class="btn-copy" onclick="copyToClipboard(document.getElementById('playback-${index}').value, this)">📋</button>
+                    <input type="text" id="playback-${index}" class="input-field" value="${stream.playbackId || ''}" readonly>
+                    <button type="button" class="btn-copy" onclick="copyField('playback-${index}', this)" title="Copy">
+                        ${ICONS.copy}
+                    </button>
                 </div>
             </div>
             <div class="config-row">
                 <label>Stream Key</label>
                 <div class="input-with-copy">
-                    <input type="password" id="streamkey-${index}" class="input-field" value="${stream.streamKey || ''}" placeholder="Enter Stream Key">
-                    <button type="button" class="btn-show" onclick="toggleStreamKeyVisibility(${index})">👁</button>
-                    <button type="button" class="btn-copy" onclick="copyToClipboard(document.getElementById('streamkey-${index}').value, this)">📋</button>
+                    <input type="password" id="streamkey-${index}" class="input-field" value="${stream.streamKey || ''}" readonly>
+                    <button type="button" class="btn-show" onclick="toggleStreamKeyVisibility(${index})" title="Show/Hide">
+                        ${ICONS.eye}
+                    </button>
+                    <button type="button" class="btn-copy" onclick="copyField('streamkey-${index}', this)" title="Copy">
+                        ${ICONS.copy}
+                    </button>
                 </div>
             </div>
             <div class="config-row">
                 <label>RTMP URL</label>
                 <div class="input-with-copy">
-                    <input type="text" id="rtmp-${index}" class="input-field" value="${stream.rtmpUrl || 'rtmp://global-live.mux.com:5222/app'}">
-                    <button type="button" class="btn-copy" onclick="copyToClipboard(document.getElementById('rtmp-${index}').value, this)">📋</button>
+                    <input type="text" id="rtmp-${index}" class="input-field" value="${stream.rtmpUrl || 'rtmp://global-live.mux.com:5222/app'}" readonly>
+                    <button type="button" class="btn-copy" onclick="copyField('rtmp-${index}', this)" title="Copy">
+                        ${ICONS.copy}
+                    </button>
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
 }
 
 /**
- * Create a new livestream in Mux and populate fields
+ * Get tag color from config or generate one
  */
-async function createMuxLivestream(index) {
-    const stream = settingsConfig.streams[index];
-    if (!stream) return;
+function getTagColor(tagName) {
+    if (!tagName) return '#6b7280';
+    const tag = settingsConfig.tags?.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+    if (tag) return tag.color;
+    // Generate consistent color from tag name
+    let hash = 0;
+    for (let i = 0; i < tagName.length; i++) {
+        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 60%, 45%)`;
+}
+
+/**
+ * Toggle stream configuration lock
+ */
+function toggleStreamLock() {
+    const isCurrentlyLocked = settingsConfig.streamConfigLocked !== false;
     
-    // Check if already has a livestream ID
-    const existingId = document.getElementById(`livestreamid-${index}`).value;
-    if (existingId) {
-        if (!confirm(`Stream "${stream.name}" already has a Live Stream ID.\n\nCreate a NEW livestream? This won't delete the old one in Mux.`)) {
+    if (isCurrentlyLocked) {
+        // Unlocking - show warning
+        if (!confirm('⚠️ WARNING\n\nUnlocking stream configuration allows creating new streams.\n\nDo NOT unlock during a live event unless absolutely necessary.\n\nProceed?')) {
             return;
         }
     }
     
-    const button = event.target.closest('button');
-    const originalText = button.innerHTML;
+    settingsConfig.streamConfigLocked = !isCurrentlyLocked;
+    populateStreamConfigs();
+}
+
+/**
+ * Show new stream form
+ */
+function showNewStreamForm() {
+    if (settingsConfig.streamConfigLocked !== false) return;
+    
+    // Reset form data
+    newStreamData = {
+        name: '',
+        tag: '',
+        liveStreamId: '',
+        playbackId: '',
+        streamKey: '',
+        rtmpUrl: 'rtmp://global-live.mux.com:5222/app'
+    };
+    
+    const form = document.getElementById('newStreamForm');
+    if (form) {
+        form.classList.remove('hidden');
+        // Reset form fields
+        document.getElementById('newStreamName').value = '';
+        document.getElementById('newStreamTag').value = '';
+        document.getElementById('newLiveStreamId').value = '';
+        document.getElementById('newPlaybackId').value = '';
+        document.getElementById('newStreamKey').value = '';
+        document.getElementById('newRtmpUrl').value = 'rtmp://global-live.mux.com:5222/app';
+        // Reset button states
+        document.getElementById('btnCreateInMux').disabled = false;
+        document.getElementById('btnSaveStream').disabled = true;
+        // Focus on name field
+        document.getElementById('newStreamName').focus();
+    }
+}
+
+/**
+ * Update new stream data as user types
+ */
+function updateNewStreamData(field, value) {
+    newStreamData[field] = value;
+}
+
+/**
+ * Create new livestream in Mux
+ */
+async function createNewMuxLivestream() {
+    const name = document.getElementById('newStreamName').value.trim();
+    
+    if (!name) {
+        alert('Please enter a Stream Name first.');
+        document.getElementById('newStreamName').focus();
+        return;
+    }
+    
+    const button = document.getElementById('btnCreateInMux');
+    const originalHTML = button.innerHTML;
     button.innerHTML = '<span class="spinner"></span> Creating...';
     button.disabled = true;
     
@@ -624,43 +808,125 @@ async function createMuxLivestream(index) {
         const response = await fetch('/api/create-livestream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: stream.name })
+            body: JSON.stringify({ name: name })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            // Populate the fields
-            document.getElementById(`livestreamid-${index}`).value = data.liveStreamId;
-            document.getElementById(`playback-${index}`).value = data.playbackId;
-            document.getElementById(`streamkey-${index}`).value = data.streamKey;
-            document.getElementById(`rtmp-${index}`).value = data.rtmpUrl;
+            // Populate the form fields
+            newStreamData.liveStreamId = data.liveStreamId;
+            newStreamData.playbackId = data.playbackId;
+            newStreamData.streamKey = data.streamKey;
+            newStreamData.rtmpUrl = data.rtmpUrl;
+            newStreamData.name = name;
+            newStreamData.tag = document.getElementById('newStreamTag').value.trim();
             
-            // Visual feedback
-            button.innerHTML = '✅ Created!';
+            // Update form display
+            const liveStreamIdInput = document.getElementById('newLiveStreamId');
+            const playbackIdInput = document.getElementById('newPlaybackId');
+            const streamKeyInput = document.getElementById('newStreamKey');
+            const rtmpUrlInput = document.getElementById('newRtmpUrl');
+            
+            liveStreamIdInput.value = data.liveStreamId;
+            playbackIdInput.value = data.playbackId;
+            streamKeyInput.value = data.streamKey;
+            rtmpUrlInput.value = data.rtmpUrl;
+            
+            // Add visual feedback for auto-filled fields
+            liveStreamIdInput.classList.add('auto-filled');
+            playbackIdInput.classList.add('auto-filled');
+            streamKeyInput.classList.add('auto-filled');
+            rtmpUrlInput.classList.add('auto-filled');
+            
+            // Enable save button
+            document.getElementById('btnSaveStream').disabled = false;
+            
+            // Update create button
+            button.innerHTML = `${ICONS.check} Created!`;
             button.classList.add('btn-success');
             
-            // Show success message
-            alert(`Livestream "${stream.name}" created successfully!\n\nDon't forget to Save Settings.`);
-            
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.classList.remove('btn-success');
-                button.disabled = false;
-            }, 2000);
         } else {
             throw new Error(data.error || 'Failed to create livestream');
         }
     } catch (error) {
         console.error('Create livestream error:', error);
-        button.innerHTML = '❌ Error';
         alert('Failed to create livestream: ' + error.message);
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }, 2000);
+        button.innerHTML = originalHTML;
+        button.disabled = false;
     }
+}
+
+/**
+ * Save the new stream to config
+ */
+async function saveNewStream() {
+    if (!newStreamData.liveStreamId) {
+        alert('Please create the stream in Mux first.');
+        return;
+    }
+    
+    // Add stream to config
+    if (!settingsConfig.streams) settingsConfig.streams = [];
+    
+    settingsConfig.streams.push({
+        name: newStreamData.name,
+        tag: newStreamData.tag,
+        liveStreamId: newStreamData.liveStreamId,
+        playbackId: newStreamData.playbackId,
+        streamKey: newStreamData.streamKey,
+        rtmpUrl: newStreamData.rtmpUrl
+    });
+    
+    // Add tag to tags list if it doesn't exist
+    if (newStreamData.tag) {
+        if (!settingsConfig.tags) settingsConfig.tags = [];
+        const tagExists = settingsConfig.tags.some(t => t.name.toLowerCase() === newStreamData.tag.toLowerCase());
+        if (!tagExists) {
+            // Generate a color for the new tag
+            const hue = Math.abs(newStreamData.tag.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0) % 360);
+            settingsConfig.tags.push({
+                id: newStreamData.tag.toLowerCase().replace(/\s+/g, '_'),
+                name: newStreamData.tag,
+                color: `hsl(${hue}, 60%, 45%)`,
+                icon: '🎬'
+            });
+        }
+    }
+    
+    // Hide form and refresh display
+    document.getElementById('newStreamForm').classList.add('hidden');
+    populateStreamConfigs();
+    populateTagsConfig();
+    
+    // Show success
+    alert(`Stream "${newStreamData.name}" added!\n\nDon't forget to Save Settings.`);
+}
+
+/**
+ * Cancel new stream creation
+ */
+function cancelNewStream() {
+    document.getElementById('newStreamForm').classList.add('hidden');
+    // Note: If they created in Mux but didn't save, the livestream still exists in Mux
+    // That's okay - it can be used later or deleted from Mux dashboard
+}
+
+/**
+ * Copy field value to clipboard
+ */
+function copyField(fieldId, button) {
+    const input = document.getElementById(fieldId);
+    if (!input || !input.value) {
+        return;
+    }
+    
+    navigator.clipboard.writeText(input.value).then(() => {
+        button.classList.add('copied');
+        setTimeout(() => button.classList.remove('copied'), 1500);
+    }).catch(err => {
+        console.error('Copy failed:', err);
+    });
 }
 
 /**

@@ -14,36 +14,8 @@
     "producerName": "Scott",
     "producerPhone": "0412 XXX XXX"
   },
-  "streams": [
-    {
-      "name": "Main Stage",
-      "playbackId": "SRaLbHORMpqkvcB7cF3ziu7D701QzTxrzUw2GOFTfRf00",
-      "liveStreamId": "spDSZGOT2fRmqVkMpvaiPMjnBD1qW8800ghXCHoJojBc",
-      "streamKey": "ENTER_STREAM_KEY",
-      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
-    },
-    {
-      "name": "Yabun Yarns",
-      "playbackId": "ENTER_PLAYBACK_ID",
-      "liveStreamId": "ENTER_LIVE_STREAM_ID",
-      "streamKey": "ENTER_STREAM_KEY",
-      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
-    },
-    {
-      "name": "Corroboree",
-      "playbackId": "ENTER_PLAYBACK_ID",
-      "liveStreamId": "ENTER_LIVE_STREAM_ID",
-      "streamKey": "ENTER_STREAM_KEY",
-      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
-    },
-    {
-      "name": "Speak Out",
-      "playbackId": "ENTER_PLAYBACK_ID",
-      "liveStreamId": "ENTER_LIVE_STREAM_ID",
-      "streamKey": "ENTER_STREAM_KEY",
-      "rtmpUrl": "rtmp://global-live.mux.com:5222/app"
-    }
-  ],
+  "streams": [],
+  "streamConfigLocked": true,
   "visibility": {
     "vuMeters": true,
     "streamStatus": true,
