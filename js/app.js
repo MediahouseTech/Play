@@ -49,6 +49,13 @@ async function initDashboard() {
     }
     
     console.log('[App] Dashboard ready');
+    
+    // Add ESCAPE key handler for returning to all-view
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && currentView !== 'all') {
+            switchView('all');
+        }
+    });
 }
 
 /**
@@ -139,7 +146,6 @@ function initUI() {
     const titleEl = document.getElementById('eventTitle');
     if (titleEl) titleEl.textContent = config.eventName;
     
-    createPlayerSelector();
     createVisibilityToggles();
     setBandwidth(config.defaultBandwidth || 'medium');
     populateEventInfo();
@@ -333,7 +339,7 @@ function createPlayerWrapper(stream, index) {
     
     wrapper.innerHTML = `
         <div class="player-header">
-            <span class="stream-name">${stream.name}</span>
+            <span class="stream-name clickable" onclick="toggleStreamView(${index})" title="Click to toggle 1-up view">${stream.name}</span>
             <span class="stream-status" id="status-${index}">⏳ Checking...</span>
         </div>
         <div class="player-content">
@@ -821,13 +827,31 @@ function switchView(view) {
         container.className = 'grid-view';
         document.querySelectorAll('.player-wrapper').forEach(wrapper => {
             wrapper.style.display = 'block';
+            wrapper.querySelector('.stream-name')?.classList.remove('viewing');
         });
     } else {
         // Show single player
         container.className = 'single-view';
         document.querySelectorAll('.player-wrapper').forEach((wrapper, index) => {
             wrapper.style.display = index === view ? 'block' : 'none';
+            if (index === view) {
+                wrapper.querySelector('.stream-name')?.classList.add('viewing');
+            }
         });
+    }
+}
+
+/**
+ * Toggle between all-view and single-stream view
+ * Click stream name to go 1-up, click again or ESCAPE to go back
+ */
+function toggleStreamView(index) {
+    if (currentView === index) {
+        // Already viewing this stream, go back to all
+        switchView('all');
+    } else {
+        // Switch to single stream view
+        switchView(index);
     }
 }
 
