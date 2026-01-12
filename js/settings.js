@@ -1124,12 +1124,17 @@ async function saveSettings() {
         const titleEl = document.getElementById('eventTitle');
         if (titleEl) titleEl.textContent = settingsConfig.eventName;
         
+        // Sync with global config used by app.js
+        if (typeof config !== 'undefined') {
+            Object.assign(config, settingsConfig);
+        }
+        
         // Refresh Break Mode panel with updated streams
         await populateMainBreakControls();
         
-        // Refresh main dashboard if streams changed
-        if (typeof initializePlayers === 'function') {
-            initializePlayers();
+        // Refresh main dashboard players if streams changed
+        if (typeof initPlayers === 'function') {
+            initPlayers();
         }
         
     } catch (error) {
