@@ -326,6 +326,11 @@ function initPlayers() {
     });
     
     switchView('all');
+    
+    // Show break controls if producer is already authenticated
+    if (typeof isProducerAuthenticated !== 'undefined' && isProducerAuthenticated) {
+        showInlineBreakControls();
+    }
 }
 
 /**
