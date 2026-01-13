@@ -1288,7 +1288,11 @@ async function toggleBreakModeInline(index) {
  * Show inline break controls for all streams (called after producer login)
  */
 function showInlineBreakControls() {
-    document.querySelectorAll('.break-control').forEach(el => {
+    console.log('[App] showInlineBreakControls called');
+    const controls = document.querySelectorAll('.break-control');
+    console.log(`[App] Found ${controls.length} break control elements`);
+    
+    controls.forEach(el => {
         el.style.display = 'flex';
     });
     

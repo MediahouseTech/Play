@@ -123,6 +123,13 @@ function showBreakModePanel() {
     if (typeof showInlineBreakControls === 'function') {
         showInlineBreakControls();
         console.log('[Settings] Inline break controls shown on dashboard');
+        
+        // Retry after a short delay in case players are still being created
+        setTimeout(() => {
+            if (typeof showInlineBreakControls === 'function') {
+                showInlineBreakControls();
+            }
+        }, 500);
     }
 }
 
