@@ -307,7 +307,7 @@ function applyFiltersAndSort() {
     filteredRecordings = recordings.filter(rec => {
         const matchesSearch = !searchTerm || 
             rec.title?.toLowerCase().includes(searchTerm) ||
-            rec.stageName?.toLowerCase().includes(searchTerm) ||
+            rec.streamName?.toLowerCase().includes(searchTerm) ||
             rec.createdFormatted?.toLowerCase().includes(searchTerm) ||
             rec.externalId?.toLowerCase().includes(searchTerm) ||
             rec.notes?.toLowerCase().includes(searchTerm);
@@ -345,8 +345,8 @@ function applyFiltersAndSort() {
                 return b.duration - a.duration;
             case 'duration-asc':
                 return a.duration - b.duration;
-            case 'stage':
-                return (a.stageName || '').localeCompare(b.stageName || '');
+            case 'stream':
+                return (a.streamName || '').localeCompare(b.streamName || '');
             default:
                 return 0;
         }
@@ -738,7 +738,7 @@ function openPreview(assetId) {
     
     // Update modal info
     document.getElementById('previewTitle').textContent = rec.title || 'Preview';
-    document.getElementById('previewStage').textContent = rec.stageName || '--';
+    document.getElementById('previewStream').textContent = rec.streamName || '--';
     document.getElementById('previewDate').textContent = rec.createdFormatted || '--';
     document.getElementById('previewDuration').textContent = rec.durationStr || '--';
     document.getElementById('previewAssetId').textContent = rec.assetId;
@@ -1198,8 +1198,8 @@ async function updateRecording(assetId, updates) {
  * Format: {LivestreamName}-{DD-MM-YY}_{HH-MM}.mp4
  */
 function generateDownloadFilename(rec) {
-    // Get livestream name (or fallback)
-    let name = rec.stageName || rec.title || 'Recording';
+    // Get stream name (or fallback)
+    let name = rec.streamName || rec.title || 'Recording';
     
     // Convert spaces to hyphens, remove special chars
     name = name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
@@ -1300,7 +1300,7 @@ function openBatchRename() {
     if (selectedRecordings.size === 0) return;
     
     document.getElementById('batchRenameCount').textContent = selectedRecordings.size;
-    document.getElementById('renamePattern').value = '{stage} - Session {n}';
+    document.getElementById('renamePattern').value = '{stream} - Session {n}';
     updateRenamePreview();
     document.getElementById('batchRenameModal').classList.add('show');
 }
@@ -1318,7 +1318,7 @@ function updateRenamePreview() {
     preview.innerHTML = selectedRecs.slice(0, 5).map((rec, i) => {
         const name = pattern
             .replace('{n}', String(i + 1).padStart(3, '0'))
-            .replace('{stage}', rec.stageName || 'Unknown')
+            .replace('{stream}', rec.streamName || 'Unknown')
             .replace('{date}', rec.createdFormatted?.split(',')[0] || '');
         return `<div>${name}</div>`;
     }).join('') + (selectedRecs.length > 5 ? `<div>... and ${selectedRecs.length - 5} more</div>` : '');
@@ -1332,7 +1332,7 @@ async function applyBatchRename() {
         const rec = selectedRecs[i];
         const title = pattern
             .replace('{n}', String(i + 1).padStart(3, '0'))
-            .replace('{stage}', rec.stageName || 'Unknown')
+            .replace('{stream}', rec.streamName || 'Unknown')
             .replace('{date}', rec.createdFormatted?.split(',')[0] || '');
         
         await updateRecording(rec.assetId, { title });
@@ -1547,7 +1547,7 @@ async function bulkDelete() {
 function exportCSV() {
     const data = filteredRecordings.map(rec => ({
         'Title': rec.title || '',
-        'Stage': rec.stageName || '',
+        'Stream': rec.streamName || '',
         'Date': rec.createdFormatted || '',
         'Duration': rec.durationStr || '',
         'Duration (seconds)': rec.duration || 0,

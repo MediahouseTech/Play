@@ -1,13 +1,15 @@
 /**
- * RECORDINGS.MJS - List All Tagged Recordings
+ * RECORDINGS.MJS - Recording Manager API
  * 
  * GET /api/recordings - Returns list of all recordings with metadata
+ * GET /api/recordings?action=refresh - Re-fetch from Mux, auto-tag by stream
+ * GET /api/recordings?action=download&assetId=X - Get download URL
+ * POST /api/recordings - Update or delete recordings
  * 
- * Useful for post-production to see all recordings with:
- * - Stage names
- * - Timestamps  
- * - Duration
- * - Direct download links
+ * KEY FEATURES:
+ * - Dynamic stream detection via Mux passthrough field
+ * - Auto-tagging based on stream config
+ * - Preserves user edits (manual titles, notes, tags)
  */
 
 import { getStore } from "@netlify/blobs";
@@ -110,21 +112,26 @@ export default async function handler(request, context) {
 
         // GET with action=refresh - Re-fetch all assets from Mux and update index
         if (request.method === 'GET' && action === 'refresh') {
-            // Get our config to know which Live Stream IDs to look for
+            // Get existing index to preserve user edits (tags, notes, custom titles)
+            const existingIndex = await store.get("recordings-index", { type: "json" }) || [];
+            const existingMap = new Map(existingIndex.map(r => [r.assetId, r]));
+            
+            // Get config for stream lookups and auto-tagging
             let config = await store.get("config", { type: "json" });
             
-            // Build list of known live stream IDs from config
-            // Also include hardcoded Main Stage ID as fallback
-            const knownStreamIds = [
-                'spDSZGOT2fRmqVkMpvaiPMjnBD1qW8800ghXCHoJojBc' // Main Stage - hardcoded fallback
-            ];
+            // Build lookup maps from config (NO hardcoded IDs - fully dynamic)
+            // Map 1: liveStreamId → stream name
+            // Map 2: stream name → stream config (for auto-tagging)
+            const streamNamesByLiveId = {};
+            const streamConfigByName = {};
             
             if (config?.streams) {
                 config.streams.forEach(s => {
-                    if (s.liveStreamId && 
-                        s.liveStreamId !== 'ENTER_LIVE_STREAM_ID' && 
-                        !knownStreamIds.includes(s.liveStreamId)) {
-                        knownStreamIds.push(s.liveStreamId);
+                    if (s.liveStreamId && s.name && s.liveStreamId !== 'ENTER_LIVE_STREAM_ID') {
+                        streamNamesByLiveId[s.liveStreamId] = s.name;
+                    }
+                    if (s.name) {
+                        streamConfigByName[s.name] = s;
                     }
                 });
             }
@@ -148,52 +155,71 @@ export default async function handler(request, context) {
             const assetsData = await assetsResponse.json();
             const recordings = [];
 
-            // Stage name lookup map
-            const stageNames = {
-                'spDSZGOT2fRmqVkMpvaiPMjnBD1qW8800ghXCHoJojBc': 'Main Stage',
-                'x91mPV02jW00EhP6lECoopFnjTri2s02Zip474B9jYO6k00': 'Old Test Stream'
-            };
-            
-            // Add names from config if available
-            if (config?.streams) {
-                config.streams.forEach(s => {
-                    if (s.liveStreamId && s.name) {
-                        stageNames[s.liveStreamId] = s.name;
-                    }
-                });
-            }
-
             for (const asset of assetsData.data) {
-                // Include ALL live stream recordings (not just configured ones)
+                // Only include recordings from live streams
                 if (asset.live_stream_id) {
-                    const stageName = stageNames[asset.live_stream_id] || 'Unknown Stage';
+                    // STREAM NAME PRIORITY:
+                    // 1. Mux passthrough field (set when livestream created - most reliable)
+                    // 2. Config lookup by liveStreamId (if configured in Play settings)
+                    // 3. "Recording" as last resort (never "Unknown Stage")
+                    const streamName = asset.passthrough || 
+                                       streamNamesByLiveId[asset.live_stream_id] || 
+                                       'Recording';
                     
-                    // Format created timestamp
-                    const createdDate = new Date(parseInt(asset.created_at) * 1000);
+                    // Parse timestamp - Mux returns Unix seconds as string
+                    const timestamp = parseInt(asset.created_at);
+                    const createdDate = new Date(timestamp * 1000);
+                    
+                    // Format for Sydney timezone
                     const sydneyTime = createdDate.toLocaleString('en-AU', {
                         timeZone: 'Australia/Sydney',
-                        year: 'numeric',
-                        month: '2-digit',
                         day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: true
                     });
 
-                    const durationMins = Math.round(asset.duration / 60);
+                    // Calculate duration
+                    const durationMins = asset.duration ? Math.round(asset.duration / 60) : 0;
+                    const durationStr = durationMins > 0 ? `${durationMins} mins` : 'Processing...';
+
+                    // Generate fresh title from Mux data (ignore corrupt meta.title)
+                    const freshTitle = `${streamName} - ${sydneyTime}`;
+                    
+                    // Check if user has manually edited this recording
+                    const existing = existingMap.get(asset.id);
+                    const userEditedTitle = existing?.title && 
+                                           !existing.title.includes('Unknown Stage') &&
+                                           !existing.title.includes('21/01/1970') &&
+                                           existing.title !== existing.streamName + ' - ' + existing.createdFormatted;
+
+                    // AUTO-TAGGING:
+                    // If user hasn't manually tagged, check if stream config has a default tag
+                    let autoTag = null;
+                    if (!existing?.tag) {
+                        const streamConfig = streamConfigByName[streamName];
+                        if (streamConfig?.tag) {
+                            autoTag = streamConfig.tag;
+                        }
+                    }
 
                     recordings.push({
                         assetId: asset.id,
                         playbackId: asset.playback_ids?.[0]?.id || null,
                         liveStreamId: asset.live_stream_id,
-                        stageName,
-                        title: asset.meta?.title || `${stageName} - ${sydneyTime}`,
+                        streamName,
+                        title: userEditedTitle ? existing.title : freshTitle,
                         externalId: asset.meta?.external_id || null,
                         createdAt: asset.created_at,
                         createdFormatted: sydneyTime,
-                        duration: asset.duration,
-                        durationStr: durationMins + ' mins',
-                        status: asset.status
+                        duration: asset.duration || 0,
+                        durationStr,
+                        status: asset.status,
+                        // Preserve user tag OR apply auto-tag from stream config
+                        tag: existing?.tag || autoTag,
+                        notes: existing?.notes || null
                     });
                 }
             }
