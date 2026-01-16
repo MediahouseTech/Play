@@ -155,9 +155,14 @@ export default async function handler(request, context) {
             const assetsData = await assetsResponse.json();
             const recordings = [];
 
+            console.log('[recordings] Processing', assetsData.data.length, 'assets from Mux');
+
             for (const asset of assetsData.data) {
                 // Only include recordings from live streams
                 if (asset.live_stream_id) {
+                    // DEBUG: Log what Mux is returning
+                    console.log('[recordings] Asset:', asset.id, '| passthrough:', asset.passthrough, '| duration:', asset.duration, '| created_at:', asset.created_at);
+                    
                     // STREAM NAME PRIORITY:
                     // 1. Mux passthrough field (set when livestream created - most reliable)
                     // 2. Config lookup by liveStreamId (if configured in Play settings)
@@ -165,6 +170,8 @@ export default async function handler(request, context) {
                     const streamName = asset.passthrough || 
                                        streamNamesByLiveId[asset.live_stream_id] || 
                                        'Recording';
+                    
+                    console.log('[recordings] streamName resolved to:', streamName);
                     
                     // Parse timestamp - Mux returns Unix seconds as string
                     const timestamp = parseInt(asset.created_at);
