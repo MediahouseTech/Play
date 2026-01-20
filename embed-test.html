@@ -3,54 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embed Test - Main Stage</title>
+    <title>Yabun Festival 2026 - Main Stage</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
-            color: #fff;
-            padding: 40px;
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
         }
-        h1 {
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
         }
-        .embed-container {
-            max-width: 960px;
-            margin: 0 auto;
+        .video-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: opacity 0.5s ease;
         }
-        .note {
-            margin-top: 20px;
-            padding: 15px;
-            background: #2a2a2a;
-            border-radius: 8px;
-            font-size: 0.9rem;
+        #liveVideo {
+            z-index: 2;
+            opacity: 1;
+        }
+        #breakVideo {
+            z-index: 1;
+            opacity: 0;
+        }
+        /* When on break: hide live, show break */
+        .video-container.on-break #liveVideo {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .video-container.on-break #breakVideo {
+            opacity: 1;
+        }
+        /* Poster/loading state */
+        .poster-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            background: #000 url('images/poster.jpg') center/contain no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .poster-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-text {
             color: #888;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
-    <div class="embed-container">
-        <h1>Main Stage - Raw Mux Embed Test</h1>
-        
-        <iframe 
-            src="https://player.mux.com/YeItyyn71Wxsl00mp02402J4HrvjaedR02DmVofc7452wII?stream-type=live&preload=metadata&accent-color=%23fa50b5&poster=https%3A%2F%2Fyabun.org.au%2Flivestream%2Fposters%2Fmain_poster.jpg"
-            style="aspect-ratio: 16/9; width: 100%; border: 0;"
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
-            allowfullscreen="true"
-            title="Yabun Festival 2026 - Main Stage"
-        ></iframe>
-        
-        <div class="note">
-            <strong>This is the raw Mux embed.</strong><br>
-            It will NOT respond to Break Mode from the PLAY dashboard.<br>
-            Whatever the encoder sends is what viewers see.
+    <div class="video-container" id="videoContainer">
+        <!-- Poster/Loading overlay -->
+        <div class="poster-overlay" id="posterOverlay">
+            <span class="loading-text">Loading stream...</span>
         </div>
+        
+        <!-- Break/Fallback video (underneath) - preloaded and ready -->
+        <video 
+            id="breakVideo" 
+            class="video-layer"
+            muted
+            playsinline
+            loop
+        ></video>
+        
+        <!-- Live video (on top) -->
+        <video 
+            id="liveVideo" 
+            class="video-layer"
+            muted
+            playsinline
+        ></video>
     </div>
+
+    <script>
+        // =====================================================
+        // CONFIGURATION - Main Stage (Stream Index 0)
+        // =====================================================
+        const STREAM_INDEX = 0;
+        const LIVE_PLAYBACK_ID = 'YeItyyn71Wxsl00mp02402J4HrvjaedR02DmVofc7452wII';
+        const FALLBACK_PLAYBACK_ID = 'mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g';
+        const POLL_INTERVAL = 3000; // Check break mode every 3 seconds
+        
+        // =====================================================
+        // STATE
+        // =====================================================
+        let liveHls = null;
+        let breakHls = null;
+        let isOnBreak = false;
+        let liveVideoReady = false;
+        let breakVideoReady = false;
+        
+        const container = document.getElementById('videoContainer');
+        const liveVideo = document.getElementById('liveVideo');
+        const breakVideo = document.getElementById('breakVideo');
+        const posterOverlay = document.getElementById('posterOverlay');
+        
+        // =====================================================
+        // INITIALIZE BOTH PLAYERS
+        // =====================================================
+        function initPlayers() {
+            console.log('[Embed] Initializing players...');
+            
+            // Initialize LIVE stream
+            initLivePlayer();
+            
+            // Pre-load BREAK/fallback video so it's ready instantly
+            initBreakPlayer();
+            
+            // Start polling for break mode
+            checkBreakMode();
+            setInterval(checkBreakMode, POLL_INTERVAL);
+        }
+        
+        function initLivePlayer() {
+            const liveUrl = `https://stream.mux.com/${LIVE_PLAYBACK_ID}.m3u8`;
+            console.log('[Embed] Loading LIVE stream:', liveUrl);
+            
+            if (Hls.isSupported()) {
+                liveHls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: false
+                });
+                
+                liveHls.loadSource(liveUrl);
+                liveHls.attachMedia(liveVideo);
+                
+                liveHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    console.log('[Embed] LIVE manifest parsed');
+                });
+                
+                liveHls.on(Hls.Events.LEVEL_LOADED, (event, data) => {
+                    const isLive = data.details && data.details.live === true;
+                    console.log('[Embed] LIVE level loaded, isLive:', isLive);
+                    
+                    if (isLive && !isOnBreak) {
+                        liveVideo.play()
+                            .then(() => {
+                                console.log('[Embed] LIVE video playing');
+                                liveVideoReady = true;
+                                hideOverlayIfReady();
+                            })
+                            .catch(e => console.error('[Embed] LIVE play error:', e));
+                    }
+                });
+                
+                liveHls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('[Embed] LIVE HLS error:', data.type, data.details);
+                    if (data.fatal) {
+                        // Stream not live - that's OK, show poster
+                        console.log('[Embed] LIVE stream not available');
+                    }
+                });
+                
+            } else if (liveVideo.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari native HLS
+                liveVideo.src = liveUrl;
+                liveVideo.addEventListener('canplay', () => {
+                    if (!isOnBreak) {
+                        liveVideo.play();
+                        liveVideoReady = true;
+                        hideOverlayIfReady();
+                    }
+                });
+            }
+        }
+        
+        function initBreakPlayer() {
+            const breakUrl = `https://stream.mux.com/${FALLBACK_PLAYBACK_ID}.m3u8`;
+            console.log('[Embed] Pre-loading BREAK video:', breakUrl);
+            
+            if (Hls.isSupported()) {
+                breakHls = new Hls({
+                    enableWorker: true
+                });
+                
+                breakHls.loadSource(breakUrl);
+                breakHls.attachMedia(breakVideo);
+                
+                breakHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    console.log('[Embed] BREAK manifest parsed');
+                    // Don't auto-play - just have it ready
+                    breakVideoReady = true;
+                });
+                
+                breakHls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('[Embed] BREAK HLS error:', data.type, data.details);
+                });
+                
+            } else if (breakVideo.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari native HLS
+                breakVideo.src = breakUrl;
+                breakVideo.addEventListener('canplay', () => {
+                    breakVideoReady = true;
+                });
+            }
+        }
+        
+        function hideOverlayIfReady() {
+            // Hide poster once we have something to show
+            if ((liveVideoReady && !isOnBreak) || (breakVideoReady && isOnBreak)) {
+                posterOverlay.classList.add('hidden');
+            }
+        }
+        
+        // =====================================================
+        // BREAK MODE POLLING
+        // =====================================================
+        async function checkBreakMode() {
+            try {
+                const response = await fetch('/api/break-mode', {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                
+                if (!response.ok) {
+                    console.warn('[Embed] Break mode API error:', response.status);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.breakMode) {
+                    const newBreakState = data.breakMode[String(STREAM_INDEX)] === true;
+                    
+                    if (newBreakState !== isOnBreak) {
+                        console.log('[Embed] Break mode changed:', isOnBreak, '->', newBreakState);
+                        applyBreakMode(newBreakState);
+                    }
+                }
+            } catch (error) {
+                console.error('[Embed] Break mode fetch error:', error);
+            }
+        }
+        
+        // =====================================================
+        // APPLY BREAK MODE (SMOOTH CROSSFADE)
+        // =====================================================
+        function applyBreakMode(onBreak) {
+            isOnBreak = onBreak;
+            
+            if (onBreak) {
+                // GOING TO BREAK
+                console.log('[Embed] Switching to BREAK video');
+                
+                // Start playing break video (it's already loaded)
+                breakVideo.currentTime = 0;
+                breakVideo.play()
+                    .then(() => {
+                        console.log('[Embed] BREAK video playing');
+                        // CSS handles the crossfade
+                        container.classList.add('on-break');
+                        hideOverlayIfReady();
+                    })
+                    .catch(e => console.error('[Embed] BREAK play error:', e));
+                
+            } else {
+                // RETURNING TO LIVE
+                console.log('[Embed] Switching to LIVE video');
+                
+                // Resume live video
+                liveVideo.play()
+                    .then(() => {
+                        console.log('[Embed] LIVE video playing');
+                        // CSS handles the crossfade
+                        container.classList.remove('on-break');
+                        hideOverlayIfReady();
+                    })
+                    .catch(e => console.error('[Embed] LIVE play error:', e));
+            }
+        }
+        
+        // =====================================================
+        // INITIALIZE ON LOAD
+        // =====================================================
+        document.addEventListener('DOMContentLoaded', initPlayers);
+    </script>
 </body>
 </html>
