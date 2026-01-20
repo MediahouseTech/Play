@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yabun Festival 2026 - Yabun Yarns</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body{width:100%;height:100%;background:#000;overflow:hidden}
+        .video-container{position:relative;width:100%;height:100%}
+        .layer{position:absolute;top:0;left:0;width:100%;height:100%;transition:opacity 0.5s ease}
+        #liveVideo,#breakVideo{object-fit:contain}
+        #liveVideo{z-index:3;opacity:0}
+        #breakVideo{z-index:2;opacity:0}
+        .poster{background:#000 url('../images/yabunyarns_poster.jpg') center/contain no-repeat;z-index:1;opacity:1}
+        .video-container.state-live #liveVideo{opacity:1}
+        .video-container.state-live .poster{opacity:0}
+        .video-container.state-break #breakVideo{opacity:1}
+        .video-container.state-break .poster{opacity:0}
+    </style>
+</head>
+<body>
+    <div class="video-container" id="videoContainer">
+        <div class="layer poster"></div>
+        <video id="breakVideo" class="layer" muted playsinline loop></video>
+        <video id="liveVideo" class="layer" muted playsinline></video>
+    </div>
+    <script>
+        const STREAM_INDEX = 1;
+        const LIVE_PLAYBACK_ID = 'AJ529yGZ4VLO99yXz11CEbQzRm3LF01PoWBtdUzubFSo';
+        const BREAK_PLAYBACK_ID = 'mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g';
+        
+        let liveHls = null, breakHls = null;
+        let isOnBreak = false, isEncoderLive = false;
+        const container = document.getElementById('videoContainer');
+        const liveVideo = document.getElementById('liveVideo');
+        const breakVideo = document.getElementById('breakVideo');
+
+        function init() {
+            initLivePlayer();
+            initBreakPlayer();
+            checkBreakMode();
+            setInterval(checkBreakMode, 3000);
+        }
+
+        function initLivePlayer() {
+            const url = `https://stream.mux.com/${LIVE_PLAYBACK_ID}.m3u8`;
+            if (Hls.isSupported()) {
+                liveHls = new Hls({ enableWorker: true });
+                liveHls.loadSource(url);
+                liveHls.attachMedia(liveVideo);
+                liveHls.on(Hls.Events.LEVEL_LOADED, (e, d) => {
+                    if (d.details?.live) {
+                        isEncoderLive = true;
+                        liveVideo.play().catch(() => {});
+                        updateDisplay();
+                    }
+                });
+                liveHls.on(Hls.Events.ERROR, (e, d) => {
+                    if (d.fatal || d.details === 'manifestLoadError') {
+                        isEncoderLive = false;
+                        updateDisplay();
+                        setTimeout(() => { if(liveHls) liveHls.loadSource(url); }, 5000);
+                    }
+                });
+            } else if (liveVideo.canPlayType('application/vnd.apple.mpegurl')) {
+                liveVideo.src = url;
+                liveVideo.addEventListener('canplay', () => { isEncoderLive = true; liveVideo.play(); updateDisplay(); });
+                liveVideo.addEventListener('error', () => { isEncoderLive = false; updateDisplay(); });
+            }
+        }
+
+        function initBreakPlayer() {
+            const url = `https://stream.mux.com/${BREAK_PLAYBACK_ID}.m3u8`;
+            if (Hls.isSupported()) {
+                breakHls = new Hls({ enableWorker: true });
+                breakHls.loadSource(url);
+                breakHls.attachMedia(breakVideo);
+            } else if (breakVideo.canPlayType('application/vnd.apple.mpegurl')) {
+                breakVideo.src = url;
+            }
+        }
+
+        function updateDisplay() {
+            container.classList.remove('state-live', 'state-break');
+            
+            if (isOnBreak) {
+                container.classList.add('state-break');
+                liveVideo.muted = true;
+                breakVideo.muted = false;
+                breakVideo.play().catch(() => {});
+            } else if (isEncoderLive) {
+                container.classList.add('state-live');
+                breakVideo.muted = true;
+                liveVideo.muted = false;
+            } else {
+                liveVideo.muted = true;
+                breakVideo.muted = true;
+            }
+        }
+
+        async function checkBreakMode() {
+            try {
+                const r = await fetch('/api/break-mode', { cache: 'no-store' });
+                if (r.ok) {
+                    const d = await r.json();
+                    const newBreak = d.breakMode?.[String(STREAM_INDEX)] === true;
+                    if (newBreak !== isOnBreak) {
+                        isOnBreak = newBreak;
+                        updateDisplay();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
