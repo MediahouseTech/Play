@@ -268,6 +268,10 @@
                 // GOING TO BREAK
                 console.log('[Embed] Switching to BREAK video');
                 
+                // AUDIO: Mute live, unmute break
+                liveVideo.muted = true;
+                breakVideo.muted = false;
+                
                 // Start playing break video (it's already loaded)
                 breakVideo.currentTime = 0;
                 breakVideo.play()
@@ -282,6 +286,10 @@
             } else {
                 // RETURNING TO LIVE
                 console.log('[Embed] Switching to LIVE video');
+                
+                // AUDIO: Mute break, unmute live
+                breakVideo.muted = true;
+                liveVideo.muted = false;
                 
                 // Resume live video
                 liveVideo.play()
