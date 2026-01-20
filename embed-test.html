@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed Test - Main Stage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 40px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .embed-container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        .note {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="embed-container">
+        <h1>Main Stage - Raw Mux Embed Test</h1>
+        
+        <iframe 
+            src="https://player.mux.com/YeItyyn71Wxsl00mp0240Z14HrvjoedR02Dm?stream-type=live&preload=metadata&accent-color=%23fa50b5&poster=https%3A%2F%2Fyabun.org.au%2Flivestream%2Fposters%2Fmain_poster.jpg"
+            style="aspect-ratio: 16/9; width: 100%; border: 0;"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen="true"
+            title="Yabun Festival 2026 - Main Stage"
+        ></iframe>
+        
+        <div class="note">
+            <strong>This is the raw Mux embed.</strong><br>
+            It will NOT respond to Break Mode from the PLAY dashboard.<br>
+            Whatever the encoder sends is what viewers see.
+        </div>
+    </div>
+</body>
+</html>
