@@ -92,8 +92,7 @@
                 // BREAK MODE - show break video
                 container.classList.add('state-break');
                 liveVideo.muted = true;
-                breakVideo.muted = false;
-                breakVideo.play().catch(() => {});
+                breakVideo.play().then(() => { breakVideo.muted = false; }).catch(() => {});
             } else if (isEncoderLive) {
                 // LIVE - show live stream
                 container.classList.add('state-live');

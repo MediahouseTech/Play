@@ -88,8 +88,7 @@
             if (isOnBreak) {
                 container.classList.add('state-break');
                 liveVideo.muted = true;
-                breakVideo.muted = false;
-                breakVideo.play().catch(() => {});
+                breakVideo.play().then(() => { breakVideo.muted = false; }).catch(() => {});
             } else if (isEncoderLive) {
                 container.classList.add('state-live');
                 breakVideo.muted = true;
