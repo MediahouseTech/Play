@@ -77,8 +77,12 @@
                 breakHls = new Hls({ enableWorker: true });
                 breakHls.loadSource(url);
                 breakHls.attachMedia(breakVideo);
+                breakHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    breakVideo.play().catch(() => {});
+                });
             } else if (breakVideo.canPlayType('application/vnd.apple.mpegurl')) {
                 breakVideo.src = url;
+                breakVideo.addEventListener('canplay', () => { breakVideo.play(); });
             }
         }
 
@@ -88,7 +92,7 @@
             if (isOnBreak) {
                 container.classList.add('state-break');
                 liveVideo.muted = true;
-                breakVideo.play().then(() => { breakVideo.muted = false; }).catch(() => {});
+                breakVideo.muted = false;
             } else if (isEncoderLive) {
                 container.classList.add('state-live');
                 breakVideo.muted = true;

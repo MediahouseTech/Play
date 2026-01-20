@@ -78,10 +78,12 @@
                 breakHls.loadSource(url);
                 breakHls.attachMedia(breakVideo);
                 breakHls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    // Preloaded and ready
+                    // Start playing muted immediately so it's ready
+                    breakVideo.play().catch(() => {});
                 });
             } else if (breakVideo.canPlayType('application/vnd.apple.mpegurl')) {
                 breakVideo.src = url;
+                breakVideo.addEventListener('canplay', () => { breakVideo.play(); });
             }
         }
 
@@ -89,17 +91,17 @@
             container.classList.remove('state-live', 'state-break');
             
             if (isOnBreak) {
-                // BREAK MODE - show break video
+                // BREAK MODE - show break video with audio
                 container.classList.add('state-break');
                 liveVideo.muted = true;
-                breakVideo.play().then(() => { breakVideo.muted = false; }).catch(() => {});
+                breakVideo.muted = false;
             } else if (isEncoderLive) {
-                // LIVE - show live stream
+                // LIVE - show live stream with audio
                 container.classList.add('state-live');
                 breakVideo.muted = true;
                 liveVideo.muted = false;
             } else {
-                // OFFLINE - show poster (no class added = poster visible)
+                // OFFLINE - show poster, mute everything
                 liveVideo.muted = true;
                 breakVideo.muted = true;
             }
