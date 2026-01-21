@@ -1229,6 +1229,90 @@ async function saveSettings() {
     }
 }
 
+/**
+ * Sync images to Mux (slate images for reconnect)
+ */
+async function syncImagesToMux() {
+    const button = document.getElementById('btnSyncImages');
+    const statusDiv = document.getElementById('muxImagesStatus');
+    
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span> Syncing...';
+    }
+    
+    try {
+        // First preview
+        const previewResponse = await fetch('/api/sync-images?action=preview');
+        const previewData = await previewResponse.json();
+        
+        if (!previewData.success) {
+            throw new Error(previewData.error || 'Preview failed');
+        }
+        
+        // Show preview and confirm
+        const streamList = previewData.results.map(r => 
+            `• Stream ${r.stream} (${r.name}): ${r.slateUrl}`
+        ).join('\n');
+        
+        if (!confirm(`Sync slate images to Mux?\n\n${streamList}\n\nThis will update the reconnect slate for each stream.`)) {
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '🔄 Sync Images to Mux';
+            }
+            return;
+        }
+        
+        // Apply
+        const applyResponse = await fetch('/api/sync-images?action=apply');
+        const applyData = await applyResponse.json();
+        
+        if (!applyData.success) {
+            throw new Error(applyData.error || 'Apply failed');
+        }
+        
+        // Show results
+        const successCount = applyData.results.filter(r => r.status === 'success').length;
+        const failCount = applyData.results.filter(r => r.status === 'error').length;
+        
+        if (statusDiv) {
+            statusDiv.innerHTML = `<span class="success">✓ ${successCount} stream(s) updated</span>` +
+                (failCount > 0 ? `<span class="error"> • ${failCount} failed</span>` : '');
+            statusDiv.classList.add('show');
+        }
+        
+        if (button) {
+            button.innerHTML = '✓ Synced!';
+            button.classList.add('btn-success');
+            setTimeout(() => {
+                button.innerHTML = '🔄 Sync Images to Mux';
+                button.classList.remove('btn-success');
+                button.disabled = false;
+            }, 3000);
+        }
+        
+        console.log('[Settings] Mux images synced:', applyData.results);
+        
+    } catch (error) {
+        console.error('[Settings] Sync images failed:', error);
+        
+        if (statusDiv) {
+            statusDiv.innerHTML = `<span class="error">✗ ${error.message}</span>`;
+            statusDiv.classList.add('show');
+        }
+        
+        if (button) {
+            button.innerHTML = '✗ Failed';
+            button.classList.add('btn-error');
+            setTimeout(() => {
+                button.innerHTML = '🔄 Sync Images to Mux';
+                button.classList.remove('btn-error');
+                button.disabled = false;
+            }, 3000);
+        }
+    }
+}
+
 // Reset Dashboard to defaults
 async function resetDashboard() {
     if (!confirm('Are you sure you want to reset the dashboard?\n\nThis will:\n• Clear all event information\n• Reset to single "Event Monitor" stream\n• Clear all stream IDs and keys\n• Reset expiry date\n\nThis cannot be undone.')) {

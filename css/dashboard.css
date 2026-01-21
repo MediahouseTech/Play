@@ -2149,3 +2149,38 @@ html, body {
     border-color: var(--accent);
     color: white;
 }
+
+/* ============================================
+   MUX IMAGES SYNC
+   ============================================ */
+
+.mux-images-status {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: none;
+}
+
+.mux-images-status.show {
+    display: block;
+    background: var(--bg-secondary);
+}
+
+.mux-images-status .success {
+    color: #22c55e;
+}
+
+.mux-images-status .error {
+    color: #ef4444;
+}
+
+.btn-success {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+}
+
+.btn-error {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
