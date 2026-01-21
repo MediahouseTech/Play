@@ -151,6 +151,38 @@
                     </button>
                 </div>
 
+                <!-- Break Video Library Section -->
+                <div class="settings-section">
+                    <h3>🎬 Break Video Library</h3>
+                    <p class="section-hint">Up to 4 break videos from Mux. Paste the Playback ID from your Mux dashboard.</p>
+                    <div id="breakVideoLibrary" class="break-video-library">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Transition Settings Section -->
+                <div class="settings-section">
+                    <h3>🔀 Transition Settings</h3>
+                    <p class="section-hint">How viewers see the switch between live stream and break videos.</p>
+                    <div class="config-row-inline">
+                        <div class="config-row">
+                            <label>Duration</label>
+                            <select id="settings-transitionDuration" class="input-field">
+                                <option value="0.5">0.5 seconds (Fast)</option>
+                                <option value="1">1 second (Normal)</option>
+                                <option value="1.5">1.5 seconds (Slow)</option>
+                            </select>
+                        </div>
+                        <div class="config-row">
+                            <label>Type</label>
+                            <select id="settings-transitionType" class="input-field">
+                                <option value="crossfade">Crossfade</option>
+                                <option value="fadeBlack">Fade Through Black</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Display Settings Section -->
                 <div class="settings-section">
                     <h3>Display Options</h3>

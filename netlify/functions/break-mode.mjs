@@ -41,16 +41,31 @@ export default async function handler(request, context) {
             let breakState = await store.get("break-mode", { type: "json" });
             
             // Initialize default state if none exists
+            // New format: each stream is { onBreak: bool, activeSlot: 1|2|null }
             if (!breakState) {
                 breakState = {
-                    "0": false,
-                    "1": false,
-                    "2": false,
-                    "3": false,
-                    fallbackPlaybackId: "mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g",
+                    "0": { onBreak: false, activeSlot: null },
+                    "1": { onBreak: false, activeSlot: null },
+                    "2": { onBreak: false, activeSlot: null },
+                    "3": { onBreak: false, activeSlot: null },
                     lastUpdated: new Date().toISOString()
                 };
                 await store.setJSON("break-mode", breakState);
+            }
+            
+            // Migration: convert old boolean format to new object format
+            let needsMigration = false;
+            for (const key of ['0', '1', '2', '3']) {
+                if (typeof breakState[key] === 'boolean') {
+                    breakState[key] = { onBreak: breakState[key], activeSlot: breakState[key] ? 1 : null };
+                    needsMigration = true;
+                }
+            }
+            if (needsMigration) {
+                delete breakState.fallbackPlaybackId; // Remove legacy field
+                breakState.lastUpdated = new Date().toISOString();
+                await store.setJSON("break-mode", breakState);
+                console.log('[break-mode] Migrated to new slot format');
             }
 
             console.log('[break-mode] GET:', JSON.stringify(breakState));
@@ -62,9 +77,11 @@ export default async function handler(request, context) {
         }
 
         // POST - Set break mode for a stream
+        // Body: { streamIndex: 0-3, isOnBreak: bool, slot: 1|2|null }
+        // slot is required when isOnBreak is true, ignored when false
         if (request.method === 'POST') {
             const body = await request.json();
-            const { streamIndex, isOnBreak } = body;
+            const { streamIndex, isOnBreak, slot } = body;
 
             // Validate input
             if (streamIndex === undefined || isOnBreak === undefined) {
@@ -82,33 +99,49 @@ export default async function handler(request, context) {
                     error: 'Invalid streamIndex. Must be 0-3.'
                 }), { status: 400, headers });
             }
+            
+            // Validate slot when going on break
+            if (isOnBreak && slot !== 1 && slot !== 2) {
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: 'Missing or invalid slot. Must be 1 or 2 when going on break.'
+                }), { status: 400, headers });
+            }
 
             // Get current state
             let breakState = await store.get("break-mode", { type: "json" });
             if (!breakState) {
                 breakState = {
-                    "0": false,
-                    "1": false,
-                    "2": false,
-                    "3": false,
-                    fallbackPlaybackId: "mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g"
+                    "0": { onBreak: false, activeSlot: null },
+                    "1": { onBreak: false, activeSlot: null },
+                    "2": { onBreak: false, activeSlot: null },
+                    "3": { onBreak: false, activeSlot: null }
                 };
+            }
+            
+            // Migrate old format if needed
+            if (typeof breakState[index] === 'boolean') {
+                breakState[index] = { onBreak: breakState[index], activeSlot: null };
             }
 
             // Update the specific stream
-            breakState[index] = Boolean(isOnBreak);
+            breakState[index] = {
+                onBreak: Boolean(isOnBreak),
+                activeSlot: isOnBreak ? slot : null
+            };
             breakState.lastUpdated = new Date().toISOString();
             breakState.updatedBy = body.updatedBy || 'producer';
 
             // Save back to store
             await store.setJSON("break-mode", breakState);
 
-            console.log(`[break-mode] POST: Stream ${index} set to ${isOnBreak ? 'BREAK' : 'LIVE'}`);
+            const slotMsg = isOnBreak ? ` (Slot ${slot})` : '';
+            console.log(`[break-mode] POST: Stream ${index} set to ${isOnBreak ? 'BREAK' + slotMsg : 'LIVE'}`);
 
             return new Response(JSON.stringify({
                 success: true,
                 breakMode: breakState,
-                message: `Stream ${index} is now ${isOnBreak ? 'ON BREAK' : 'LIVE'}`
+                message: `Stream ${index} is now ${isOnBreak ? 'ON BREAK' + slotMsg : 'LIVE'}`
             }), { status: 200, headers });
         }
 

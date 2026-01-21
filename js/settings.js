@@ -501,6 +501,101 @@ function deleteTag(index) {
     populateTagsConfig();
 }
 
+// ============================================
+// BREAK VIDEO LIBRARY
+// ============================================
+
+/**
+ * Populate break video library in settings
+ */
+function populateBreakVideoLibrary() {
+    const container = document.getElementById('breakVideoLibrary');
+    if (!container) return;
+    
+    // Initialize library if it doesn't exist
+    if (!settingsConfig.breakVideoLibrary) {
+        settingsConfig.breakVideoLibrary = [
+            { id: 'break-1', name: 'Break Video 1', playbackId: '' },
+            { id: 'break-2', name: 'Break Video 2', playbackId: '' },
+            { id: 'break-3', name: 'Break Video 3', playbackId: '' },
+            { id: 'break-4', name: 'Break Video 4', playbackId: '' }
+        ];
+    }
+    
+    container.innerHTML = settingsConfig.breakVideoLibrary.map((video, index) => {
+        const hasVideo = video.playbackId && video.playbackId.trim() !== '';
+        const thumbnailUrl = hasVideo 
+            ? `https://image.mux.com/${video.playbackId}/thumbnail.jpg?width=160&height=90&time=5`
+            : '';
+        
+        return `
+            <div class="break-video-row ${hasVideo ? 'has-video' : ''}" data-index="${index}">
+                <div class="slot-label">Video ${index + 1}</div>
+                <div class="input-with-name">
+                    <input type="text" 
+                           class="input-field video-name-input" 
+                           value="${video.name || ''}"
+                           placeholder="Video name"
+                           onchange="updateBreakVideoField(${index}, 'name', this.value)">
+                    <input type="text" 
+                           class="input-field playback-id-input" 
+                           value="${video.playbackId || ''}"
+                           placeholder="Paste Mux Playback ID here"
+                           onchange="updateBreakVideoField(${index}, 'playbackId', this.value)">
+                </div>
+                <div class="video-preview">
+                    ${hasVideo 
+                        ? `<img src="${thumbnailUrl}" alt="Preview" onerror="this.parentElement.innerHTML='<span class=\'no-preview\'>No preview</span>'">`
+                        : '<span class="no-preview">No video</span>'
+                    }
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Update a break video field
+ */
+function updateBreakVideoField(index, field, value) {
+    if (!settingsConfig.breakVideoLibrary || !settingsConfig.breakVideoLibrary[index]) return;
+    
+    settingsConfig.breakVideoLibrary[index][field] = value;
+    
+    // If playback ID changed, refresh to show/hide thumbnail
+    if (field === 'playbackId') {
+        populateBreakVideoLibrary();
+    }
+}
+
+// ============================================
+// TRANSITION SETTINGS
+// ============================================
+
+/**
+ * Populate transition settings dropdowns
+ */
+function populateTransitionSettings() {
+    // Initialize if doesn't exist
+    if (!settingsConfig.transitionSettings) {
+        settingsConfig.transitionSettings = {
+            duration: 0.5,
+            type: 'crossfade'
+        };
+    }
+    
+    const durationSelect = document.getElementById('settings-transitionDuration');
+    const typeSelect = document.getElementById('settings-transitionType');
+    
+    if (durationSelect) {
+        durationSelect.value = String(settingsConfig.transitionSettings.duration);
+    }
+    
+    if (typeSelect) {
+        typeSelect.value = settingsConfig.transitionSettings.type;
+    }
+}
+
 /**
  * Populate settings form with current config
  */
@@ -542,6 +637,12 @@ function populateSettings() {
     
     // Populate tags config
     populateTagsConfig();
+    
+    // Populate break video library
+    populateBreakVideoLibrary();
+    
+    // Populate transition settings
+    populateTransitionSettings();
     
     console.log('[Settings] Form populated');
 }
@@ -1161,6 +1262,11 @@ async function saveSettings() {
     settingsConfig.visibility.duration = document.getElementById('settings-showDuration')?.checked ?? true;
     settingsConfig.visibility.bitrate = document.getElementById('settings-showBitrate')?.checked ?? false;
     settingsConfig.visibility.viewers = document.getElementById('settings-showViewers')?.checked ?? false;
+    
+    // Gather transition settings
+    settingsConfig.transitionSettings = settingsConfig.transitionSettings || {};
+    settingsConfig.transitionSettings.duration = parseFloat(document.getElementById('settings-transitionDuration')?.value) || 0.5;
+    settingsConfig.transitionSettings.type = document.getElementById('settings-transitionType')?.value || 'crossfade';
     
     // Gather all stream data from inputs
     settingsConfig.streams.forEach((stream, index) => {

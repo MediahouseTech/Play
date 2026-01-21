@@ -17,11 +17,21 @@ const defaultConfig = {
     producerPhone: "0412 XXX XXX"
   },
   streams: [
-    { name: "Main Stage", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app" },
-    { name: "Yabun Yarns", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app" },
-    { name: "Corroboree", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app" },
-    { name: "Speak Out", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app" }
+    { name: "Main Stage", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app", breakVideo1: null, breakVideo2: null },
+    { name: "Yabun Yarns", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app", breakVideo1: null, breakVideo2: null },
+    { name: "Corroboree", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app", breakVideo1: null, breakVideo2: null },
+    { name: "Speak Out", playbackId: "", streamKey: "", rtmpUrl: "rtmp://global-live.mux.com:5222/app", breakVideo1: null, breakVideo2: null }
   ],
+  breakVideoLibrary: [
+    { id: "break-1", name: "Break Video 1", playbackId: "" },
+    { id: "break-2", name: "Break Video 2", playbackId: "" },
+    { id: "break-3", name: "Break Video 3", playbackId: "" },
+    { id: "break-4", name: "Break Video 4", playbackId: "" }
+  ],
+  transitionSettings: {
+    duration: 0.5,
+    type: "crossfade"
+  },
   visibility: {
     vuMeters: true,
     streamStatus: true,
