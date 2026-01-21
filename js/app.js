@@ -426,9 +426,10 @@ function createPlayerWrapper(stream, index) {
             </span>
             <span class="stats-spacer"></span>
             <span class="break-control" id="break-control-${index}" style="display: none;">
-                <span class="break-stream-name">${stream.name}</span>
                 <span class="break-status-badge" id="break-badge-${index}">LIVE</span>
-                <button class="btn-break-inline" id="break-btn-${index}" onclick="toggleBreakModeInline(${index})" title="Toggle break mode">BREAK</button>
+                <button class="btn-break-inline btn-break-1" id="break-btn-1-${index}" onclick="toggleBreakModeInline(${index}, 1)" title="Switch to Break 1">Break 1</button>
+                <button class="btn-break-inline btn-break-2" id="break-btn-2-${index}" onclick="toggleBreakModeInline(${index}, 2)" title="Switch to Break 2">Break 2</button>
+                <button class="btn-break-inline btn-go-live" id="break-btn-live-${index}" onclick="toggleBreakModeInline(${index}, 0)" title="Go Live" style="display: none;">GO LIVE</button>
             </span>
         </div>
     `;
@@ -1069,13 +1070,20 @@ async function fetchBreakModeState() {
             // Check each stream for changes
             for (let i = 0; i < 4; i++) {
                 const index = String(i);
-                const wasOnBreak = breakModeState[index] === true;
-                const isOnBreak = newState[index] === true;
+                const oldState = breakModeState[index];
+                const newStateForStream = newState[index];
+                
+                // Handle both old boolean format and new object format
+                const wasOnBreak = typeof oldState === 'object' ? oldState?.onBreak === true : oldState === true;
+                const isOnBreak = typeof newStateForStream === 'object' ? newStateForStream?.onBreak === true : newStateForStream === true;
                 
                 if (wasOnBreak !== isOnBreak) {
                     console.log(`[App] Stream ${i} break mode changed: ${wasOnBreak} -> ${isOnBreak}`);
                     applyBreakModeToStream(i, isOnBreak, newState.fallbackPlaybackId || FALLBACK_PLAYBACK_ID);
                 }
+                
+                // Update inline break badge
+                updateInlineBreakBadge(i, newStateForStream);
             }
             
             // Update local state
@@ -1235,32 +1243,51 @@ function handleBreakModeChange(streamIndex, isOnBreak, fallbackId) {
 /**
  * Update inline break badge for a stream
  * @param {number} index - Stream index
- * @param {boolean} isOnBreak - Whether stream is on break
+ * @param {object|boolean} state - Break state (object with onBreak/activeSlot or boolean for backward compat)
  */
-function updateInlineBreakBadge(index, isOnBreak) {
+function updateInlineBreakBadge(index, state) {
     const badge = document.getElementById(`break-badge-${index}`);
-    const btn = document.getElementById(`break-btn-${index}`);
+    const btn1 = document.getElementById(`break-btn-1-${index}`);
+    const btn2 = document.getElementById(`break-btn-2-${index}`);
+    const btnLive = document.getElementById(`break-btn-live-${index}`);
+    
+    // Handle both old boolean format and new object format
+    let isOnBreak = false;
+    let activeSlot = null;
+    
+    if (typeof state === 'object' && state !== null) {
+        isOnBreak = state.onBreak === true;
+        activeSlot = state.activeSlot;
+    } else {
+        isOnBreak = state === true;
+    }
     
     if (badge) {
-        badge.textContent = isOnBreak ? 'BREAK' : 'LIVE';
+        if (isOnBreak && activeSlot) {
+            badge.textContent = `BREAK ${activeSlot}`;
+        } else if (isOnBreak) {
+            badge.textContent = 'BREAK';
+        } else {
+            badge.textContent = 'LIVE';
+        }
         badge.classList.toggle('on-break', isOnBreak);
     }
     
-    if (btn) {
-        btn.textContent = isOnBreak ? 'GO LIVE' : 'BREAK';
-        btn.classList.toggle('go-live', isOnBreak);
-    }
+    // Show/hide buttons based on state
+    if (btn1) btn1.style.display = isOnBreak ? 'none' : 'inline-flex';
+    if (btn2) btn2.style.display = isOnBreak ? 'none' : 'inline-flex';
+    if (btnLive) btnLive.style.display = isOnBreak ? 'inline-flex' : 'none';
 }
 
 /**
  * Toggle break mode from inline button
  * @param {number} index - Stream index
+ * @param {number} slot - Break slot (0 = go live, 1 = break 1, 2 = break 2)
  */
-async function toggleBreakModeInline(index) {
-    const currentState = breakModeState[String(index)] === true;
-    const newState = !currentState;
+async function toggleBreakModeInline(index, slot) {
+    const isGoingOnBreak = slot > 0;
     
-    console.log(`[App] toggleBreakModeInline: stream ${index} -> ${newState ? 'BREAK' : 'LIVE'}`);
+    console.log(`[App] toggleBreakModeInline: stream ${index} -> ${isGoingOnBreak ? 'BREAK ' + slot : 'LIVE'}`);
     
     try {
         const response = await fetch('/api/break-mode', {
@@ -1268,14 +1295,20 @@ async function toggleBreakModeInline(index) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 streamIndex: index,
-                isOnBreak: newState,
+                isOnBreak: isGoingOnBreak,
+                slot: isGoingOnBreak ? slot : null,
                 updatedBy: 'producer-inline'
             })
         });
         
         if (response.ok) {
-            // Apply immediately
-            handleBreakModeChange(index, newState, breakModeState.fallbackPlaybackId);
+            const data = await response.json();
+            // Update local state
+            breakModeState = data.breakMode;
+            // Update UI for this stream
+            updateInlineBreakBadge(index, breakModeState[String(index)]);
+            // Apply visual change
+            handleBreakModeChange(index, isGoingOnBreak, null);
         } else {
             console.error('[App] Failed to toggle break mode');
         }
@@ -1298,8 +1331,8 @@ function showInlineBreakControls() {
     
     // Update badges to current state
     for (let i = 0; i < 4; i++) {
-        const isOnBreak = breakModeState[String(i)] === true;
-        updateInlineBreakBadge(i, isOnBreak);
+        const state = breakModeState[String(i)];
+        updateInlineBreakBadge(i, state);
     }
 }
 

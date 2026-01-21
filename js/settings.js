@@ -779,6 +779,22 @@ function populateStreamConfigs() {
 }
 
 /**
+ * Generate break video dropdown options from library
+ */
+function getBreakVideoOptions(selectedId) {
+    const library = settingsConfig.breakVideoLibrary || [];
+    const validVideos = library.filter(v => v.playbackId && v.playbackId.trim() !== '');
+    
+    let options = '<option value="">-- None --</option>';
+    validVideos.forEach((video, index) => {
+        const selected = selectedId === video.id ? 'selected' : '';
+        options += `<option value="${video.id}" ${selected}>${video.name || 'Video ' + (index + 1)}</option>`;
+    });
+    
+    return options;
+}
+
+/**
  * Render a single stream card
  */
 function renderStreamCard(stream, index) {
@@ -841,6 +857,20 @@ function renderStreamCard(stream, index) {
                     <button type="button" class="btn-copy" onclick="copyField('rtmp-${index}', this)" title="Copy">
                         ${ICONS.copy}
                     </button>
+                </div>
+            </div>
+            <div class="break-video-assignment">
+                <div class="config-row">
+                    <label>Break 1 Video</label>
+                    <select id="breakvideo1-${index}" class="input-field" onchange="updateStreamField(${index}, 'breakVideo1', this.value)">
+                        ${getBreakVideoOptions(stream.breakVideo1)}
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label>Break 2 Video</label>
+                    <select id="breakvideo2-${index}" class="input-field" onchange="updateStreamField(${index}, 'breakVideo2', this.value)">
+                        ${getBreakVideoOptions(stream.breakVideo2)}
+                    </select>
                 </div>
             </div>
         </div>
@@ -1276,6 +1306,8 @@ async function saveSettings() {
         stream.playbackId = document.getElementById(`playback-${index}`)?.value || '';
         stream.streamKey = document.getElementById(`streamkey-${index}`)?.value || '';
         stream.rtmpUrl = document.getElementById(`rtmp-${index}`)?.value || 'rtmp://global-live.mux.com:5222/app';
+        stream.breakVideo1 = document.getElementById(`breakvideo1-${index}`)?.value || null;
+        stream.breakVideo2 = document.getElementById(`breakvideo2-${index}`)?.value || null;
     });
     
     // Ensure streamBaseUrl is preserved
