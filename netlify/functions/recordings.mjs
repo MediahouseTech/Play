@@ -161,7 +161,10 @@ export default async function handler(request, context) {
                 // Only include recordings from live streams
                 if (asset.live_stream_id) {
                     // DEBUG: Log what Mux is returning
-                    console.log('[recordings] Asset:', asset.id, '| passthrough:', asset.passthrough, '| duration:', asset.duration, '| created_at:', asset.created_at);
+                    console.log('[recordings] Asset:', asset.id, '| live_stream_id:', asset.live_stream_id, '| passthrough:', asset.passthrough, '| duration:', asset.duration, '| created_at:', asset.created_at, '| status:', asset.status);
+                    
+                    // Also log available stream IDs from config for comparison
+                    console.log('[recordings] Config liveStreamIds:', Object.keys(streamNamesByLiveId));
                     
                     // STREAM NAME PRIORITY:
                     // 1. Mux passthrough field (set when livestream created - most reliable)
@@ -173,9 +176,33 @@ export default async function handler(request, context) {
                     
                     console.log('[recordings] streamName resolved to:', streamName);
                     
-                    // Parse timestamp - Mux returns Unix seconds as string
-                    const timestamp = parseInt(asset.created_at);
-                    const createdDate = new Date(timestamp * 1000);
+                    // Parse timestamp - handle multiple formats from Mux
+                    let createdDate;
+                    const rawCreatedAt = asset.created_at;
+                    
+                    if (typeof rawCreatedAt === 'number') {
+                        // Unix timestamp in seconds
+                        createdDate = new Date(rawCreatedAt * 1000);
+                    } else if (typeof rawCreatedAt === 'string') {
+                        // Try parsing as Unix timestamp first
+                        const parsed = parseInt(rawCreatedAt);
+                        if (!isNaN(parsed) && parsed > 1000000000) {
+                            // Valid Unix timestamp (after 2001)
+                            createdDate = new Date(parsed * 1000);
+                        } else {
+                            // Try as ISO string
+                            createdDate = new Date(rawCreatedAt);
+                        }
+                    } else {
+                        // Fallback to now
+                        createdDate = new Date();
+                    }
+                    
+                    // Validate the date - if invalid, use current time
+                    if (isNaN(createdDate.getTime()) || createdDate.getFullYear() < 2020) {
+                        console.log('[recordings] Invalid date detected, using current time. Raw value:', rawCreatedAt);
+                        createdDate = new Date();
+                    }
                     
                     // Format for Sydney timezone
                     const sydneyTime = createdDate.toLocaleString('en-AU', {
