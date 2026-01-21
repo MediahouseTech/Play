@@ -189,8 +189,10 @@ export default async function handler(request, context) {
                     });
 
                     // Calculate duration
+                    // Mux takes 1-3 minutes to finalize recordings after stream ends
+                    const isProcessing = asset.status !== 'ready' || !asset.duration || asset.duration < 1;
                     const durationMins = asset.duration ? Math.round(asset.duration / 60) : 0;
-                    const durationStr = durationMins > 0 ? `${durationMins} mins` : 'Processing...';
+                    const durationStr = isProcessing ? 'Finalizing...' : (durationMins > 0 ? `${durationMins} mins` : '< 1 min');
 
                     // Generate fresh title from Mux data (ignore corrupt meta.title)
                     const freshTitle = `${streamName} - ${sydneyTime}`;

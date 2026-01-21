@@ -471,6 +471,27 @@ body {
     font-weight: 600;
 }
 
+/* FINALISING status badge - pulsing amber indicator */
+.status-badge.finalising {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(245, 158, 11, 0.9);
+    color: #000;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    animation: pulse-amber 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-amber {
+    0%, 100% { opacity: 1; background: rgba(245, 158, 11, 0.9); }
+    50% { opacity: 0.7; background: rgba(245, 158, 11, 0.6); }
+}
+
 .select-checkbox {
     position: absolute;
     top: 10px;

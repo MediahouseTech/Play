@@ -418,6 +418,11 @@ function renderRecordings() {
         const isUntagged = !rec.tag;
         const tagBadge = rec.tag ? `<span class="tag-badge ${rec.tag}">${getTagLabel(rec.tag)}</span>` : '<span class="tag-badge untagged">NO TAG</span>';
         
+        // Check if recording is still processing
+        const isProcessing = rec.status !== 'ready' || rec.duration === 0;
+        const processingBadge = isProcessing ? '<span class="status-badge finalising">FINALISING...</span>' : '';
+        const durationDisplay = isProcessing ? 'Processing...' : rec.durationStr;
+        
         return `
             <div class="recording-card ${isSelected ? 'selected' : ''} ${isUntagged ? 'untagged' : ''}" 
                  data-asset-id="${rec.assetId}">
@@ -429,7 +434,8 @@ function renderRecordings() {
                     <div class="play-overlay">
                         <div class="play-icon">▶</div>
                     </div>
-                    <span class="duration-badge">${rec.durationStr}</span>
+                    <span class="duration-badge">${durationDisplay}</span>
+                    ${processingBadge}
                 </div>
                 <div class="recording-info">
                     <div class="recording-title" title="${rec.title}">${rec.title || 'Untitled'}</div>

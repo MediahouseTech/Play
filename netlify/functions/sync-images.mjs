@@ -13,15 +13,8 @@ export default async function handler(req, context) {
         return new Response(null, { status: 204, headers });
     }
 
-    const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID;
-    const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET;
-
-    if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
-        return new Response(JSON.stringify({ 
-            success: false, 
-            error: 'Mux API credentials not configured' 
-        }), { status: 500, headers });
-    }
+    const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID || '7952c3b8-1fba-4bf8-b95a-219aee11cfe6';
+    const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET || 'kIT/Bs5wfBOIkVjljFAFT/EjqxVFKJ+kmKKyFXXRuRIO3HyyES5OZUBpXwfmezViqwnLCPGN0E8';
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action') || 'preview';
