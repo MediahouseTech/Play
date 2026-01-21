@@ -44,3 +44,8 @@
   from = "/api/create-livestream"
   to = "/.netlify/functions/create-livestream"
   status = 200
+
+[[redirects]]
+  from = "/api/sync-images"
+  to = "/.netlify/functions/sync-images"
+  status = 200
