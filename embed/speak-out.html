@@ -9,58 +9,105 @@
         *{margin:0;padding:0;box-sizing:border-box}
         html,body{width:100%;height:100%;background:#000;overflow:hidden}
         .video-container{position:relative;width:100%;height:100%}
-        .layer{position:absolute;top:0;left:0;width:100%;height:100%;transition:opacity 0.5s ease}
-        #liveVideo,#breakVideo{object-fit:contain}
-        #liveVideo{z-index:3;opacity:0}
-        #breakVideo{z-index:2;opacity:0}
+        .layer{position:absolute;top:0;left:0;width:100%;height:100%}
+        #liveVideo,#breakVideo1,#breakVideo2{object-fit:contain}
+        #liveVideo{z-index:4;opacity:0}
+        #breakVideo1{z-index:3;opacity:0}
+        #breakVideo2{z-index:2;opacity:0}
         .poster{background:#000 url('../images/poster-4.jpg') center/contain no-repeat;z-index:1;opacity:1}
-        .video-container.state-live #liveVideo{opacity:1}
-        .video-container.state-live .poster{opacity:0}
-        .video-container.state-break #breakVideo{opacity:1}
-        .video-container.state-break .poster{opacity:0}
+        .black-overlay{background:#000;z-index:10;opacity:0;pointer-events:none}
     </style>
 </head>
 <body>
     <div class="video-container" id="videoContainer">
         <div class="layer poster"></div>
-        <video id="breakVideo" class="layer" muted playsinline loop controls></video>
+        <video id="breakVideo2" class="layer" muted playsinline loop controls></video>
+        <video id="breakVideo1" class="layer" muted playsinline loop controls></video>
         <video id="liveVideo" class="layer" muted playsinline controls></video>
+        <div class="layer black-overlay" id="blackOverlay"></div>
     </div>
     <script>
         const STREAM_INDEX = 3;
-        const LIVE_PLAYBACK_ID = 'NV00U02H01xuzo006zDHibFrCSUXEH7hEIwIUxidYsLhP1w';
-        const BREAK_PLAYBACK_ID = 'mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g';
         
-        let liveHls = null, breakHls = null;
-        let isOnBreak = false, isEncoderLive = false;
+        let config = null;
+        let transitionDuration = 0.5;
+        let transitionType = 'crossfade';
+        let breakVideo1PlaybackId = null;
+        let breakVideo2PlaybackId = null;
+        let livePlaybackId = null;
+        
+        let liveHls = null, break1Hls = null, break2Hls = null;
+        let isOnBreak = false, activeSlot = null, isEncoderLive = false;
+        let isTransitioning = false;
+        
         const container = document.getElementById('videoContainer');
         const liveVideo = document.getElementById('liveVideo');
-        const breakVideo = document.getElementById('breakVideo');
+        const breakVideo1 = document.getElementById('breakVideo1');
+        const breakVideo2 = document.getElementById('breakVideo2');
+        const blackOverlay = document.getElementById('blackOverlay');
+        const poster = document.querySelector('.poster');
 
-        function init() {
-            initLivePlayer();
-            initBreakPlayer();
+        async function init() {
+            await loadConfig();
+            applyTransitionStyles();
+            if (livePlaybackId) initLivePlayer();
+            if (breakVideo1PlaybackId) initBreakPlayer(1, breakVideo1PlaybackId);
+            if (breakVideo2PlaybackId) initBreakPlayer(2, breakVideo2PlaybackId);
             checkBreakMode();
             setInterval(checkBreakMode, 3000);
         }
 
+        async function loadConfig() {
+            try {
+                const r = await fetch('/api/config');
+                if (!r.ok) throw new Error('Config fetch failed');
+                config = await r.json();
+                
+                const stream = config.streams?.[STREAM_INDEX];
+                if (stream) {
+                    livePlaybackId = stream.playbackId;
+                    const library = config.breakVideoLibrary || [];
+                    
+                    if (stream.breakVideo1) {
+                        const bv1 = library.find(v => v.id === stream.breakVideo1);
+                        if (bv1?.playbackId) breakVideo1PlaybackId = bv1.playbackId;
+                    }
+                    if (stream.breakVideo2) {
+                        const bv2 = library.find(v => v.id === stream.breakVideo2);
+                        if (bv2?.playbackId) breakVideo2PlaybackId = bv2.playbackId;
+                    }
+                }
+                
+                if (config.transitionSettings) {
+                    transitionDuration = config.transitionSettings.duration || 0.5;
+                    transitionType = config.transitionSettings.type || 'crossfade';
+                }
+            } catch (e) {
+                console.error('[Embed] Config load failed:', e);
+            }
+        }
+
+        function applyTransitionStyles() {
+            const style = document.createElement('style');
+            style.textContent = `.layer { transition: opacity ${transitionDuration}s ease; }`;
+            document.head.appendChild(style);
+        }
+
         function initLivePlayer() {
-            const url = `https://stream.mux.com/${LIVE_PLAYBACK_ID}.m3u8`;
+            const url = `https://stream.mux.com/${livePlaybackId}.m3u8`;
             if (Hls.isSupported()) {
-                liveHls = new Hls({ enableWorker: true });
+                liveHls = new Hls({ 
+                    enableWorker: true, lowLatencyMode: true, backBufferLength: 0,
+                    liveBackBufferLength: 0, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 6
+                });
                 liveHls.loadSource(url);
                 liveHls.attachMedia(liveVideo);
                 liveHls.on(Hls.Events.LEVEL_LOADED, (e, d) => {
-                    if (d.details?.live) {
-                        isEncoderLive = true;
-                        liveVideo.play().catch(() => {});
-                        updateDisplay();
-                    }
+                    if (d.details?.live) { isEncoderLive = true; liveVideo.play().catch(() => {}); updateDisplay(); }
                 });
                 liveHls.on(Hls.Events.ERROR, (e, d) => {
                     if (d.fatal || d.details === 'manifestLoadError') {
-                        isEncoderLive = false;
-                        updateDisplay();
+                        isEncoderLive = false; updateDisplay();
                         setTimeout(() => { if(liveHls) liveHls.loadSource(url); }, 5000);
                     }
                 });
@@ -71,48 +118,67 @@
             }
         }
 
-        function initBreakPlayer() {
-            const url = `https://stream.mux.com/${BREAK_PLAYBACK_ID}.m3u8`;
+        function initBreakPlayer(slot, playbackId) {
+            const video = slot === 1 ? breakVideo1 : breakVideo2;
+            const url = `https://stream.mux.com/${playbackId}.m3u8`;
             if (Hls.isSupported()) {
-                breakHls = new Hls({ enableWorker: true });
-                breakHls.loadSource(url);
-                breakHls.attachMedia(breakVideo);
-                breakHls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    breakVideo.play().catch(() => {});
-                });
-            } else if (breakVideo.canPlayType('application/vnd.apple.mpegurl')) {
-                breakVideo.src = url;
-                breakVideo.addEventListener('canplay', () => { breakVideo.play(); });
+                const hls = new Hls({ enableWorker: true });
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+                if (slot === 1) break1Hls = hls; else break2Hls = hls;
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('canplay', () => { video.play(); });
             }
         }
 
-        function updateDisplay() {
-            container.classList.remove('state-live', 'state-break');
-            
-            if (isOnBreak) {
-                container.classList.add('state-break');
-                liveVideo.muted = true;
-                breakVideo.muted = false;
-            } else if (isEncoderLive) {
-                container.classList.add('state-live');
-                breakVideo.muted = true;
-                liveVideo.muted = false;
+        async function transitionTo(targetState) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            if (transitionType === 'fade-black') {
+                blackOverlay.style.opacity = '1';
+                await sleep(transitionDuration * 1000);
+                applyState(targetState);
+                await sleep(50);
+                blackOverlay.style.opacity = '0';
             } else {
-                liveVideo.muted = true;
-                breakVideo.muted = true;
+                applyState(targetState);
             }
+            await sleep(transitionDuration * 1000);
+            isTransitioning = false;
         }
+
+        function applyState(state) {
+            liveVideo.style.opacity = '0'; breakVideo1.style.opacity = '0'; breakVideo2.style.opacity = '0'; poster.style.opacity = '0';
+            liveVideo.muted = true; breakVideo1.muted = true; breakVideo2.muted = true;
+            if (state === 'live') { liveVideo.style.opacity = '1'; liveVideo.muted = false; }
+            else if (state === 'break1') { breakVideo1.style.opacity = '1'; breakVideo1.muted = false; }
+            else if (state === 'break2') { breakVideo2.style.opacity = '1'; breakVideo2.muted = false; }
+            else { poster.style.opacity = '1'; }
+        }
+
+        function updateDisplay() {
+            let targetState = 'poster';
+            if (isOnBreak && activeSlot === 1) targetState = 'break1';
+            else if (isOnBreak && activeSlot === 2) targetState = 'break2';
+            else if (isOnBreak) targetState = 'break1';
+            else if (isEncoderLive) targetState = 'live';
+            transitionTo(targetState);
+        }
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
         async function checkBreakMode() {
             try {
                 const r = await fetch('/api/break-mode', { cache: 'no-store' });
                 if (r.ok) {
                     const d = await r.json();
-                    const newBreak = d.breakMode?.[String(STREAM_INDEX)] === true;
-                    if (newBreak !== isOnBreak) {
-                        isOnBreak = newBreak;
-                        updateDisplay();
-                    }
+                    const state = d.breakMode?.[String(STREAM_INDEX)];
+                    let newBreak, newSlot;
+                    if (typeof state === 'object' && state !== null) { newBreak = state.onBreak === true; newSlot = state.activeSlot; }
+                    else { newBreak = state === true; newSlot = 1; }
+                    if (newBreak !== isOnBreak || newSlot !== activeSlot) { isOnBreak = newBreak; activeSlot = newSlot; updateDisplay(); }
                 }
             } catch (e) {}
         }
