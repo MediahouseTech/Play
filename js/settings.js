@@ -186,6 +186,7 @@ async function toggleBreakModeMain(streamIndex, setToBreak) {
             body: JSON.stringify({
                 streamIndex: streamIndex,
                 isOnBreak: setToBreak,
+                slot: setToBreak ? 1 : null,
                 updatedBy: 'producer'
             })
         });
@@ -218,7 +219,8 @@ async function toggleBreakModeMain(streamIndex, setToBreak) {
             
             // Notify app.js to update players immediately
             if (typeof handleBreakModeChange === 'function') {
-                handleBreakModeChange(streamIndex, setToBreak, settingsBreakModeCache?.fallbackPlaybackId);
+                // Settings uses slot 1 by default for break mode
+                handleBreakModeChange(streamIndex, setToBreak, setToBreak ? 1 : null);
             }
         } else {
             throw new Error(data.error || 'Unknown error');
@@ -326,6 +328,7 @@ async function toggleBreakMode(streamIndex, setToBreak) {
             body: JSON.stringify({
                 streamIndex: streamIndex,
                 isOnBreak: setToBreak,
+                slot: setToBreak ? 1 : null,
                 updatedBy: 'producer'
             })
         });
@@ -352,7 +355,7 @@ async function toggleBreakMode(streamIndex, setToBreak) {
             
             // Notify app.js to update players immediately
             if (typeof handleBreakModeChange === 'function') {
-                handleBreakModeChange(streamIndex, setToBreak, settingsBreakModeCache?.fallbackPlaybackId);
+                handleBreakModeChange(streamIndex, setToBreak, setToBreak ? 1 : null);
             }
         } else {
             throw new Error(data.error || 'Unknown error');

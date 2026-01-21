@@ -530,8 +530,13 @@ function loadHlsPlayer(index, playbackId) {
         
         const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: false,
-            backBufferLength: 30,
+            lowLatencyMode: true,
+            backBufferLength: 0,
+            liveBackBufferLength: 0,
+            liveSyncDurationCount: 3,
+            liveMaxLatencyDurationCount: 6,
+            maxBufferLength: 10,
+            maxMaxBufferLength: 20,
             debug: false
         });
         
@@ -1029,7 +1034,40 @@ function applyPreferences(prefs) {
 
 let breakModeState = {}; // Current break mode for each stream
 let breakModePoller = null; // Global poller for break mode
-const FALLBACK_PLAYBACK_ID = 'mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g';
+const FALLBACK_PLAYBACK_ID = 'mbX0201BRcVnkh802Fb00UHWbRUpNgV64lM029iBmuHLqe1g'; // Legacy fallback only
+
+/**
+ * Get the break video playback ID for a stream based on slot
+ * @param {number} streamIndex - Stream index (0-3)
+ * @param {number} slot - Break slot (1 or 2)
+ * @returns {string} Playback ID for the break video
+ */
+function getBreakVideoPlaybackId(streamIndex, slot) {
+    if (!config || !config.streams || !config.streams[streamIndex]) {
+        console.warn(`[App] No config for stream ${streamIndex}, using fallback`);
+        return FALLBACK_PLAYBACK_ID;
+    }
+    
+    const stream = config.streams[streamIndex];
+    const breakVideoId = slot === 1 ? stream.breakVideo1 : stream.breakVideo2;
+    
+    if (!breakVideoId) {
+        console.warn(`[App] Stream ${streamIndex} has no break video ${slot} assigned, using fallback`);
+        return FALLBACK_PLAYBACK_ID;
+    }
+    
+    // Look up playback ID from break video library
+    const library = config.breakVideoLibrary || [];
+    const breakVideo = library.find(v => v.id === breakVideoId);
+    
+    if (!breakVideo || !breakVideo.playbackId) {
+        console.warn(`[App] Break video ${breakVideoId} not found in library, using fallback`);
+        return FALLBACK_PLAYBACK_ID;
+    }
+    
+    console.log(`[App] Stream ${streamIndex} Break ${slot}: Using ${breakVideo.name} (${breakVideo.playbackId})`);
+    return breakVideo.playbackId;
+}
 
 /**
  * Start polling for break mode state (runs continuously)
@@ -1076,10 +1114,14 @@ async function fetchBreakModeState() {
                 // Handle both old boolean format and new object format
                 const wasOnBreak = typeof oldState === 'object' ? oldState?.onBreak === true : oldState === true;
                 const isOnBreak = typeof newStateForStream === 'object' ? newStateForStream?.onBreak === true : newStateForStream === true;
+                const oldSlot = typeof oldState === 'object' ? oldState?.activeSlot : null;
+                const newSlot = typeof newStateForStream === 'object' ? newStateForStream?.activeSlot : null;
                 
-                if (wasOnBreak !== isOnBreak) {
-                    console.log(`[App] Stream ${i} break mode changed: ${wasOnBreak} -> ${isOnBreak}`);
-                    applyBreakModeToStream(i, isOnBreak, newState.fallbackPlaybackId || FALLBACK_PLAYBACK_ID);
+                // Only apply changes if break state OR slot changed
+                if (wasOnBreak !== isOnBreak || (isOnBreak && oldSlot !== newSlot)) {
+                    console.log(`[App] Stream ${i} break mode changed: ${wasOnBreak} -> ${isOnBreak}, slot: ${oldSlot} -> ${newSlot}`);
+                    const breakPlaybackId = isOnBreak ? getBreakVideoPlaybackId(i, newSlot || 1) : null;
+                    applyBreakModeToStream(i, isOnBreak, breakPlaybackId);
                 }
                 
                 // Update inline break badge
@@ -1228,16 +1270,22 @@ function loadFallbackVideo(index, playbackId) {
  * This provides immediate feedback without waiting for poller
  * @param {number} streamIndex - Stream index
  * @param {boolean} isOnBreak - New break state
- * @param {string} fallbackId - Fallback video playback ID
+ * @param {number} slot - Break slot (1 or 2) when going on break
  */
-function handleBreakModeChange(streamIndex, isOnBreak, fallbackId) {
-    console.log(`[App] handleBreakModeChange called: stream ${streamIndex}, break: ${isOnBreak}`);
+function handleBreakModeChange(streamIndex, isOnBreak, slot) {
+    console.log(`[App] handleBreakModeChange called: stream ${streamIndex}, break: ${isOnBreak}, slot: ${slot}`);
     
     // Update local state immediately
-    breakModeState[String(streamIndex)] = isOnBreak;
+    breakModeState[String(streamIndex)] = { onBreak: isOnBreak, activeSlot: isOnBreak ? slot : null };
+    
+    // Get the correct break video playback ID
+    const breakPlaybackId = isOnBreak ? getBreakVideoPlaybackId(streamIndex, slot || 1) : null;
     
     // Apply the change immediately (don't wait for poller)
-    applyBreakModeToStream(streamIndex, isOnBreak, fallbackId || FALLBACK_PLAYBACK_ID);
+    applyBreakModeToStream(streamIndex, isOnBreak, breakPlaybackId);
+    
+    // Update the badge
+    updateInlineBreakBadge(streamIndex, breakModeState[String(streamIndex)]);
 }
 
 /**
@@ -1307,8 +1355,8 @@ async function toggleBreakModeInline(index, slot) {
             breakModeState = data.breakMode;
             // Update UI for this stream
             updateInlineBreakBadge(index, breakModeState[String(index)]);
-            // Apply visual change
-            handleBreakModeChange(index, isGoingOnBreak, null);
+            // Apply visual change with correct slot
+            handleBreakModeChange(index, isGoingOnBreak, isGoingOnBreak ? slot : null);
         } else {
             console.error('[App] Failed to toggle break mode');
         }
