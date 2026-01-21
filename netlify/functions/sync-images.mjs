@@ -21,7 +21,7 @@ export default async function handler(req, context) {
 
     try {
         // Get config from Netlify Blobs
-        const store = getStore({ name: "play-config", consistency: "strong" });
+        const store = getStore("dashboard-config");
         const configData = await store.get("config", { type: "json" });
 
         if (!configData || !configData.streams) {
