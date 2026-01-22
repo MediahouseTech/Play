@@ -173,6 +173,7 @@
         }
 
         async function transitionTo(targetState) {
+            console.log(`[Embed] transitionTo(${targetState}), isTransitioning=${isTransitioning}`);
             if (isTransitioning) return;
             isTransitioning = true;
             
@@ -235,6 +236,7 @@
                 targetState = 'live';
             }
             
+            console.log(`[Embed] updateDisplay: isOnBreak=${isOnBreak}, activeSlot=${activeSlot}, isEncoderLive=${isEncoderLive} -> targetState=${targetState}`);
             transitionTo(targetState);
         }
 
@@ -247,7 +249,9 @@
                 const r = await fetch('/api/break-mode', { cache: 'no-store' });
                 if (r.ok) {
                     const d = await r.json();
+                    console.log('[Embed] Break mode API response:', JSON.stringify(d));
                     const state = d.breakMode?.[String(STREAM_INDEX)];
+                    console.log(`[Embed] Stream ${STREAM_INDEX} state:`, state);
                     
                     // Handle both old boolean format and new object format
                     let newBreak, newSlot;
@@ -259,8 +263,12 @@
                         newSlot = 1; // Default to slot 1 for old format
                     }
                     
+                    console.log(`[Embed] Parsed: newBreak=${newBreak}, newSlot=${newSlot}, current isOnBreak=${isOnBreak}, activeSlot=${activeSlot}`);
+                    console.log(`[Embed] Break video IDs: break1=${breakVideo1PlaybackId}, break2=${breakVideo2PlaybackId}`);
+                    
                     // Only update if something changed
                     if (newBreak !== isOnBreak || newSlot !== activeSlot) {
+                        console.log('[Embed] State changed! Updating display...');
                         isOnBreak = newBreak;
                         activeSlot = newSlot;
                         updateDisplay();
