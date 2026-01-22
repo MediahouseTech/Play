@@ -1,5 +1,6 @@
 /**
- * APP.JS - Mediahouse Crew Dashboard v2.0
+ * APP.JS - Mediahouse Crew Dashboard v2.5
+ * Build: 2026-01-22 Dual Break Buttons
  * Main application logic
  * 
  * KEY FIX: Uses manifest pre-fetch to detect LIVE vs VOD
