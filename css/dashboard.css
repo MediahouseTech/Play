@@ -2356,22 +2356,25 @@ html, body {
     color: #000;
 }
 
-.break-control .btn-go-live,
-.break-control .btn-break-inline.btn-go-live {
-    background: var(--success) !important;
-    color: #000 !important;
+.break-control .btn-go-live {
+    background: var(--success);
+    color: #000;
     font-weight: 700;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.break-control .btn-go-live:hover,
-.break-control .btn-break-inline.btn-go-live:hover {
-    background: #4ade80 !important;
+.break-control .btn-go-live:hover {
+    background: #4ade80;
 }
 
-.break-control .btn-go-live:focus,
-.break-control .btn-break-inline.btn-go-live:focus {
+.break-control .btn-go-live:focus {
     outline: none;
-    background: var(--success) !important;
+    background: var(--success);
 }
 
 /* Mobile: Disable hover states (prevent sticky hover on touch) */

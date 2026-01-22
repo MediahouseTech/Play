@@ -430,7 +430,7 @@ function createPlayerWrapper(stream, index) {
                 <span class="break-status-badge" id="break-badge-${index}">LIVE</span>
                 <button class="btn-break-inline btn-break-1" id="break-btn-1-${index}" onclick="toggleBreakModeInline(${index}, 1)" title="Switch to Break 1">Break 1</button>
                 <button class="btn-break-inline btn-break-2" id="break-btn-2-${index}" onclick="toggleBreakModeInline(${index}, 2)" title="Switch to Break 2">Break 2</button>
-                <button class="btn-break-inline btn-go-live" id="break-btn-live-${index}" onclick="toggleBreakModeInline(${index}, 0)" title="Go Live" style="display: none;">GO LIVE</button>
+                <button class="btn-go-live" id="break-btn-live-${index}" onclick="toggleBreakModeInline(${index}, 0)" title="Go Live" style="display: none;">GO LIVE</button>
             </span>
         </div>
     `;
