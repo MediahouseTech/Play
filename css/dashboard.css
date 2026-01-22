@@ -2324,6 +2324,13 @@ html, body {
     border-color: var(--warning);
 }
 
+.break-control .btn-break-1:focus {
+    outline: none;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
 .break-control .btn-break-2 {
     background: var(--bg-tertiary);
     color: var(--text-primary);
@@ -2336,6 +2343,13 @@ html, body {
     border-color: var(--warning);
 }
 
+.break-control .btn-break-2:focus {
+    outline: none;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
 .break-control .btn-go-live {
     background: var(--success);
     color: #000;
@@ -2344,6 +2358,36 @@ html, body {
 
 .break-control .btn-go-live:hover {
     background: #4ade80;
+}
+
+.break-control .btn-go-live:focus {
+    outline: none;
+    background: var(--success);
+}
+
+/* Mobile: Disable hover states (prevent sticky hover on touch) */
+@media (hover: none) and (pointer: coarse) {
+    .break-control .btn-break-1:hover,
+    .break-control .btn-break-2:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--border);
+    }
+    
+    .break-control .btn-break-1:active,
+    .break-control .btn-break-2:active {
+        background: var(--warning);
+        color: #000;
+        border-color: var(--warning);
+    }
+    
+    .break-control .btn-go-live:hover {
+        background: var(--success);
+    }
+    
+    .break-control .btn-go-live:active {
+        background: #4ade80;
+    }
 }
 
 /* Mobile: Compact break controls */

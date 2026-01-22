@@ -1311,6 +1311,9 @@ function updateInlineBreakBadge(index, state) {
         isOnBreak = state === true;
     }
     
+    console.log(`[App] updateInlineBreakBadge: stream ${index}, isOnBreak=${isOnBreak}, activeSlot=${activeSlot}`);
+    
+    // Update badge text and class
     if (badge) {
         if (isOnBreak && activeSlot) {
             badge.textContent = `BREAK ${activeSlot}`;
@@ -1322,10 +1325,19 @@ function updateInlineBreakBadge(index, state) {
         badge.classList.toggle('on-break', isOnBreak);
     }
     
-    // Show/hide buttons based on state
-    if (btn1) btn1.style.display = isOnBreak ? 'none' : 'inline-flex';
-    if (btn2) btn2.style.display = isOnBreak ? 'none' : 'inline-flex';
-    if (btnLive) btnLive.style.display = isOnBreak ? 'inline-flex' : 'none';
+    // Reset all button states first
+    if (btn1) {
+        btn1.classList.remove('active');
+        btn1.style.display = isOnBreak ? 'none' : 'inline-flex';
+    }
+    if (btn2) {
+        btn2.classList.remove('active');
+        btn2.style.display = isOnBreak ? 'none' : 'inline-flex';
+    }
+    if (btnLive) {
+        btnLive.classList.add('go-live'); // Ensure green styling
+        btnLive.style.display = isOnBreak ? 'inline-flex' : 'none';
+    }
 }
 
 /**
@@ -1337,6 +1349,11 @@ async function toggleBreakModeInline(index, slot) {
     const isGoingOnBreak = slot > 0;
     
     console.log(`[App] toggleBreakModeInline: stream ${index} -> ${isGoingOnBreak ? 'BREAK ' + slot : 'LIVE'}`);
+    
+    // Blur any focused button to prevent stuck states on mobile
+    if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+        document.activeElement.blur();
+    }
     
     try {
         const response = await fetch('/api/break-mode', {
