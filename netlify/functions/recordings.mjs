@@ -31,7 +31,7 @@ export default async function handler(request, context) {
     }
 
     try {
-        const store = getStore("yabun-dashboard");
+        const store = getStore("dashboard-config");
         const url = new URL(request.url);
         const action = url.searchParams.get('action');
 
