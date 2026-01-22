@@ -2345,3 +2345,23 @@ html, body {
 .break-control .btn-go-live:hover {
     background: #4ade80;
 }
+
+/* Mobile: Compact break controls */
+@media (max-width: 768px) {
+    .break-control {
+        gap: 4px;
+    }
+    
+    .break-control .btn-break-inline,
+    .break-control .btn-break-1,
+    .break-control .btn-break-2,
+    .break-control .btn-go-live {
+        padding: 3px 6px;
+        font-size: 0.6rem;
+    }
+    
+    .break-status-badge {
+        padding: 2px 4px;
+        font-size: 0.6rem;
+    }
+}
