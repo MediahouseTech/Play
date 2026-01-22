@@ -430,7 +430,7 @@ function createPlayerWrapper(stream, index) {
                 <span class="break-status-badge" id="break-badge-${index}">LIVE</span>
                 <button class="btn-break-inline btn-break-1" id="break-btn-1-${index}" onclick="toggleBreakModeInline(${index}, 1)" title="Switch to Break 1">Break 1</button>
                 <button class="btn-break-inline btn-break-2" id="break-btn-2-${index}" onclick="toggleBreakModeInline(${index}, 2)" title="Switch to Break 2">Break 2</button>
-                <button class="btn-go-live" id="break-btn-live-${index}" onclick="toggleBreakModeInline(${index}, 0)" title="Go Live" style="display: none;">GO LIVE</button>
+                <button class="btn-go-live" id="break-btn-live-${index}" onclick="toggleBreakModeInline(${index}, 0)" title="Go Live" style="display: none; background: #22c55e; color: #000; font-weight: 700; padding: 4px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">GO LIVE</button>
             </span>
         </div>
     `;
@@ -1336,7 +1336,12 @@ function updateInlineBreakBadge(index, state) {
         btn2.style.display = isOnBreak ? 'none' : 'inline-flex';
     }
     if (btnLive) {
-        btnLive.classList.add('go-live'); // Ensure green styling
+        btnLive.style.background = '#22c55e';
+        btnLive.style.color = '#000';
+        btnLive.style.fontWeight = '700';
+        btnLive.style.padding = '4px 10px';
+        btnLive.style.border = 'none';
+        btnLive.style.borderRadius = '4px';
         btnLive.style.display = isOnBreak ? 'inline-flex' : 'none';
     }
     
