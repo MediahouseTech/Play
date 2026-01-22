@@ -148,7 +148,8 @@ export default async function handler(request, context) {
                 });
             }
             
-            console.log('[recordings] Stream tag config:', config?.streams?.map(s => ({ name: s.name, tag: s.tag, liveStreamId: s.liveStreamId?.substring(0, 8) })));
+            console.log('[recordings] Stream tag config:', JSON.stringify(config?.streams?.map(s => ({ name: s.name, tag: s.tag, liveStreamId: s.liveStreamId?.substring(0, 12) }))));
+            console.log('[recordings] Config liveStreamIds:', Object.keys(streamConfigByLiveId));
 
             // Fetch all assets from Mux
             const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64');
@@ -266,12 +267,16 @@ export default async function handler(request, context) {
                         const streamConfigByNameLookup = streamConfigByName[streamName];
                         const streamConfig = streamConfigById || streamConfigByNameLookup;
                         
+                        console.log(`[recordings] Tag lookup for ${streamName}: configById=${!!streamConfigById}, configByName=${!!streamConfigByNameLookup}, tag=${streamConfig?.tag || 'NONE'}`);
+                        
                         if (streamConfig?.tag) {
                             autoTag = streamConfig.tag;
-                            console.log(`[recordings] Auto-tagging ${streamName} with tag: ${autoTag}`);
+                            console.log(`[recordings] Auto-tagging ${streamName} with tag: "${autoTag}"`);
                         } else {
-                            console.log(`[recordings] No auto-tag for ${streamName} (liveStreamId: ${asset.live_stream_id?.substring(0, 8)}...)`);
+                            console.log(`[recordings] No auto-tag for ${streamName} - streamConfig.tag is empty or undefined`);
                         }
+                    } else {
+                        console.log(`[recordings] Skipping auto-tag for ${streamName} - already has tag: "${existing.tag}"`);
                     }
 
                     recordings.push({
