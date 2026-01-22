@@ -2356,19 +2356,22 @@ html, body {
     color: #000;
 }
 
-.break-control .btn-go-live {
-    background: var(--success);
-    color: #000;
+.break-control .btn-go-live,
+.break-control .btn-break-inline.btn-go-live {
+    background: var(--success) !important;
+    color: #000 !important;
     font-weight: 700;
 }
 
-.break-control .btn-go-live:hover {
-    background: #4ade80;
+.break-control .btn-go-live:hover,
+.break-control .btn-break-inline.btn-go-live:hover {
+    background: #4ade80 !important;
 }
 
-.break-control .btn-go-live:focus {
+.break-control .btn-go-live:focus,
+.break-control .btn-break-inline.btn-go-live:focus {
     outline: none;
-    background: var(--success);
+    background: var(--success) !important;
 }
 
 /* Mobile: Disable hover states (prevent sticky hover on touch) */
