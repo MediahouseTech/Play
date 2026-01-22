@@ -119,6 +119,13 @@ function checkPassword() {
  * Show break mode panel on main dashboard (after producer login)
  */
 function showBreakModePanel() {
+    // Show visibility toggles (SHOW bar) for producers
+    const visibilityToggles = document.getElementById('visibilityToggles');
+    if (visibilityToggles) {
+        visibilityToggles.style.display = 'flex';
+        console.log('[Settings] Visibility toggles shown for producer');
+    }
+    
     // Now uses inline controls in each player's stats bar
     if (typeof showInlineBreakControls === 'function') {
         showInlineBreakControls();
