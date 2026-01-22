@@ -267,6 +267,39 @@ async function refreshRecordings() {
     showLoading(false);
 }
 
+async function forceRefreshRecordings() {
+    if (!confirm('Force refresh will clear ALL cached data and rebuild from Mux.\n\nUser-added tags and notes will be LOST.\n\nContinue?')) {
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        const response = await fetch('/api/recordings?action=refresh&force=true');
+        const data = await response.json();
+        
+        if (data.success) {
+            recordings = data.recordings || [];
+            applyFiltersAndSort();
+            updateStats();
+            updateLastRefresh();
+            
+            if (recordings.length === 0) {
+                showEmpty();
+            }
+            
+            alert(`Force refresh complete. ${data.count} recordings loaded.`);
+        } else {
+            throw new Error(data.error || 'Failed to refresh');
+        }
+    } catch (error) {
+        console.error('Error force refreshing:', error);
+        alert('Failed to force refresh: ' + error.message);
+    }
+    
+    showLoading(false);
+}
+
 function updateLastRefresh() {
     lastRefreshTime = new Date();
     document.getElementById('lastRefresh').textContent = 'Updated: just now';

@@ -111,9 +111,18 @@ export default async function handler(request, context) {
         }
 
         // GET with action=refresh - Re-fetch all assets from Mux and update index
+        // GET with action=refresh&force=true - Clear cache first, then rebuild
         if (request.method === 'GET' && action === 'refresh') {
+            const forceRefresh = url.searchParams.get('force') === 'true';
+            
             // Get existing index to preserve user edits (tags, notes, custom titles)
-            const existingIndex = await store.get("recordings-index", { type: "json" }) || [];
+            // Unless force=true, in which case we start fresh
+            let existingIndex = [];
+            if (!forceRefresh) {
+                existingIndex = await store.get("recordings-index", { type: "json" }) || [];
+            } else {
+                console.log('[recordings] Force refresh - clearing cached index');
+            }
             const existingMap = new Map(existingIndex.map(r => [r.assetId, r]));
             
             // Get config for stream lookups and auto-tagging
@@ -225,10 +234,21 @@ export default async function handler(request, context) {
                     const freshTitle = `${streamName} - ${sydneyTime}`;
                     
                     // Check if user has manually edited this recording
+                    // Bad patterns that indicate auto-generated titles that need regeneration
                     const existing = existingMap.get(asset.id);
+                    const hasBadTitle = existing?.title && (
+                        existing.title.includes('Unknown Stage') ||
+                        existing.title.includes('Unknown') ||
+                        existing.title.includes('1970') ||
+                        existing.title.includes('(0m)') ||
+                        existing.title.includes('21:23') ||
+                        existing.title.includes('21:22') ||
+                        existing.title.includes('21:21')
+                    );
+                    
+                    // Only preserve title if user manually edited AND it doesn't have bad patterns
                     const userEditedTitle = existing?.title && 
-                                           !existing.title.includes('Unknown Stage') &&
-                                           !existing.title.includes('21/01/1970') &&
+                                           !hasBadTitle &&
                                            existing.title !== existing.streamName + ' - ' + existing.createdFormatted;
 
                     // AUTO-TAGGING:
