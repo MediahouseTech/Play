@@ -110,6 +110,24 @@ export default async function handler(request, context) {
             }), { status: 200, headers });
         }
 
+        // GET with action=debug - Show tag configuration for debugging
+        if (request.method === 'GET' && action === 'debug') {
+            let config = await store.get("config", { type: "json" });
+            
+            const streamTags = config?.streams?.map(s => ({
+                name: s.name,
+                tag: s.tag || '(empty)',
+                liveStreamId: s.liveStreamId?.substring(0, 12) + '...'
+            })) || [];
+            
+            return new Response(JSON.stringify({
+                success: true,
+                message: 'Tag configuration debug info',
+                streamTags,
+                rawStreams: config?.streams?.map(s => ({ name: s.name, tag: s.tag }))
+            }, null, 2), { status: 200, headers });
+        }
+
         // GET with action=refresh - Re-fetch all assets from Mux and update index
         // GET with action=refresh&force=true - Clear cache first, then rebuild
         if (request.method === 'GET' && action === 'refresh') {
