@@ -2313,41 +2313,47 @@ html, body {
 }
 
 .break-control .btn-break-1 {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
+    background: var(--error);
+    color: white;
+    border: none;
 }
 
 .break-control .btn-break-1:hover {
-    background: var(--warning);
-    color: #000;
-    border-color: var(--warning);
+    background: #dc2626;
+    color: white;
 }
 
 .break-control .btn-break-1:focus {
     outline: none;
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border-color: var(--border);
+    background: var(--error);
+    color: white;
+}
+
+.break-control .btn-break-1.active {
+    background: var(--warning);
+    color: #000;
 }
 
 .break-control .btn-break-2 {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
+    background: var(--error);
+    color: white;
+    border: none;
 }
 
 .break-control .btn-break-2:hover {
-    background: var(--warning);
-    color: #000;
-    border-color: var(--warning);
+    background: #dc2626;
+    color: white;
 }
 
 .break-control .btn-break-2:focus {
     outline: none;
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border-color: var(--border);
+    background: var(--error);
+    color: white;
+}
+
+.break-control .btn-break-2.active {
+    background: var(--warning);
+    color: #000;
 }
 
 .break-control .btn-go-live {
@@ -2369,16 +2375,14 @@ html, body {
 @media (hover: none) and (pointer: coarse) {
     .break-control .btn-break-1:hover,
     .break-control .btn-break-2:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-        border-color: var(--border);
+        background: var(--error);
+        color: white;
     }
     
     .break-control .btn-break-1:active,
     .break-control .btn-break-2:active {
-        background: var(--warning);
-        color: #000;
-        border-color: var(--warning);
+        background: #dc2626;
+        color: white;
     }
     
     .break-control .btn-go-live:hover {

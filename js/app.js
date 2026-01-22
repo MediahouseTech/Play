@@ -1325,7 +1325,8 @@ function updateInlineBreakBadge(index, state) {
         badge.classList.toggle('on-break', isOnBreak);
     }
     
-    // Reset all button states first
+    // When LIVE: Show both break buttons (red), hide GO LIVE
+    // When on BREAK: Hide break buttons, show GO LIVE (green)
     if (btn1) {
         btn1.classList.remove('active');
         btn1.style.display = isOnBreak ? 'none' : 'inline-flex';
@@ -1338,6 +1339,11 @@ function updateInlineBreakBadge(index, state) {
         btnLive.classList.add('go-live'); // Ensure green styling
         btnLive.style.display = isOnBreak ? 'inline-flex' : 'none';
     }
+    
+    // Force blur to clear any stuck focus/hover states
+    if (btn1) btn1.blur();
+    if (btn2) btn2.blur();
+    if (btnLive) btnLive.blur();
 }
 
 /**
