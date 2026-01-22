@@ -131,19 +131,24 @@ export default async function handler(request, context) {
             // Build lookup maps from config (NO hardcoded IDs - fully dynamic)
             // Map 1: liveStreamId → stream name
             // Map 2: stream name → stream config (for auto-tagging)
+            // Map 3: liveStreamId → stream config (for direct auto-tagging)
             const streamNamesByLiveId = {};
             const streamConfigByName = {};
+            const streamConfigByLiveId = {};
             
             if (config?.streams) {
                 config.streams.forEach(s => {
                     if (s.liveStreamId && s.name && s.liveStreamId !== 'ENTER_LIVE_STREAM_ID') {
                         streamNamesByLiveId[s.liveStreamId] = s.name;
+                        streamConfigByLiveId[s.liveStreamId] = s;
                     }
                     if (s.name) {
                         streamConfigByName[s.name] = s;
                     }
                 });
             }
+            
+            console.log('[recordings] Stream tag config:', config?.streams?.map(s => ({ name: s.name, tag: s.tag, liveStreamId: s.liveStreamId?.substring(0, 8) })));
 
             // Fetch all assets from Mux
             const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64');
@@ -252,12 +257,20 @@ export default async function handler(request, context) {
                                            existing.title !== existing.streamName + ' - ' + existing.createdFormatted;
 
                     // AUTO-TAGGING:
-                    // If user hasn't manually tagged, check if stream config has a default tag
+                    // If user hasn't manually tagged, apply tag from stream config
+                    // Use liveStreamId lookup (most reliable) or fall back to name lookup
                     let autoTag = null;
                     if (!existing?.tag) {
-                        const streamConfig = streamConfigByName[streamName];
+                        // Try direct liveStreamId lookup first
+                        const streamConfigById = streamConfigByLiveId[asset.live_stream_id];
+                        const streamConfigByNameLookup = streamConfigByName[streamName];
+                        const streamConfig = streamConfigById || streamConfigByNameLookup;
+                        
                         if (streamConfig?.tag) {
                             autoTag = streamConfig.tag;
+                            console.log(`[recordings] Auto-tagging ${streamName} with tag: ${autoTag}`);
+                        } else {
+                            console.log(`[recordings] No auto-tag for ${streamName} (liveStreamId: ${asset.live_stream_id?.substring(0, 8)}...)`);
                         }
                     }
 
