@@ -123,6 +123,9 @@ export default async function handler(request, context) {
             return new Response(JSON.stringify({
                 success: true,
                 message: 'Tag configuration debug info',
+                configExists: !!config,
+                configKeys: config ? Object.keys(config) : [],
+                streamsCount: config?.streams?.length || 0,
                 streamTags,
                 rawStreams: config?.streams?.map(s => ({ name: s.name, tag: s.tag }))
             }, null, 2), { status: 200, headers });
