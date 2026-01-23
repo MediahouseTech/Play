@@ -49,3 +49,8 @@
   from = "/api/sync-images"
   to = "/.netlify/functions/sync-images"
   status = 200
+
+[[redirects]]
+  from = "/api/stream-health"
+  to = "/.netlify/functions/stream-health"
+  status = 200
