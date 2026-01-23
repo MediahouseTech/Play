@@ -4,6 +4,28 @@ All notable changes to Play are documented in this file.
 
 ---
 
+## [v2.5] - 2026-01-23 - Connection Health & UI Polish
+
+### Added
+- Connection health indicator (colored dot in player header)
+  - 🟢 Excellent: stream drift ≤ 500ms
+  - 🟡 Good: 500ms - 1s drift
+  - 🔴 Poor: > 1s drift
+  - ⚪ Unknown: stream offline or no data
+- Health legend in dashboard footer
+- `/api/stream-health` endpoint for Mux session monitoring
+
+### Changed
+- "Not Live" status changed to "No Stream" for clarity
+- Renamed visibility toggle from "VU Meters" to "Health"
+
+### Technical
+- `startConnectionHealthPoller()` polls every 15 seconds when stream is live
+- Health status derived from Mux session average drift
+- Footer legend uses compact inline styling
+
+---
+
 ## [v2.4] - 2026-01-12 - Festival Ready
 
 ### Added
