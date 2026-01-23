@@ -2486,6 +2486,41 @@ html, body {
     opacity: 0.5;
 }
 
+/* Footer legend for connection health */
+.footer-legend {
+    font-size: 0.75rem;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-dot.excellent {
+    background: #22c55e;
+}
+
+.legend-dot.good {
+    background: #eab308;
+}
+
+.legend-dot.poor {
+    background: #ef4444;
+}
+
+.legend-dot.unknown {
+    background: #4b5563;
+}
+
 /* ============================================
    AUDIO TOGGLE - Stream monitor speaker icon
    Click to hear audio from one stream at a time
