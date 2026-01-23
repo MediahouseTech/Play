@@ -2419,3 +2419,81 @@ html, body {
         font-size: 0.6rem;
     }
 }
+
+/* ============================================
+   AUDIO TOGGLE - Stream monitor speaker icon
+   Click to hear audio from one stream at a time
+   ============================================ */
+
+.audio-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    transition: all 0.2s ease;
+    opacity: 0.4;
+}
+
+.audio-toggle:hover {
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.audio-toggle.active {
+    opacity: 1;
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.audio-toggle .speaker-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(0.6);
+    transition: filter 0.2s ease;
+}
+
+.audio-toggle:hover .speaker-icon {
+    filter: brightness(0) invert(0.85);
+}
+
+.audio-toggle.active .speaker-icon {
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(190deg);
+}
+
+/* Touch-friendly sizing for mobile */
+@media (max-width: 768px) {
+    .audio-toggle {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+    }
+    
+    .audio-toggle .speaker-icon {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* Prevent sticky hover on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .audio-toggle:hover {
+        opacity: 0.4;
+        background: transparent;
+    }
+    
+    .audio-toggle:active {
+        opacity: 0.8;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .audio-toggle.active:hover {
+        opacity: 1;
+        background: rgba(59, 130, 246, 0.2);
+    }
+}

@@ -23,6 +23,7 @@ let streamPollers = {}; // Track polling intervals by stream index
 let liveStatusPollers = {}; // Track live status polling while playing
 let confirmedNotLive = {}; // Track streams confirmed as NOT LIVE via HLS check
 let vuMeters = {}; // Track VU meter instances by stream index
+let activeAudioStream = null; // Track which stream has audio enabled (null = all muted)
 
 /**
  * Initialize the dashboard
@@ -395,6 +396,9 @@ function createPlayerWrapper(stream, index) {
     wrapper.innerHTML = `
         <div class="player-header">
             <span class="stream-name clickable" onclick="toggleStreamView(${index})" title="Click to toggle 1-up view">${stream.name}</span>
+            <button class="audio-toggle" id="audio-toggle-${index}" onclick="toggleStreamAudio(${index})" title="Toggle audio for this stream">
+                <img src="images/speaker-trnasparent.png" alt="Speaker" class="speaker-icon">
+            </button>
             <span class="stream-status" id="status-${index}">⏳ Checking...</span>
         </div>
         <div class="player-content">
@@ -934,6 +938,46 @@ function toggleStreamView(index) {
     } else {
         // Switch to single stream view
         switchView(index);
+    }
+}
+
+/**
+ * Toggle audio for a specific stream
+ * Only one stream can have audio at a time
+ * @param {number} index - Stream index to toggle audio for
+ */
+function toggleStreamAudio(index) {
+    console.log(`[Audio] toggleStreamAudio called for stream ${index}, current active: ${activeAudioStream}`);
+    
+    // Mute ALL videos first
+    document.querySelectorAll('video').forEach((video, i) => {
+        video.muted = true;
+    });
+    
+    // Update ALL toggle buttons to muted state
+    document.querySelectorAll('.audio-toggle').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // If clicking the already-active stream, just leave everything muted
+    if (activeAudioStream === index) {
+        console.log(`[Audio] Stream ${index} was active, now all muted`);
+        activeAudioStream = null;
+        return;
+    }
+    
+    // Otherwise, unmute the clicked stream
+    const video = document.getElementById(`video-${index}`);
+    const toggleBtn = document.getElementById(`audio-toggle-${index}`);
+    
+    if (video) {
+        video.muted = false;
+        activeAudioStream = index;
+        console.log(`[Audio] Stream ${index} audio ENABLED`);
+        
+        if (toggleBtn) {
+            toggleBtn.classList.add('active');
+        }
     }
 }
 
