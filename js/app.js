@@ -416,7 +416,7 @@ function createPlayerWrapper(stream, index) {
                     poster="images/poster.jpg"
                 ></video>
                 <div class="video-overlay" id="overlay-${index}">
-                    <div class="overlay-message">⏹ Not Live</div>
+                    <div class="overlay-message">⏹ No Stream</div>
                 </div>
             </div>
             <div class="vu-container" id="vu-container-${index}"></div>
@@ -483,7 +483,7 @@ async function initStreamPlayer(index, liveStreamId, playbackId) {
     
     if (!status.isLive) {
         console.log(`[App] Stream ${index} is NOT live (status: ${status.status}) - showing poster`);
-        statusEl.textContent = '⏹ Not Live';
+        statusEl.textContent = '⏹ No Stream';
         statusEl.className = 'stream-status';
         overlayEl.style.display = 'flex';
         
@@ -742,7 +742,7 @@ function handleStreamEnded(index) {
     
     // Update UI
     if (statusEl) {
-        statusEl.textContent = '⏹ Not Live';
+        statusEl.textContent = '⏹ No Stream';
         statusEl.className = 'stream-status';
     }
     if (overlayEl) overlayEl.style.display = 'flex';
