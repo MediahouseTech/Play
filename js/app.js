@@ -1,6 +1,6 @@
 /**
  * APP.JS - Mediahouse Crew Dashboard v2.5
- * Build: 2026-01-22 Dual Break Buttons
+ * Build: 2026-01-23 Connection Health Indicator
  * Main application logic
  * 
  * KEY FIX: Uses manifest pre-fetch to detect LIVE vs VOD
@@ -396,10 +396,15 @@ function createPlayerWrapper(stream, index) {
     wrapper.innerHTML = `
         <div class="player-header">
             <span class="stream-name clickable" onclick="toggleStreamView(${index})" title="Click to toggle 1-up view">${stream.name}</span>
-            <button class="audio-toggle" id="audio-toggle-${index}" onclick="toggleStreamAudio(${index})" title="Toggle audio for this stream">
-                <img src="images/speaker-trnasparent.png" alt="Speaker" class="speaker-icon">
-            </button>
-            <span class="stream-status" id="status-${index}">⏳ Checking...</span>
+            <div class="header-controls">
+                <span class="connection-indicator" id="connection-${index}" title="Connection strength: checking...">
+                    <span class="connection-dot unknown"></span>
+                </span>
+                <button class="audio-toggle" id="audio-toggle-${index}" onclick="toggleStreamAudio(${index})" title="Toggle audio for this stream">
+                    <img src="images/speaker-trnasparent.png" alt="Speaker" class="speaker-icon">
+                </button>
+                <span class="stream-status" id="status-${index}">⏳ Checking...</span>
+            </div>
         </div>
         <div class="player-content">
             <div class="video-container">
@@ -645,6 +650,9 @@ function loadHlsPlayer(index, playbackId) {
     // Start continuous status polling to detect when encoder stops
     startLiveStatusPoller(index, video.liveStreamId);
     
+    // Start connection health polling
+    startConnectionHealthPoller(index, video.liveStreamId);
+    
     // Initialize VU meter (auto-starts when video plays)
     setupVuMeter(index);
 }
@@ -714,6 +722,9 @@ function handleStreamEnded(index) {
     
     // Stop live status polling
     stopLiveStatusPoller(index);
+    
+    // Stop connection health polling
+    stopConnectionHealthPoller(index);
     
     // Destroy HLS instance
     if (video && video.hlsInstance) {
@@ -979,6 +990,107 @@ function toggleStreamAudio(index) {
             toggleBtn.classList.add('active');
         }
     }
+}
+
+/**
+ * Connection health polling intervals
+ */
+let connectionHealthPollers = {};
+
+/**
+ * Fetch connection health status from Mux Stats API
+ * @param {number} index - Stream index
+ * @param {string} liveStreamId - Mux Live Stream ID
+ */
+async function fetchConnectionHealth(index, liveStreamId) {
+    if (!liveStreamId || liveStreamId === 'ENTER_LIVE_STREAM_ID') {
+        updateConnectionIndicator(index, 'unknown', 'No stream ID configured');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/stream-health?liveStreamId=${liveStreamId}`, {
+            method: 'GET',
+            cache: 'no-cache'
+        });
+        
+        if (!response.ok) {
+            updateConnectionIndicator(index, 'unknown', 'API error');
+            return;
+        }
+        
+        const data = await response.json();
+        const status = data.status || 'unknown';
+        
+        // Build tooltip with detailed info
+        let tooltip = `Connection: ${status}`;
+        if (data.sessionAvg !== undefined) {
+            tooltip += ` | Drift: ${data.sessionAvg}ms`;
+        }
+        
+        updateConnectionIndicator(index, status, tooltip);
+        
+    } catch (error) {
+        console.error(`[Connection] Health check failed for stream ${index}:`, error);
+        updateConnectionIndicator(index, 'unknown', 'Check failed');
+    }
+}
+
+/**
+ * Update the connection indicator UI
+ * @param {number} index - Stream index
+ * @param {string} status - Connection status: excellent, good, poor, unknown
+ * @param {string} tooltip - Tooltip text
+ */
+function updateConnectionIndicator(index, status, tooltip) {
+    const indicator = document.getElementById(`connection-${index}`);
+    if (!indicator) return;
+    
+    const dot = indicator.querySelector('.connection-dot');
+    if (!dot) return;
+    
+    // Remove all status classes
+    dot.classList.remove('excellent', 'good', 'poor', 'unknown');
+    
+    // Add the appropriate class
+    dot.classList.add(status);
+    
+    // Update tooltip
+    indicator.title = tooltip;
+}
+
+/**
+ * Start connection health polling for a stream
+ * @param {number} index - Stream index
+ * @param {string} liveStreamId - Mux Live Stream ID
+ */
+function startConnectionHealthPoller(index, liveStreamId) {
+    // Clear existing poller
+    stopConnectionHealthPoller(index);
+    
+    console.log(`[Connection] Starting health poller for stream ${index}`);
+    
+    // Fetch immediately
+    fetchConnectionHealth(index, liveStreamId);
+    
+    // Then poll every 15 seconds
+    connectionHealthPollers[index] = setInterval(() => {
+        fetchConnectionHealth(index, liveStreamId);
+    }, 15000);
+}
+
+/**
+ * Stop connection health polling for a stream
+ * @param {number} index - Stream index
+ */
+function stopConnectionHealthPoller(index) {
+    if (connectionHealthPollers[index]) {
+        clearInterval(connectionHealthPollers[index]);
+        delete connectionHealthPollers[index];
+        console.log(`[Connection] Stopped health poller for stream ${index}`);
+    }
+    // Reset to unknown when stopping
+    updateConnectionIndicator(index, 'unknown', 'Stream offline');
 }
 
 /**

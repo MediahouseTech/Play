@@ -814,6 +814,15 @@ html, body {
     padding: 8px 12px;
     background: var(--pp-bg-surface);
     border-bottom: 1px solid var(--pp-border-subtle);
+    gap: 12px;
+}
+
+/* Header controls group - equal spacing */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
 }
 
 .stream-name {
@@ -822,6 +831,11 @@ html, body {
     color: var(--pp-text-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    /* Allow truncation on mobile */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .stream-name.clickable {
@@ -2421,6 +2435,58 @@ html, body {
 }
 
 /* ============================================
+   CONNECTION INDICATOR - Encoder health dot
+   Shows Mux connection strength: excellent/good/poor/unknown
+   ============================================ */
+
+.connection-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    cursor: help;
+}
+
+.connection-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Excellent - bright green with glow */
+.connection-dot.excellent {
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+/* Good - yellow/amber */
+.connection-dot.good {
+    background: #eab308;
+    box-shadow: 0 0 6px rgba(234, 179, 8, 0.5);
+}
+
+/* Poor - red with pulse animation */
+.connection-dot.poor {
+    background: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    animation: pulse-poor 1.5s infinite;
+}
+
+@keyframes pulse-poor {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+    50% { opacity: 0.7; box-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
+}
+
+/* Unknown - grey, muted (follows "Quiet Normal" principle) */
+.connection-dot.unknown {
+    background: #4b5563;
+    box-shadow: none;
+    opacity: 0.5;
+}
+
+/* ============================================
    AUDIO TOGGLE - Stream monitor speaker icon
    Click to hear audio from one stream at a time
    ============================================ */
@@ -2436,7 +2502,6 @@ html, body {
     border-radius: 4px;
     cursor: pointer;
     padding: 4px;
-    margin-left: 8px;
     transition: all 0.2s ease;
     opacity: 0.4;
 }
@@ -2477,6 +2542,36 @@ html, body {
     .audio-toggle .speaker-icon {
         width: 22px;
         height: 22px;
+    }
+    
+    /* Player header mobile - tighter spacing, truncate stream name */
+    .player-header {
+        gap: 8px;
+        padding: 6px 10px;
+    }
+    
+    .header-controls {
+        gap: 8px;
+    }
+    
+    .stream-name {
+        max-width: 100px; /* Truncate long names on mobile */
+        font-size: 0.7rem;
+    }
+    
+    .stream-status {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    
+    .connection-indicator {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .connection-dot {
+        width: 8px;
+        height: 8px;
     }
 }
 

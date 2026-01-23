@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Mediahouse Crew Dashboard for Yabun Festival 2025",
   "dependencies": {
-    "@netlify/blobs": "^8.1.0"
+    "@netlify/blobs": "^8.1.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }
