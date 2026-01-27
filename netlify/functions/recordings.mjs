@@ -62,34 +62,34 @@ export default async function handler(request, context) {
 
             const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64');
             
-            // Step 1: ALWAYS try to enable master access
-            // If it's already enabled, Mux returns 400 - that's fine, we ignore it
-            console.log(`[recordings] Requesting master access for asset: ${assetId}`);
-            try {
-                await fetch(
-                    `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
-                    {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Basic ${auth}`
-                        },
-                        body: JSON.stringify({ master_access: 'temporary' })
-                    }
-                );
-                // We don't care about the response - if it fails, it's probably already enabled
-            } catch (e) {
-                console.log(`[recordings] Enable master access request completed (may already be enabled)`);
+            // Step 1: Enable master access
+            console.log(`[recordings] Enabling master access for: ${assetId}`);
+            const enableResponse = await fetch(
+                `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Basic ${auth}`
+                    },
+                    body: JSON.stringify({ master_access: 'temporary' })
+                }
+            );
+            
+            const enableText = await enableResponse.text();
+            console.log(`[recordings] Enable response (${enableResponse.status}): ${enableText}`);
+            
+            // 400 with "already exists" is OK - means it's already enabled
+            if (!enableResponse.ok && !enableText.toLowerCase().includes('already')) {
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: `Failed to enable download: ${enableText}`
+                }), { status: 500, headers });
             }
 
             // Step 2: Poll for master URL (up to 30 seconds)
-            let asset = null;
-            let attempts = 0;
-            const maxAttempts = 30;
-            
-            while (attempts < maxAttempts) {
-                attempts++;
-                
+            console.log(`[recordings] Polling for master URL...`);
+            for (let attempt = 1; attempt <= 30; attempt++) {
                 const assetResponse = await fetch(
                     `https://api.mux.com/video/v1/assets/${assetId}`,
                     {
@@ -106,11 +106,11 @@ export default async function handler(request, context) {
                 }
 
                 const assetData = await assetResponse.json();
-                asset = assetData.data;
+                const asset = assetData.data;
                 
                 // Check if master URL is ready
                 if (asset.master?.url) {
-                    console.log(`[recordings] Master URL ready after ${attempts}s`);
+                    console.log(`[recordings] SUCCESS! Master URL ready after ${attempt}s`);
                     return new Response(JSON.stringify({
                         success: true,
                         assetId: asset.id,
@@ -120,22 +120,20 @@ export default async function handler(request, context) {
                     }), { status: 200, headers });
                 }
                 
-                // Log progress every 5 attempts
-                if (attempts % 5 === 0) {
-                    console.log(`[recordings] Waiting for master URL... ${attempts}/${maxAttempts} (status: ${asset.master?.status || 'none'})`);
+                // Log progress
+                if (attempt % 5 === 0 || attempt === 1) {
+                    console.log(`[recordings] Attempt ${attempt}/30 - master_access: ${asset.master_access}, master.status: ${asset.master?.status || 'none'}`);
                 }
                 
                 // Wait 1 second
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            // Timeout - URL never became ready
-            console.error(`[recordings] Master URL not ready after ${maxAttempts}s`);
+            // Timeout
+            console.error(`[recordings] TIMEOUT after 30s - master URL never became ready`);
             return new Response(JSON.stringify({
                 success: false,
-                error: 'Download preparation timed out. This recording may be too large. Please try again or contact support.',
-                masterStatus: asset?.master?.status || 'unknown',
-                masterAccess: asset?.master_access || 'unknown'
+                error: 'Download preparation timed out after 30 seconds. Please try again.'
             }), { status: 503, headers });
         }
 

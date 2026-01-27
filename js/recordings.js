@@ -1270,17 +1270,17 @@ async function downloadRecording(assetId) {
     const progress = document.getElementById('downloadProgress');
     
     modal.classList.add('show');
-    status.textContent = 'Preparing download from Mux (this may take a few seconds)...';
-    progress.style.width = '20%';
+    status.textContent = 'Preparing download from Mux (up to 30 seconds)...';
+    progress.style.width = '10%';
     
-    // Animate progress while waiting
-    let progressValue = 20;
+    // Animate progress while waiting (slower for 30 second timeout)
+    let progressValue = 10;
     const progressInterval = setInterval(() => {
-        if (progressValue < 90) {
-            progressValue += 5;
+        if (progressValue < 85) {
+            progressValue += 2; // Slower increment for 30 second wait
             progress.style.width = progressValue + '%';
         }
-    }, 1000);
+    }, 800);
     
     try {
         const response = await fetch(`/api/recordings?action=download&assetId=${assetId}`);
@@ -1320,7 +1320,7 @@ async function downloadRecording(assetId) {
         
         setTimeout(() => {
             modal.classList.remove('show');
-        }, 4000);
+        }, 5000);
     }
 }
 
