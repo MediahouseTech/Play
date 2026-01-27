@@ -1270,11 +1270,22 @@ async function downloadRecording(assetId) {
     const progress = document.getElementById('downloadProgress');
     
     modal.classList.add('show');
-    status.textContent = 'Requesting download URL from Mux...';
-    progress.style.width = '30%';
+    status.textContent = 'Preparing download from Mux (this may take a few seconds)...';
+    progress.style.width = '20%';
+    
+    // Animate progress while waiting
+    let progressValue = 20;
+    const progressInterval = setInterval(() => {
+        if (progressValue < 90) {
+            progressValue += 5;
+            progress.style.width = progressValue + '%';
+        }
+    }, 1000);
     
     try {
         const response = await fetch(`/api/recordings?action=download&assetId=${assetId}`);
+        clearInterval(progressInterval);
+        
         const data = await response.json();
         
         if (data.success && data.downloadUrl) {
@@ -1302,13 +1313,14 @@ async function downloadRecording(assetId) {
             throw new Error(data.error || 'Failed to get download URL');
         }
     } catch (error) {
+        clearInterval(progressInterval);
         console.error('Download error:', error);
         status.textContent = 'Error: ' + error.message;
         progress.style.width = '0%';
         
         setTimeout(() => {
             modal.classList.remove('show');
-        }, 3000);
+        }, 4000);
     }
 }
 
