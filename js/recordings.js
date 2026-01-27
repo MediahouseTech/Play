@@ -1270,50 +1270,72 @@ async function downloadRecording(assetId) {
     const progress = document.getElementById('downloadProgress');
     
     modal.classList.add('show');
-    status.textContent = 'Preparing download from Mux (up to 30 seconds)...';
+    status.textContent = 'Requesting download URL from Mux...';
     progress.style.width = '10%';
     
-    // Animate progress while waiting (slower for 30 second timeout)
-    let progressValue = 10;
-    const progressInterval = setInterval(() => {
-        if (progressValue < 85) {
-            progressValue += 2; // Slower increment for 30 second wait
-            progress.style.width = progressValue + '%';
-        }
-    }, 800);
-    
     try {
+        // Step 1: Get download URL from our API
         const response = await fetch(`/api/recordings?action=download&assetId=${assetId}`);
-        clearInterval(progressInterval);
-        
         const data = await response.json();
         
-        if (data.success && data.downloadUrl) {
-            status.innerHTML = `Downloading: <strong>${filename}</strong>`;
-            progress.style.width = '100%';
-            
-            // Create download link with proper filename
-            const link = document.createElement('a');
-            link.href = data.downloadUrl;
-            link.download = filename;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Show filename reminder (in case browser ignores download attribute)
-            setTimeout(() => {
-                status.innerHTML = `Save as: <strong>${filename}</strong>`;
-            }, 500);
-            
-            setTimeout(() => {
-                modal.classList.remove('show');
-            }, 3000);
-        } else {
+        if (!data.success || !data.downloadUrl) {
             throw new Error(data.error || 'Failed to get download URL');
         }
+        
+        // Step 2: Fetch the actual file as blob (so we can set filename)
+        status.textContent = `Downloading: ${filename}`;
+        progress.style.width = '30%';
+        
+        const fileResponse = await fetch(data.downloadUrl);
+        if (!fileResponse.ok) {
+            throw new Error('Failed to download file from Mux');
+        }
+        
+        // Get content length for progress
+        const contentLength = fileResponse.headers.get('content-length');
+        const total = parseInt(contentLength, 10) || 0;
+        
+        // Read the stream with progress
+        const reader = fileResponse.body.getReader();
+        const chunks = [];
+        let received = 0;
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            chunks.push(value);
+            received += value.length;
+            
+            // Update progress (30% to 90%)
+            if (total > 0) {
+                const pct = 30 + (received / total) * 60;
+                progress.style.width = `${Math.min(90, pct)}%`;
+            }
+        }
+        
+        // Step 3: Create blob and trigger download with our filename
+        const blob = new Blob(chunks, { type: 'video/mp4' });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Cleanup
+        URL.revokeObjectURL(blobUrl);
+        
+        progress.style.width = '100%';
+        status.innerHTML = `✅ Saved as: <strong>${filename}</strong>`;
+        
+        setTimeout(() => {
+            modal.classList.remove('show');
+        }, 3000);
+        
     } catch (error) {
-        clearInterval(progressInterval);
         console.error('Download error:', error);
         status.textContent = 'Error: ' + error.message;
         progress.style.width = '0%';
