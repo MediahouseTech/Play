@@ -34,7 +34,7 @@
         let transitionType = 'crossfade';
         let breakVideo1PlaybackId = null;
         let breakVideo2PlaybackId = null;
-        let livePlaybackId = null;
+        let livePlaybackId = 'Ub01I4uisYGliCrOu01VMc2YEEnPHy00Xcr2Eqi201V3hpg';
         
         let liveHls = null, break1Hls = null, break2Hls = null;
         let isOnBreak = false, activeSlot = null, isEncoderLive = false;
@@ -65,7 +65,7 @@
                 
                 const stream = config.streams?.[STREAM_INDEX];
                 if (stream) {
-                    livePlaybackId = stream.playbackId;
+                    if (!livePlaybackId) livePlaybackId = stream.playbackId;
                     const library = config.breakVideoLibrary || [];
                     
                     if (stream.breakVideo1) {
