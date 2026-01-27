@@ -85,6 +85,8 @@ export default async function handler(request, context) {
 
             const checkData = await checkResponse.json();
             const assetStatus = checkData.data?.status;
+            const existingMasterAccess = checkData.data?.master_access;
+            const existingMasterUrl = checkData.data?.master?.url;
             
             // If asset is not ready yet, can't download
             if (assetStatus !== 'ready') {
@@ -97,38 +99,65 @@ export default async function handler(request, context) {
                 }), { status: 503, headers });
             }
 
-            // Step 2: Enable master access (required for MP4 download)
-            console.log(`[recordings] Enabling master access for asset: ${assetId}`);
-            const enableMasterResponse = await fetch(
-                `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Basic ${auth}`
-                    },
-                    body: JSON.stringify({ master_access: 'temporary' })
-                }
-            );
-
-            if (!enableMasterResponse.ok) {
-                const errText = await enableMasterResponse.text();
-                console.error(`[recordings] Failed to enable master access:`, errText);
-                
-                // Try to parse Mux error for better message
-                let muxError = 'Unknown error';
-                try {
-                    const errJson = JSON.parse(errText);
-                    muxError = errJson.error?.messages?.join(', ') || errJson.error?.type || errText;
-                } catch (e) {
-                    muxError = errText;
-                }
-                
+            // If master URL already exists, return it immediately!
+            if (existingMasterUrl) {
+                console.log(`[recordings] Master URL already available, returning immediately`);
                 return new Response(JSON.stringify({
-                    success: false,
-                    error: `Mux error: ${muxError}`,
-                    statusCode: enableMasterResponse.status
-                }), { status: 500, headers });
+                    success: true,
+                    assetId: checkData.data.id,
+                    title: checkData.data.meta?.title || 'Untitled',
+                    externalId: checkData.data.meta?.external_id || null,
+                    duration: checkData.data.duration,
+                    masterAccess: existingMasterAccess,
+                    downloadUrl: existingMasterUrl,
+                    playbackUrl: checkData.data.playback_ids?.[0]?.id 
+                        ? `https://stream.mux.com/${checkData.data.playback_ids[0].id}.m3u8`
+                        : null,
+                    message: 'Download URL ready (expires in 24 hours)'
+                }), { status: 200, headers });
+            }
+
+            // Step 2: Enable master access (required for MP4 download)
+            // Skip if already enabled (to avoid "already exists" error)
+            if (existingMasterAccess !== 'temporary') {
+                console.log(`[recordings] Enabling master access for asset: ${assetId}`);
+                const enableMasterResponse = await fetch(
+                    `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${auth}`
+                        },
+                        body: JSON.stringify({ master_access: 'temporary' })
+                    }
+                );
+
+                if (!enableMasterResponse.ok) {
+                    const errText = await enableMasterResponse.text();
+                    console.error(`[recordings] Failed to enable master access:`, errText);
+                    
+                    // Try to parse Mux error for better message
+                    let muxError = 'Unknown error';
+                    try {
+                        const errJson = JSON.parse(errText);
+                        muxError = errJson.error?.messages?.join(', ') || errJson.error?.type || errText;
+                    } catch (e) {
+                        muxError = errText;
+                    }
+                    
+                    // If error is "already exists", that's okay - continue to get URL
+                    if (!muxError.toLowerCase().includes('already exists')) {
+                        return new Response(JSON.stringify({
+                            success: false,
+                            error: `Mux error: ${muxError}`,
+                            statusCode: enableMasterResponse.status
+                        }), { status: 500, headers });
+                    }
+                    console.log(`[recordings] Master access already exists, continuing to fetch URL`);
+                }
+            } else {
+                console.log(`[recordings] Master access already temporary, skipping enable step`);
             }
 
             // Step 3: Poll for master URL to become available (Mux needs a few seconds)
