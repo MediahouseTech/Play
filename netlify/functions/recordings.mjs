@@ -62,7 +62,42 @@ export default async function handler(request, context) {
 
             const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64');
             
-            // First, enable master access (required for MP4 download)
+            // Step 1: First check if asset exists and is ready
+            console.log(`[recordings] Checking asset status: ${assetId}`);
+            const checkResponse = await fetch(
+                `https://api.mux.com/video/v1/assets/${assetId}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Basic ${auth}`
+                    }
+                }
+            );
+
+            if (!checkResponse.ok) {
+                const errText = await checkResponse.text();
+                console.error(`[recordings] Asset not found:`, errText);
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: `Asset not found or inaccessible (${checkResponse.status})`
+                }), { status: 404, headers });
+            }
+
+            const checkData = await checkResponse.json();
+            const assetStatus = checkData.data?.status;
+            
+            // If asset is not ready yet, can't download
+            if (assetStatus !== 'ready') {
+                console.log(`[recordings] Asset not ready, status: ${assetStatus}`);
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: `Recording is still processing (status: ${assetStatus}). Please wait a few minutes and try again.`,
+                    assetId: assetId,
+                    status: assetStatus
+                }), { status: 503, headers });
+            }
+
+            // Step 2: Enable master access (required for MP4 download)
             console.log(`[recordings] Enabling master access for asset: ${assetId}`);
             const enableMasterResponse = await fetch(
                 `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
@@ -79,14 +114,27 @@ export default async function handler(request, context) {
             if (!enableMasterResponse.ok) {
                 const errText = await enableMasterResponse.text();
                 console.error(`[recordings] Failed to enable master access:`, errText);
-                throw new Error(`Failed to enable master access: ${enableMasterResponse.status}`);
+                
+                // Try to parse Mux error for better message
+                let muxError = 'Unknown error';
+                try {
+                    const errJson = JSON.parse(errText);
+                    muxError = errJson.error?.messages?.join(', ') || errJson.error?.type || errText;
+                } catch (e) {
+                    muxError = errText;
+                }
+                
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: `Mux error: ${muxError}`,
+                    statusCode: enableMasterResponse.status
+                }), { status: 500, headers });
             }
 
-            // Poll for master URL to become available (Mux needs a few seconds)
-            // Retry up to 10 times with 1 second delay (10 seconds total max)
+            // Step 3: Poll for master URL to become available (Mux needs a few seconds)
             let asset = null;
             let attempts = 0;
-            const maxAttempts = 10;
+            const maxAttempts = 15; // Increased to 15 attempts
             
             while (attempts < maxAttempts) {
                 attempts++;
@@ -115,11 +163,8 @@ export default async function handler(request, context) {
                     break;
                 }
                 
-                // Check master status
-                if (asset.master?.status === 'ready' && asset.master?.url) {
-                    console.log(`[recordings] Master status ready, URL available`);
-                    break;
-                }
+                // Log current master status
+                console.log(`[recordings] Master status: ${asset.master?.status || 'not set'}`);
                 
                 // Wait 1 second before next attempt
                 if (attempts < maxAttempts) {
