@@ -1271,71 +1271,51 @@ async function downloadRecording(assetId) {
     
     modal.classList.add('show');
     status.textContent = 'Requesting download URL from Mux...';
-    progress.style.width = '10%';
+    progress.style.width = '20%';
+    
+    // Animate progress while waiting
+    let progressValue = 20;
+    const progressInterval = setInterval(() => {
+        if (progressValue < 80) {
+            progressValue += 3;
+            progress.style.width = progressValue + '%';
+        }
+    }, 500);
     
     try {
-        // Step 1: Get download URL from our API
         const response = await fetch(`/api/recordings?action=download&assetId=${assetId}`);
+        clearInterval(progressInterval);
         const data = await response.json();
         
         if (!data.success || !data.downloadUrl) {
             throw new Error(data.error || 'Failed to get download URL');
         }
         
-        // Step 2: Fetch the actual file as blob (so we can set filename)
-        status.textContent = `Downloading: ${filename}`;
-        progress.style.width = '30%';
-        
-        const fileResponse = await fetch(data.downloadUrl);
-        if (!fileResponse.ok) {
-            throw new Error('Failed to download file from Mux');
-        }
-        
-        // Get content length for progress
-        const contentLength = fileResponse.headers.get('content-length');
-        const total = parseInt(contentLength, 10) || 0;
-        
-        // Read the stream with progress
-        const reader = fileResponse.body.getReader();
-        const chunks = [];
-        let received = 0;
-        
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            
-            chunks.push(value);
-            received += value.length;
-            
-            // Update progress (30% to 90%)
-            if (total > 0) {
-                const pct = 30 + (received / total) * 60;
-                progress.style.width = `${Math.min(90, pct)}%`;
-            }
-        }
-        
-        // Step 3: Create blob and trigger download with our filename
-        const blob = new Blob(chunks, { type: 'video/mp4' });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Cleanup
-        URL.revokeObjectURL(blobUrl);
-        
         progress.style.width = '100%';
-        status.innerHTML = `✅ Saved as: <strong>${filename}</strong>`;
         
+        // Open download in new tab
+        window.open(data.downloadUrl, '_blank');
+        
+        // Show filename to rename to
+        status.innerHTML = `
+            <div style="text-align:left">
+                <p>✅ Download started in new tab</p>
+                <p style="margin-top:8px"><strong>Rename the file to:</strong></p>
+                <code style="display:block; background:#1a1a2e; padding:8px; border-radius:4px; margin-top:4px; word-break:break-all">${filename}</code>
+                <button onclick="navigator.clipboard.writeText('${filename}'); this.textContent='Copied!'" 
+                        style="margin-top:8px; padding:4px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; cursor:pointer">
+                    📋 Copy Filename
+                </button>
+            </div>
+        `;
+        
+        // Keep modal open longer so user can copy filename
         setTimeout(() => {
             modal.classList.remove('show');
-        }, 3000);
+        }, 10000);
         
     } catch (error) {
+        clearInterval(progressInterval);
         console.error('Download error:', error);
         status.textContent = 'Error: ' + error.message;
         progress.style.width = '0%';
