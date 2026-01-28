@@ -62,79 +62,109 @@ export default async function handler(request, context) {
 
             const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64');
             
-            // Step 1: Enable master access
-            console.log(`[recordings] Enabling master access for: ${assetId}`);
-            const enableResponse = await fetch(
-                `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
+            // Step 1: Check current asset state
+            console.log(`[recordings] Checking asset: ${assetId}`);
+            const assetResponse = await fetch(
+                `https://api.mux.com/video/v1/assets/${assetId}`,
                 {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Basic ${auth}`
-                    },
-                    body: JSON.stringify({ master_access: 'temporary' })
+                    method: 'GET',
+                    headers: { 'Authorization': `Basic ${auth}` }
                 }
             );
-            
-            const enableText = await enableResponse.text();
-            console.log(`[recordings] Enable response (${enableResponse.status}): ${enableText}`);
-            
-            // 400 with "already exists" is OK - means it's already enabled
-            if (!enableResponse.ok && !enableText.toLowerCase().includes('already')) {
+
+            if (!assetResponse.ok) {
                 return new Response(JSON.stringify({
                     success: false,
-                    error: `Failed to enable download: ${enableText}`
-                }), { status: 500, headers });
+                    error: `Asset not found (${assetResponse.status})`
+                }), { status: 404, headers });
             }
 
-            // Step 2: Poll for master URL (up to 30 seconds)
-            console.log(`[recordings] Polling for master URL...`);
-            for (let attempt = 1; attempt <= 30; attempt++) {
-                const assetResponse = await fetch(
-                    `https://api.mux.com/video/v1/assets/${assetId}`,
+            const assetData = await assetResponse.json();
+            const asset = assetData.data;
+            
+            console.log(`[recordings] Asset state - master_access: ${asset.master_access}, master.status: ${asset.master?.status}, master.url: ${asset.master?.url ? 'YES' : 'NO'}`);
+            
+            // If master URL is already available, return it immediately
+            if (asset.master?.url) {
+                console.log(`[recordings] Master URL ready, returning`);
+                return new Response(JSON.stringify({
+                    success: true,
+                    assetId: asset.id,
+                    duration: asset.duration,
+                    downloadUrl: asset.master.url,
+                    message: 'Download URL ready (expires in 24 hours)'
+                }), { status: 200, headers });
+            }
+            
+            // If master is currently preparing, tell user to wait
+            if (asset.master?.status === 'preparing') {
+                const durationMins = Math.round((asset.duration || 0) / 60);
+                const estimatedWait = durationMins > 60 ? '5-15 minutes' : '1-3 minutes';
+                console.log(`[recordings] Master preparing, duration: ${durationMins} mins`);
+                return new Response(JSON.stringify({
+                    success: false,
+                    preparing: true,
+                    error: `Download is being prepared by Mux. For a ${durationMins} minute recording, this typically takes ${estimatedWait}. Please try again shortly.`,
+                    masterStatus: 'preparing'
+                }), { status: 202, headers });
+            }
+            
+            // If master access not yet requested, request it now
+            if (asset.master_access === 'none') {
+                console.log(`[recordings] Enabling master access...`);
+                const enableResponse = await fetch(
+                    `https://api.mux.com/video/v1/assets/${assetId}/master-access`,
                     {
-                        method: 'GET',
-                        headers: { 'Authorization': `Basic ${auth}` }
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${auth}`
+                        },
+                        body: JSON.stringify({ master_access: 'temporary' })
                     }
                 );
-
-                if (!assetResponse.ok) {
-                    return new Response(JSON.stringify({
-                        success: false,
-                        error: `Asset not found (${assetResponse.status})`
-                    }), { status: 404, headers });
-                }
-
-                const assetData = await assetResponse.json();
-                const asset = assetData.data;
                 
-                // Check if master URL is ready
-                if (asset.master?.url) {
-                    console.log(`[recordings] SUCCESS! Master URL ready after ${attempt}s`);
+                const enableText = await enableResponse.text();
+                console.log(`[recordings] Enable response: ${enableResponse.status} - ${enableText}`);
+                
+                const durationMins = Math.round((asset.duration || 0) / 60);
+                const estimatedWait = durationMins > 60 ? '5-15 minutes' : '1-3 minutes';
+                
+                return new Response(JSON.stringify({
+                    success: false,
+                    preparing: true,
+                    error: `Download preparation started. For a ${durationMins} minute recording, this typically takes ${estimatedWait}. Please try again shortly.`,
+                    masterStatus: 'preparing'
+                }), { status: 202, headers });
+            }
+            
+            // Master access is set but URL not ready yet - might be in a weird state
+            // Try re-fetching a few times quickly
+            for (let i = 0; i < 5; i++) {
+                await new Promise(r => setTimeout(r, 2000));
+                const retryResponse = await fetch(
+                    `https://api.mux.com/video/v1/assets/${assetId}`,
+                    { headers: { 'Authorization': `Basic ${auth}` } }
+                );
+                const retryData = await retryResponse.json();
+                if (retryData.data?.master?.url) {
                     return new Response(JSON.stringify({
                         success: true,
-                        assetId: asset.id,
-                        duration: asset.duration,
-                        downloadUrl: asset.master.url,
+                        assetId: retryData.data.id,
+                        duration: retryData.data.duration,
+                        downloadUrl: retryData.data.master.url,
                         message: 'Download URL ready (expires in 24 hours)'
                     }), { status: 200, headers });
                 }
-                
-                // Log progress
-                if (attempt % 5 === 0 || attempt === 1) {
-                    console.log(`[recordings] Attempt ${attempt}/30 - master_access: ${asset.master_access}, master.status: ${asset.master?.status || 'none'}`);
-                }
-                
-                // Wait 1 second
-                await new Promise(resolve => setTimeout(resolve, 1000));
             }
-
-            // Timeout
-            console.error(`[recordings] TIMEOUT after 30s - master URL never became ready`);
+            
+            // Still not ready
             return new Response(JSON.stringify({
                 success: false,
-                error: 'Download preparation timed out after 30 seconds. Please try again.'
-            }), { status: 503, headers });
+                preparing: true,
+                error: 'Download is still being prepared. Please try again in a minute.',
+                masterStatus: asset.master?.status || 'unknown'
+            }), { status: 202, headers });
         }
 
         // GET with action=debug - Show tag configuration for debugging

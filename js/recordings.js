@@ -1270,59 +1270,68 @@ async function downloadRecording(assetId) {
     const progress = document.getElementById('downloadProgress');
     
     modal.classList.add('show');
-    status.textContent = 'Requesting download URL from Mux...';
-    progress.style.width = '20%';
-    
-    // Animate progress while waiting
-    let progressValue = 20;
-    const progressInterval = setInterval(() => {
-        if (progressValue < 80) {
-            progressValue += 3;
-            progress.style.width = progressValue + '%';
-        }
-    }, 500);
+    status.textContent = 'Checking download status...';
+    progress.style.width = '50%';
     
     try {
         const response = await fetch(`/api/recordings?action=download&assetId=${assetId}`);
-        clearInterval(progressInterval);
         const data = await response.json();
         
-        if (!data.success || !data.downloadUrl) {
-            throw new Error(data.error || 'Failed to get download URL');
+        // Download URL ready - open it
+        if (data.success && data.downloadUrl) {
+            progress.style.width = '100%';
+            window.open(data.downloadUrl, '_blank');
+            
+            status.innerHTML = `
+                <div style="text-align:left">
+                    <p>✅ Download started in new tab</p>
+                    <p style="margin-top:8px"><strong>Rename the file to:</strong></p>
+                    <code style="display:block; background:#1a1a2e; padding:8px; border-radius:4px; margin-top:4px; word-break:break-all">${filename}</code>
+                    <button onclick="navigator.clipboard.writeText('${filename}'); this.textContent='Copied!'" 
+                            style="margin-top:8px; padding:4px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; cursor:pointer">
+                        📋 Copy Filename
+                    </button>
+                </div>
+            `;
+            
+            setTimeout(() => modal.classList.remove('show'), 15000);
+            return;
         }
         
-        progress.style.width = '100%';
+        // Still preparing - show status and retry button
+        if (data.preparing) {
+            progress.style.width = '0%';
+            status.innerHTML = `
+                <div style="text-align:left">
+                    <p style="color:#f59e0b">⏳ ${data.error}</p>
+                    <button onclick="downloadRecording('${assetId}')" 
+                            style="margin-top:12px; padding:8px 16px; background:#3b82f6; border:none; border-radius:4px; color:white; cursor:pointer; font-size:14px">
+                        🔄 Check Again
+                    </button>
+                    <button onclick="document.getElementById('downloadModal').classList.remove('show')" 
+                            style="margin-top:12px; margin-left:8px; padding:8px 16px; background:#4b5563; border:none; border-radius:4px; color:white; cursor:pointer; font-size:14px">
+                        Close
+                    </button>
+                </div>
+            `;
+            return;
+        }
         
-        // Open download in new tab
-        window.open(data.downloadUrl, '_blank');
+        // Other error
+        throw new Error(data.error || 'Failed to get download URL');
         
-        // Show filename to rename to
+    } catch (error) {
+        console.error('Download error:', error);
         status.innerHTML = `
             <div style="text-align:left">
-                <p>✅ Download started in new tab</p>
-                <p style="margin-top:8px"><strong>Rename the file to:</strong></p>
-                <code style="display:block; background:#1a1a2e; padding:8px; border-radius:4px; margin-top:4px; word-break:break-all">${filename}</code>
-                <button onclick="navigator.clipboard.writeText('${filename}'); this.textContent='Copied!'" 
-                        style="margin-top:8px; padding:4px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; cursor:pointer">
-                    📋 Copy Filename
+                <p style="color:#ef4444">❌ ${error.message}</p>
+                <button onclick="downloadRecording('${assetId}')" 
+                        style="margin-top:12px; padding:8px 16px; background:#3b82f6; border:none; border-radius:4px; color:white; cursor:pointer">
+                    🔄 Try Again
                 </button>
             </div>
         `;
-        
-        // Keep modal open longer so user can copy filename
-        setTimeout(() => {
-            modal.classList.remove('show');
-        }, 10000);
-        
-    } catch (error) {
-        clearInterval(progressInterval);
-        console.error('Download error:', error);
-        status.textContent = 'Error: ' + error.message;
         progress.style.width = '0%';
-        
-        setTimeout(() => {
-            modal.classList.remove('show');
-        }, 5000);
     }
 }
 
