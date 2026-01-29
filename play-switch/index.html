@@ -180,7 +180,7 @@
             constructor(name, path, video, status) { this.name = name; this.path = path; this.video = video; this.status = status; this.pc = null; this.stats = { pr: 0, pl: 0, fd: 0, ts: 0 }; this.retry = null; }
             async connect() {
                 try {
-                    this.setState("connecting"); this.pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+                    this.setState("connecting"); this.pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "turn:203.129.19.73:3478", username: "playswitch", credential: "MediahouseTURN2026" }] });
                     this.pc.oniceconnectionstatechange = () => { if (this.pc.iceConnectionState === "failed" || this.pc.iceConnectionState === "disconnected") this.disconnect(); };
                     this.pc.onconnectionstatechange = () => { if (this.pc.connectionState === "connected") { this.setState("connected"); this.startStats(); } else if (this.pc.connectionState === "failed") this.disconnect(); };
                     this.pc.ontrack = e => { this.video.srcObject = e.streams[0]; };
