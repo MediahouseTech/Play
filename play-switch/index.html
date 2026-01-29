@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Play-Switch</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; background: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { display: flex; flex-direction: column; height: 100vh; padding: 8px; gap: 8px; }
+        .status-pane { display: flex; gap: 24px; padding: 10px 16px; background: #0d0d0d; border-radius: 4px; border: 1px solid #333; font-size: 16px; flex-shrink: 0; flex-wrap: wrap; }
+        .status-group { display: flex; align-items: center; gap: 12px; }
+        .status-group.encoders { border-left: 3px solid #f59e0b; padding-left: 12px; }
+        .status-group.atem { border-left: 3px solid #a855f7; padding-left: 12px; }
+        .status-group.server { border-left: 3px solid #3b82f6; padding-left: 12px; }
+        .status-group.preview { border-left: 3px solid #22c55e; padding-left: 12px; }
+        .status-group.program { border-left: 3px solid #ef4444; padding-left: 12px; }
+        .status-label { font-weight: 700; text-transform: uppercase; font-size: 14px; color: #888; min-width: 50px; }
+        .status-item { display: flex; align-items: center; gap: 6px; color: #ccc; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #666; }
+        .status-dot.connected { background: #22c55e; }
+        .status-dot.connecting { background: #f59e0b; animation: pulse 1s infinite; }
+        .status-dot.disconnected { background: #ef4444; }
+        .status-dot.error { background: #ef4444; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .status-value { font-variant-numeric: tabular-nums; }
+        .status-value.warning { color: #f59e0b; }
+        .status-value.error { color: #ef4444; }
+        .status-value.ok { color: #22c55e; }
+        .status-value.dim { color: #666; }
+        .server-item { display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: #1a1a1a; border-radius: 3px; font-size: 13px; }
+        .server-item .path-name { color: #888; }
+        .server-item .path-status { font-weight: 600; }
+        .server-item .path-status.live { color: #22c55e; }
+        .server-item .path-status.off { color: #666; }
+        .atem-item { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: #1a1a1a; border-radius: 3px; font-size: 13px; font-weight: 600; }
+        .atem-item .atem-label { color: #888; text-transform: uppercase; }
+        .atem-item .atem-status.live { color: #ef4444; }
+        .atem-item .atem-status.idle { color: #666; }
+        .atem-item.recording.active { background: #ef4444; }
+        .atem-item.recording.active .atem-label, .atem-item.recording.active .atem-status { color: #fff; }
+        .atem-item.streaming.active { background: #a855f7; }
+        .atem-item.streaming.active .atem-label, .atem-item.streaming.active .atem-status { color: #fff; }
+        .encoder-control { display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: #1a1a1a; border-radius: 4px; }
+        .encoder-name { font-weight: 600; color: #888; font-size: 13px; min-width: 45px; }
+        .encoder-status { padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: 600; min-width: 50px; text-align: center; }
+        .encoder-status.streaming { background: #22c55e; color: #000; }
+        .encoder-status.idle { background: #333; color: #888; }
+        .encoder-btn { padding: 4px 10px; border: none; border-radius: 3px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .encoder-btn.start { background: #22c55e; color: #000; }
+        .encoder-btn.start:hover { background: #16a34a; }
+        .encoder-btn.stop { background: #ef4444; color: #fff; }
+        .encoder-btn.stop:hover { background: #dc2626; }
+        .encoder-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .monitors { flex: 1; display: flex; gap: 8px; min-height: 0; }
+        .monitor { flex: 1; background: #000; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+        .monitor.preview { border: 3px solid #22c55e; }
+        .monitor.program { border: 3px solid #ef4444; }
+        .monitor-header { height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; text-transform: uppercase; }
+        .monitor.preview .monitor-header { background: #22c55e; color: #000; }
+        .monitor.program .monitor-header { background: #ef4444; color: #fff; }
+        .video-container { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
+        .video-container video { width: 100%; height: 100%; object-fit: contain; }
+        .video-error { position: absolute; color: #888; font-size: 14px; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="status-pane">
+        <div class="status-group encoders">
+            <span class="status-label">ENC</span>
+            <div class="encoder-control">
+                <span class="encoder-name">WPHD</span>
+                <span class="encoder-status idle" id="wphd-status">IDLE</span>
+                <button class="encoder-btn start" id="wphd-start" onclick="wpControl('wphd', 'start')">START</button>
+                <button class="encoder-btn stop" id="wphd-stop" onclick="wpControl('wphd', 'stop')">STOP</button>
+            </div>
+            <div class="encoder-control">
+                <span class="encoder-name">WP4K</span>
+                <span class="encoder-status idle" id="wp4k-status">IDLE</span>
+                <button class="encoder-btn start" id="wp4k-start" onclick="wpControl('wp4k', 'start')">START</button>
+                <button class="encoder-btn stop" id="wp4k-stop" onclick="wpControl('wp4k', 'stop')">STOP</button>
+            </div>
+        </div>
+        <div class="status-group atem">
+            <span class="status-label">ATEM</span>
+            <div class="atem-item streaming" id="atem-stream-item">
+                <span class="atem-label">Stream</span>
+                <span class="atem-status idle" id="atem-stream">IDLE</span>
+            </div>
+            <div class="atem-item recording" id="atem-record-item">
+                <span class="atem-label">Rec</span>
+                <span class="atem-status idle" id="atem-record">IDLE</span>
+            </div>
+        </div>
+        <div class="status-group server">
+            <span class="status-label">MTX</span>
+            <div class="server-item"><span class="path-name">/preview</span><span class="path-status off" id="mtx-preview">OFF</span></div>
+            <div class="server-item"><span class="path-name">/program</span><span class="path-status off" id="mtx-program">OFF</span></div>
+            <div class="server-item"><span class="path-name">/program-audio</span><span class="path-status off" id="mtx-program-audio">OFF</span></div>
+            <div class="status-item"><span class="status-value dim" id="mtx-readers">0 viewers</span></div>
+        </div>
+        <div class="status-group preview">
+            <span class="status-label">PVW</span>
+            <div class="status-item"><div class="status-dot" id="pvw-dot"></div><span class="status-value" id="pvw-state">--</span></div>
+            <div class="status-item"><span class="status-value" id="pvw-latency">--</span></div>
+            <div class="status-item"><span class="status-value" id="pvw-loss">--</span></div>
+            <div class="status-item"><span class="status-value" id="pvw-fps">--</span></div>
+        </div>
+        <div class="status-group program">
+            <span class="status-label">PGM</span>
+            <div class="status-item"><div class="status-dot" id="pgm-dot"></div><span class="status-value" id="pgm-state">--</span></div>
+            <div class="status-item"><span class="status-value" id="pgm-latency">--</span></div>
+            <div class="status-item"><span class="status-value" id="pgm-loss">--</span></div>
+            <div class="status-item"><span class="status-value" id="pgm-fps">--</span></div>
+            <div class="status-item"><span class="status-value" id="pgm-audio">🔇</span></div>
+        </div>
+    </div>
+    <div class="monitors">
+        <div class="monitor preview">
+            <div class="monitor-header">Preview</div>
+            <div class="video-container"><video id="preview-video" autoplay muted playsinline></video><div class="video-error" id="preview-error"></div></div>
+        </div>
+        <div class="monitor program">
+            <div class="monitor-header">Program</div>
+            <div class="video-container"><video id="program-video" autoplay playsinline></video><div class="video-error" id="program-error"></div></div>
+        </div>
+    </div>
+    <script>
+        const wpEndpoints = { wp4k: "/wp4k/", wphd: "/wphd/" };
+        async function wpControl(encoder, action) {
+            const btn = document.getElementById(encoder + "-" + action);
+            btn.disabled = true;
+            try {
+                const r = await fetch(wpEndpoints[encoder] + "livestreams/0/" + action, { method: "PUT" });
+                if (!r.ok) throw new Error(r.status);
+                setTimeout(() => pollEncoders(), 500);
+            } catch (e) { console.error(encoder + " " + action + " failed:", e); alert(encoder.toUpperCase() + " " + action + " failed"); }
+            btn.disabled = false;
+        }
+        async function pollEncoders() {
+            for (const [name, base] of Object.entries(wpEndpoints)) {
+                try {
+                    const r = await fetch(base + "livestreams/0");
+                    if (r.ok) {
+                        const d = await r.json();
+                        const isLive = d.status === "Streaming";
+                        const el = document.getElementById(name + "-status");
+                        el.textContent = isLive ? "LIVE" : "IDLE";
+                        el.className = "encoder-status " + (isLive ? "streaming" : "idle");
+                    }
+                } catch (e) { console.error(name + " poll error:", e); }
+            }
+        }
+        setInterval(pollEncoders, 3000); pollEncoders();
+
+        class ATEMStatus {
+            constructor() { this.elements = { streamItem: document.getElementById("atem-stream-item"), streamStatus: document.getElementById("atem-stream"), recordItem: document.getElementById("atem-record-item"), recordStatus: document.getElementById("atem-record") }; }
+            start() { this.poll(); setInterval(() => this.poll(), 2000); }
+            async poll() {
+                try {
+                    const [streamRes, recordRes] = await Promise.all([fetch("/companion/custom-variable/atem_stream/value"), fetch("/companion/custom-variable/atem_record/value")]);
+                    if (streamRes.ok) { const v = (await streamRes.text()).trim().toLowerCase(); const on = v === "live"; this.elements.streamStatus.textContent = on ? "LIVE" : "IDLE"; this.elements.streamStatus.className = "atem-status " + (on ? "live" : "idle"); this.elements.streamItem.className = "atem-item streaming" + (on ? " active" : ""); }
+                    if (recordRes.ok) { const v = (await recordRes.text()).trim().toLowerCase(); const on = v === "live"; this.elements.recordStatus.textContent = on ? "REC" : "IDLE"; this.elements.recordStatus.className = "atem-status " + (on ? "live" : "idle"); this.elements.recordItem.className = "atem-item recording" + (on ? " active" : ""); }
+                } catch (e) { console.error("ATEM error:", e); }
+            }
+        }
+        class MediaMTXStatus {
+            constructor() { this.elements = { preview: document.getElementById("mtx-preview"), program: document.getElementById("mtx-program"), programAudio: document.getElementById("mtx-program-audio"), readers: document.getElementById("mtx-readers") }; }
+            start() { this.poll(); setInterval(() => this.poll(), 2000); }
+            async poll() {
+                try {
+                    const r = await fetch("/mtx-api/v3/paths/list"); if (!r.ok) throw new Error(); const d = await r.json(); let total = 0;
+                    d.items.forEach(p => { const ready = p.ready === true; total += p.readers ? p.readers.length : 0; let el = p.name === "preview" ? this.elements.preview : p.name === "program" ? this.elements.program : p.name === "program-audio" ? this.elements.programAudio : null; if (el) { el.textContent = ready ? "LIVE" : "OFF"; el.className = "path-status " + (ready ? "live" : "off"); } });
+                    this.elements.readers.textContent = total + " viewer" + (total !== 1 ? "s" : ""); this.elements.readers.className = "status-value" + (total > 0 ? " ok" : " dim");
+                } catch (e) { console.error("MTX error:", e); }
+            }
+        }
+        class WebRTCMonitor {
+            constructor(name, path, video, status) { this.name = name; this.path = path; this.video = video; this.status = status; this.pc = null; this.stats = { pr: 0, pl: 0, fd: 0, ts: 0 }; this.retry = null; }
+            async connect() {
+                try {
+                    this.setState("connecting"); this.pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+                    this.pc.oniceconnectionstatechange = () => { if (this.pc.iceConnectionState === "failed" || this.pc.iceConnectionState === "disconnected") this.disconnect(); };
+                    this.pc.onconnectionstatechange = () => { if (this.pc.connectionState === "connected") { this.setState("connected"); this.startStats(); } else if (this.pc.connectionState === "failed") this.disconnect(); };
+                    this.pc.ontrack = e => { this.video.srcObject = e.streams[0]; };
+                    this.pc.addTransceiver("video", { direction: "recvonly" }); this.pc.addTransceiver("audio", { direction: "recvonly" });
+                    const offer = await this.pc.createOffer(); await this.pc.setLocalDescription(offer);
+                    const r = await fetch("/whep/" + this.path + "/whep", { method: "POST", headers: { "Content-Type": "application/sdp" }, body: this.pc.localDescription.sdp });
+                    if (!r.ok) throw new Error("bad status code " + r.status + ", retrying in some seconds"); await this.pc.setRemoteDescription({ type: "answer", sdp: await r.text() });
+                } catch (e) { console.error(this.name, e); this.showErr(e.message); this.setState("error"); this.schedRetry(); }
+            }
+            disconnect() { this.setState("disconnected"); this.showErr("Disconnected..."); this.stopStats(); this.schedRetry(); }
+            schedRetry() { if (this.retry) clearTimeout(this.retry); this.retry = setTimeout(() => { this.cleanup(); this.connect(); }, 2000); }
+            cleanup() { this.stopStats(); if (this.pc) { this.pc.close(); this.pc = null; } this.video.srcObject = null; }
+            setState(s) { this.status.dot.className = "status-dot " + s; this.status.state.textContent = { connected: "OK", connecting: "...", disconnected: "DOWN", error: "ERR" }[s] || s; if (s === "connected") this.hideErr(); }
+            showErr(m) { const el = document.getElementById(this.name + "-error"); if (el) el.textContent = m; }
+            hideErr() { const el = document.getElementById(this.name + "-error"); if (el) el.textContent = ""; }
+            startStats() { this.statsInt = setInterval(() => this.pollStats(), 1000); }
+            stopStats() { if (this.statsInt) { clearInterval(this.statsInt); this.statsInt = null; } }
+            async pollStats() {
+                if (!this.pc) return;
+                try {
+                    const st = await this.pc.getStats(); let vs = null, as = null, cp = null;
+                    st.forEach(r => { if (r.type === "inbound-rtp" && r.kind === "video") vs = r; if (r.type === "inbound-rtp" && r.kind === "audio") as = r; if (r.type === "candidate-pair" && r.state === "succeeded") cp = r; });
+                    if (cp && cp.currentRoundTripTime) { const rtt = Math.round(cp.currentRoundTripTime * 1000); this.status.latency.textContent = rtt + "ms"; this.status.latency.className = "status-value" + (rtt > 500 ? " error" : rtt > 200 ? " warning" : ""); }
+                    if (vs) { const now = Date.now(), dt = (now - this.stats.ts) / 1000; if (dt > 0 && this.stats.ts > 0) { const pr = vs.packetsReceived - this.stats.pr, pl = vs.packetsLost - this.stats.pl, tot = pr + pl, loss = tot > 0 ? ((pl / tot) * 100).toFixed(1) : 0; this.status.loss.textContent = loss + "%"; this.status.loss.className = "status-value" + (loss > 5 ? " error" : loss > 1 ? " warning" : ""); const fd = vs.framesDecoded - this.stats.fd, fps = Math.round(fd / dt); this.status.fps.textContent = fps + "fps"; this.status.fps.className = "status-value" + (fps < 10 ? " error" : fps < 20 ? " warning" : ""); } this.stats = { pr: vs.packetsReceived, pl: vs.packetsLost, fd: vs.framesDecoded, ts: now }; }
+                    if (this.status.audio && as) this.status.audio.textContent = as.packetsReceived > 0 ? "🔊" : "🔇";
+                } catch (e) { console.error("Stats:", e); }
+            }
+        }
+        new ATEMStatus().start(); new MediaMTXStatus().start();
+        new WebRTCMonitor("preview", "preview", document.getElementById("preview-video"), { dot: document.getElementById("pvw-dot"), state: document.getElementById("pvw-state"), latency: document.getElementById("pvw-latency"), loss: document.getElementById("pvw-loss"), fps: document.getElementById("pvw-fps") }).connect();
+        new WebRTCMonitor("program", "program-audio", document.getElementById("program-video"), { dot: document.getElementById("pgm-dot"), state: document.getElementById("pgm-state"), latency: document.getElementById("pgm-latency"), loss: document.getElementById("pgm-loss"), fps: document.getElementById("pgm-fps"), audio: document.getElementById("pgm-audio") }).connect();
+    </script>
+</body>
+</html>
